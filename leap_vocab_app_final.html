@@ -1,0 +1,3332 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>LEAP 英単語学習</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #f4f7f4;
+  --card: #ffffff;
+  --primary: #2d7a4f;
+  --primary-light: #e8f5ee;
+  --primary-dark: #1f5c3a;
+  --accent: #4a90d9;
+  --red: #e05252;
+  --green: #3cb371;
+  --yellow: #f5a623;
+  --text: #1a2e22;
+  --muted: #5a7464;
+  --border: #d6e8dc;
+  --radius: 12px;
+  --shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+html, body { height: 100%; font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); }
+button { font: inherit; cursor: pointer; border: none; border-radius: var(--radius); transition: all 0.15s; }
+button:active { transform: scale(0.97); }
+input { font: inherit; border-radius: var(--radius); border: 1.5px solid var(--border); padding: 10px 14px; outline: none; width: 100%; }
+input:focus { border-color: var(--primary); }
+
+/* ── Layout ── */
+#app { display: flex; flex-direction: column; min-height: 100%; }
+
+/* ── Top Bar ── */
+#topbar {
+  background: #fff;
+  border-bottom: 1px solid var(--border);
+  padding: 12px 16px;
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+#topbar h1 { font-size: 18px; font-weight: 800; color: var(--primary-dark); letter-spacing: 0.02em; }
+#topbar .sub { font-size: 12px; color: var(--muted); margin-top: 1px; }
+
+/* ── Nav ── */
+#nav {
+  display: flex; gap: 4px; overflow-x: auto; padding: 10px 16px;
+  background: #fff; border-bottom: 1px solid var(--border);
+  scrollbar-width: none;
+}
+#nav::-webkit-scrollbar { display: none; }
+.nav-btn {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 13px; font-weight: 600;
+  background: var(--primary-light);
+  color: var(--primary-dark);
+  border: 1.5px solid transparent;
+}
+.nav-btn.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary-dark);
+}
+
+/* ── Main Content ── */
+#content { flex: 1; padding: 16px; max-width: 900px; margin: 0 auto; width: 100%; }
+
+/* ── Range Picker ── */
+.range-bar {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  background: #fff; border-radius: var(--radius); padding: 12px 14px;
+  border: 1px solid var(--border); margin-bottom: 16px;
+  box-shadow: var(--shadow);
+}
+.range-bar label { font-size: 13px; font-weight: 600; color: var(--muted); }
+.range-bar input[type=number] { width: 72px; padding: 7px 10px; font-size: 13px; }
+.range-preset {
+  padding: 6px 11px; font-size: 12px; font-weight: 600;
+  background: var(--primary-light); color: var(--primary-dark);
+  border-radius: 999px; margin: 2px;
+}
+.range-preset.active { background: var(--primary); color: #fff; }
+.range-presets { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+
+/* ── Word List (Study mode) ── */
+.study-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 14px;
+}
+@media (max-width: 640px) {
+  .study-layout { grid-template-columns: 1fr; }
+  .study-list-panel { max-height: 220px; }
+}
+.study-list-panel {
+  background: #fff; border-radius: var(--radius);
+  border: 1px solid var(--border); overflow-y: auto;
+  max-height: 65vh; box-shadow: var(--shadow);
+}
+.word-list-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; border-bottom: 1px solid #f0f5f2;
+  cursor: pointer; transition: background 0.1s;
+  font-size: 14px;
+}
+.word-list-item:hover { background: var(--primary-light); }
+.word-list-item.selected { background: var(--primary-light); border-left: 3px solid var(--primary); }
+.word-list-item .num { font-size: 11px; color: var(--muted); min-width: 28px; }
+.word-list-item .w { font-weight: 700; }
+.word-list-item .m { font-size: 12px; color: var(--muted); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.word-list-item .wrong-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--red); flex-shrink: 0; }
+
+.study-detail {
+  background: #fff; border-radius: var(--radius);
+  border: 1px solid var(--border); padding: 24px;
+  box-shadow: var(--shadow);
+}
+.study-detail .word-en { font-size: 36px; font-weight: 900; color: var(--primary-dark); margin-bottom: 8px; }
+.study-detail .word-num { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
+.study-detail .meanings-list { margin-bottom: 20px; }
+.study-detail .meanings-list li { padding: 6px 0; font-size: 16px; border-bottom: 1px solid #f0f5f2; }
+.study-detail .example { background: var(--primary-light); border-left: 3px solid var(--primary); padding: 12px 14px; border-radius: 0 8px 8px 0; font-size: 14px; line-height: 1.6; color: var(--text); margin-top: 8px; }
+.study-detail .example .ex-en { font-weight: 600; margin-bottom: 4px; }
+.study-detail .example .ex-jp { color: var(--muted); font-size: 13px; }
+.study-nav-row { display: flex; gap: 10px; margin-top: 20px; }
+
+/* ── Quiz / Test / Typing ── */
+.quiz-card {
+  background: #fff; border-radius: var(--radius);
+  border: 1px solid var(--border); padding: 24px;
+  box-shadow: var(--shadow); max-width: 600px; margin: 0 auto;
+}
+.quiz-progress { font-size: 13px; color: var(--muted); margin-bottom: 16px; text-align: center; }
+.quiz-progress-bar { height: 4px; background: var(--border); border-radius: 2px; margin-bottom: 20px; }
+.quiz-progress-bar-fill { height: 100%; background: var(--primary); border-radius: 2px; transition: width 0.3s; }
+.quiz-question { font-size: 22px; font-weight: 800; text-align: center; margin-bottom: 28px; color: var(--text); line-height: 1.4; }
+.quiz-type-label { text-align: center; font-size: 12px; color: var(--muted); font-weight: 600; margin-bottom: 8px; letter-spacing: 0.05em; text-transform: uppercase; }
+.choices { display: flex; flex-direction: column; gap: 10px; }
+.choice-btn {
+  padding: 14px 18px; font-size: 15px; font-weight: 600;
+  background: var(--primary-light); color: var(--text);
+  border-radius: var(--radius); text-align: left;
+  border: 1.5px solid var(--border);
+}
+.choice-btn:hover:not(:disabled) { background: #d4eedd; border-color: var(--primary); }
+.choice-btn.correct { background: #e6f9ee; border-color: var(--green); color: var(--green); }
+.choice-btn.wrong { background: #fdecea; border-color: var(--red); color: var(--red); }
+.choice-btn:disabled { opacity: 0.75; cursor: default; }
+
+.result-box { margin-top: 20px; padding: 16px; border-radius: var(--radius); }
+.result-box.ok { background: #e8f9ee; border: 1.5px solid var(--green); }
+.result-box.ng { background: #fdecea; border: 1.5px solid var(--red); }
+.result-box .result-icon { font-size: 28px; text-align: center; margin-bottom: 8px; }
+.result-box .result-word { font-size: 22px; font-weight: 900; text-align: center; color: var(--primary-dark); margin-bottom: 6px; }
+.result-box .result-meanings { font-size: 14px; color: var(--muted); text-align: center; }
+.result-box .result-meanings span { display: inline-block; padding: 2px 8px; }
+
+/* Typing */
+.typing-input-row { display: flex; gap: 8px; margin-bottom: 12px; }
+.typing-input-row input { font-size: 16px; font-weight: 600; }
+.submit-btn {
+  padding: 10px 20px; background: var(--primary); color: #fff;
+  font-weight: 700; font-size: 15px; flex-shrink: 0; white-space: nowrap;
+  width: auto !important;
+}
+
+/* ── List Mode ── */
+.list-filters { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.filter-btn { padding: 7px 14px; font-size: 13px; font-weight: 600; background: var(--primary-light); color: var(--primary-dark); border-radius: 999px; }
+.filter-btn.active { background: var(--primary); color: #fff; }
+.word-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+.word-table th { background: var(--primary); color: #fff; padding: 10px 14px; text-align: left; font-size: 13px; }
+.word-table td { padding: 9px 14px; font-size: 14px; border-bottom: 1px solid #f0f5f2; }
+.word-table tr:last-child td { border-bottom: none; }
+.word-table tr:hover td { background: var(--primary-light); }
+.word-table .td-no { color: var(--muted); font-size: 12px; width: 44px; }
+.word-table .td-word { font-weight: 700; }
+.word-table .td-meaning { color: var(--muted); font-size: 13px; }
+.wrong-badge { display: inline-block; background: var(--red); color: #fff; border-radius: 999px; font-size: 10px; padding: 1px 6px; margin-left: 6px; }
+
+/* ── Mode Selector ── */
+.mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+.mode-option {
+  padding: 16px; font-size: 14px; font-weight: 700;
+  background: #fff; color: var(--text);
+  border-radius: var(--radius); border: 2px solid var(--border);
+  text-align: center;
+}
+.mode-option.active { border-color: var(--primary); background: var(--primary-light); color: var(--primary-dark); }
+.mode-option .mode-icon { font-size: 22px; display: block; margin-bottom: 6px; }
+
+/* ── Big Action Buttons ── */
+.btn-primary {
+  padding: 14px 28px; background: var(--primary); color: #fff;
+  font-weight: 800; font-size: 16px; width: 100%; margin-top: 8px;
+  border-radius: var(--radius);
+}
+.btn-primary:hover { background: var(--primary-dark); }
+.btn-secondary {
+  padding: 12px 20px; background: var(--primary-light); color: var(--primary-dark);
+  font-weight: 700; font-size: 14px; border-radius: var(--radius);
+  border: 1.5px solid var(--border);
+}
+.btn-danger { background: #fdecea; color: var(--red); border: 1.5px solid var(--red); }
+.btn-sm { padding: 8px 14px; font-size: 13px; }
+.btn-row { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+
+/* ── Score Screen ── */
+.score-card {
+  background: #fff; border-radius: var(--radius); padding: 32px 24px;
+  box-shadow: var(--shadow); text-align: center; max-width: 500px; margin: 0 auto;
+}
+.score-card .big-score { font-size: 56px; font-weight: 900; color: var(--primary-dark); line-height: 1; }
+.score-card .score-label { font-size: 14px; color: var(--muted); margin-top: 8px; margin-bottom: 24px; }
+
+/* ── Data Tools ── */
+.data-section { background: #fff; border-radius: var(--radius); padding: 16px; border: 1px solid var(--border); margin-bottom: 14px; }
+.data-section h3 { font-size: 15px; font-weight: 700; margin-bottom: 12px; }
+.stat-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+.stat-chip { background: var(--primary-light); padding: 8px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; color: var(--primary-dark); }
+
+/* Next btn */
+.next-btn {
+  padding: 14px; background: var(--primary); color: #fff;
+  font-weight: 800; font-size: 16px; width: 100%; margin-top: 16px;
+  border-radius: var(--radius);
+}
+
+/* Empty state */
+.empty { text-align: center; padding: 48px 24px; color: var(--muted); font-size: 15px; }
+
+/* Scrollable content area */
+.scroll-list { max-height: 70vh; overflow-y: auto; border-radius: var(--radius); }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="topbar">
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <h1>📘 LEAP 英単語</h1>
+        <div class="sub" id="topbar-sub">全2296語</div>
+      </div>
+      <button class="btn-secondary btn-sm" onclick="showSection('settings')">⚙ 設定</button>
+    </div>
+  </div>
+
+  <div id="nav">
+    <button class="nav-btn" onclick="showSection('study')">📖 学習</button>
+    <button class="nav-btn" onclick="showSection('test')">📝 テスト</button>
+    <button class="nav-btn" onclick="showSection('typing')">⌨ タイピング</button>
+    <button class="nav-btn" onclick="showSection('review')">🔁 復習</button>
+    <button class="nav-btn" onclick="showSection('wordlist')">📋 一覧</button>
+    <button class="nav-btn" onclick="showSection('settings')">⚙ 設定</button>
+  </div>
+
+  <div id="content">
+    <div id="section-study" class="section" style="display:none"></div>
+    <div id="section-test" class="section" style="display:none"></div>
+    <div id="section-typing" class="section" style="display:none"></div>
+    <div id="section-review" class="section" style="display:none"></div>
+    <div id="section-wordlist" class="section" style="display:none"></div>
+    <div id="section-settings" class="section" style="display:none"></div>
+  </div>
+</div>
+
+<script>
+// ── DATA ──
+const WORDS = [
+  {"no":1,"word":"agree","meanings":["賛成する", "意見が一致する", "合う"]},
+  {"no":2,"word":"oppose","meanings":["反対する"]},
+  {"no":3,"word":"advise","meanings":["忠告する"]},
+  {"no":4,"word":"tip","meanings":["助言", "ヒント", "チップ", "先", "先端"]},
+  {"no":5,"word":"discuss","meanings":["ついて話し合う", "議論する", "話題に出す"]},
+  {"no":6,"word":"blame","meanings":["責任があるとする"]},
+  {"no":7,"word":"argue","meanings":["主張する", "言い争う"]},
+  {"no":8,"word":"claim","meanings":["主張する", "要求する", "主張する", "主張", "要求"]},
+  {"no":9,"word":"complain","meanings":["文句を言う", "苦情を言う", "訴える"]},
+  {"no":10,"word":"offer","meanings":["申し出る", "申し出", "値引き"]},
+  {"no":11,"word":"suggest","meanings":["示唆する", "提案する"]},
+  {"no":12,"word":"recommend","meanings":["推薦する", "勧める"]},
+  {"no":13,"word":"grateful","meanings":["感謝している"]},
+  {"no":14,"word":"apologize","meanings":["謝る"]},
+  {"no":15,"word":"excuse","meanings":["言い訳", "許す", "免除する"]},
+  {"no":16,"word":"celebrate","meanings":["祝う", "挙行する", "執り行う"]},
+  {"no":17,"word":"congratulate","meanings":["祝う", "お祝いを述べる"]},
+  {"no":18,"word":"admire","meanings":["称賛する", "感心する"]},
+  {"no":19,"word":"impress","meanings":["感銘を与える", "感心させる"]},
+  {"no":20,"word":"award","meanings":["賞", "授与する"]},
+  {"no":21,"word":"explain","meanings":["説明する"]},
+  {"no":22,"word":"describe","meanings":["説明する"]},
+  {"no":23,"word":"communicate","meanings":["意思の疎通をはかる", "伝える"]},
+  {"no":24,"word":"express","meanings":["表現する", "急行"]},
+  {"no":25,"word":"promise","meanings":["約束", "約束する"]},
+  {"no":26,"word":"information","meanings":["情報"]},
+  {"no":27,"word":"technology","meanings":["技術"]},
+  {"no":28,"word":"research","meanings":["研究", "研究する"]},
+  {"no":29,"word":"material","meanings":["材料", "生地", "資料", "教材", "物質的な", "重大な"]},
+  {"no":30,"word":"artificial","meanings":["人工的な"]},
+  {"no":31,"word":"electric","meanings":["電気の", "電動の"]},
+  {"no":32,"word":"invent","meanings":["発明する", "でっち上げる"]},
+  {"no":33,"word":"discover","meanings":["発見する", "知る", "気がつく", "出会う"]},
+  {"no":34,"word":"develop","meanings":["発達する", "発達させる", "開発する", "発展させる"]},
+  {"no":35,"word":"skill","meanings":["技術", "力"]},
+  {"no":36,"word":"ability","meanings":["能力"]},
+  {"no":37,"word":"talent","meanings":["才能"]},
+  {"no":38,"word":"effort","meanings":["努力"]},
+  {"no":39,"word":"practice","meanings":["練習", "実践", "慣習", "練習する", "実践する"]},
+  {"no":40,"word":"achieve","meanings":["達成する"]},
+  {"no":41,"word":"manage","meanings":["何とかしてする", "経営する", "管理する"]},
+  {"no":42,"word":"improve","meanings":["改善する", "磨く", "よくなる"]},
+  {"no":43,"word":"produce","meanings":["生産する", "産出する", "取り出す", "農作物"]},
+  {"no":44,"word":"create","meanings":["創造する", "引き起こす"]},
+  {"no":45,"word":"establish","meanings":["確立する", "定着させる", "設立する"]},
+  {"no":46,"word":"form","meanings":["形成する", "形態", "書式"]},
+  {"no":47,"word":"save","meanings":["省く", "貯金する", "救う", "除いて"]},
+  {"no":48,"word":"medicine","meanings":["薬", "医学"]},
+  {"no":49,"word":"patient","meanings":["患者", "忍耐強い"]},
+  {"no":50,"word":"condition","meanings":["状態", "容態", "状況", "条件"]},
+  {"no":51,"word":"medical","meanings":["医療の", "医学の"]},
+  {"no":52,"word":"stress","meanings":["ストレス", "強調", "強調する"]},
+  {"no":53,"word":"suffer","meanings":["苦しむ", "経験する"]},
+  {"no":54,"word":"exercise","meanings":["運動", "練習", "運動する", "行使する"]},
+  {"no":55,"word":"breathe","meanings":["呼吸する", "息をする"]},
+  {"no":56,"word":"thirsty","meanings":["のどが渇いた", "切望して"]},
+  {"no":57,"word":"physical","meanings":["身体的な", "物理的な"]},
+  {"no":58,"word":"fever","meanings":["熱", "熱狂"]},
+  {"no":59,"word":"strength","meanings":["体力", "力"]},
+  {"no":60,"word":"tear","meanings":["涙", "引き裂く"]},
+  {"no":61,"word":"taste","meanings":["の味がする", "の味をみる", "味", "好み"]},
+  {"no":62,"word":"rule","meanings":["規則", "支配する"]},
+  {"no":63,"word":"role","meanings":["役割"]},
+  {"no":64,"word":"habit","meanings":["習慣", "癖"]},
+  {"no":65,"word":"custom","meanings":["習慣", "税関", "関税"]},
+  {"no":66,"word":"tradition","meanings":["伝統"]},
+  {"no":67,"word":"society","meanings":["社会", "社会", "同席すること", "協会"]},
+  {"no":68,"word":"law","meanings":["法律", "国法", "法律", "法則"]},
+  {"no":69,"word":"ancestor","meanings":["祖先"]},
+  {"no":70,"word":"population","meanings":["人口", "個体数", "住民"]},
+  {"no":71,"word":"native","meanings":["母国の", "その土地の", "生まれの人"]},
+  {"no":72,"word":"abroad","meanings":["海外へ", "海外で"]},
+  {"no":73,"word":"local","meanings":["その土地の", "地元の", "地方の", "地元の人"]},
+  {"no":74,"word":"survey","meanings":["調査", "調査する"]},
+  {"no":75,"word":"value","meanings":["価値", "価値観", "お買い得品", "重んじる"]},
+  {"no":76,"word":"treasure","meanings":["財宝", "宝", "大事な物［人］", "大事にする"]},
+  {"no":77,"word":"fashion","meanings":["流行", "流儀", "やり方", "作る"]},
+  {"no":78,"word":"public","meanings":["大衆", "公共の", "公の"]},
+  {"no":79,"word":"evidence","meanings":["証拠"]},
+  {"no":80,"word":"vote","meanings":["投票", "投票する"]},
+  {"no":81,"word":"government","meanings":["政府"]},
+  {"no":82,"word":"nation","meanings":["国家", "国民"]},
+  {"no":83,"word":"capital","meanings":["首都", "資本", "重大な", "死に値する"]},
+  {"no":84,"word":"state","meanings":["州", "状態", "国家", "述べる"]},
+  {"no":85,"word":"political","meanings":["政治的な", "政治の"]},
+  {"no":86,"word":"price","meanings":["価格", "物価", "代償"]},
+  {"no":87,"word":"sum","meanings":["金額", "合計", "計算", "要約する"]},
+  {"no":88,"word":"budget","meanings":["予算", "安い"]},
+  {"no":89,"word":"fee","meanings":["料金", "謝礼"]},
+  {"no":90,"word":"fare","meanings":["運賃"]},
+  {"no":91,"word":"bill","meanings":["勘定", "請求書", "紙幣", "法案"]},
+  {"no":92,"word":"trade","meanings":["貿易", "業", "商売", "交換する"]},
+  {"no":93,"word":"wealth","meanings":["富", "財産", "豊富な"]},
+  {"no":94,"word":"economy","meanings":["経済", "節約"]},
+  {"no":95,"word":"cost","meanings":["要する", "がかかる", "犠牲にする", "費用", "犠牲"]},
+  {"no":96,"word":"company","meanings":["会社", "一緒にいること", "仲間", "来客"]},
+  {"no":97,"word":"task","meanings":["仕事"]},
+  {"no":98,"word":"earn","meanings":["稼ぐ", "もうける", "得る"]},
+  {"no":99,"word":"hurt","meanings":["痛む", "傷つける"]},
+  {"no":100,"word":"injure","meanings":["痛める", "けがさせる"]},
+  {"no":101,"word":"damage","meanings":["損害を与える", "損害", "被害", "賠償金"]},
+  {"no":102,"word":"destroy","meanings":["破壊する", "殺す", "全滅させる"]},
+  {"no":103,"word":"ruin","meanings":["台無しにする", "破滅させる", "廃墟", "荒廃"]},
+  {"no":104,"word":"danger","meanings":["危険"]},
+  {"no":105,"word":"neighbor","meanings":["近所の人", "隣の人"]},
+  {"no":106,"word":"audience","meanings":["聴衆", "観客"]},
+  {"no":107,"word":"crowd","meanings":["群衆"]},
+  {"no":108,"word":"author","meanings":["著者", "作家"]},
+  {"no":109,"word":"staff","meanings":["職員", "従業員"]},
+  {"no":110,"word":"clerk","meanings":["店員", "事務員", "社員"]},
+  {"no":111,"word":"customer","meanings":["客"]},
+  {"no":112,"word":"passenger","meanings":["乗客"]},
+  {"no":113,"word":"elderly","meanings":["年配の", "年配の人々"]},
+  {"no":114,"word":"female","meanings":["女性の", "雌の", "女性", "雌"]},
+  {"no":115,"word":"head","meanings":["向かう", "率いる"]},
+  {"no":116,"word":"follow","meanings":["の後について行く", "続く", "従う"]},
+  {"no":117,"word":"wander","meanings":["歩き回る", "さまよう"]},
+  {"no":118,"word":"travel","meanings":["旅行する", "移動する", "進む"]},
+  {"no":119,"word":"pass","meanings":["通り過ぎる", "抜く", "受かる", "A）に渡す"]},
+  {"no":120,"word":"likely","meanings":["しそうだ", "可能性が高い", "おそらく"]},
+  {"no":121,"word":"natural","meanings":["当然の", "自然の", "生まれながらの"]},
+  {"no":122,"word":"certain","meanings":["確かな", "ある"]},
+  {"no":123,"word":"probably","meanings":["おそらく"]},
+  {"no":124,"word":"face","meanings":["直面する", "向きである", "顔", "体面", "文字盤"]},
+  {"no":125,"word":"avoid","meanings":["避ける"]},
+  {"no":126,"word":"solve","meanings":["解決する"]},
+  {"no":127,"word":"trouble","meanings":["問題", "ごたごた", "困らせる"]},
+  {"no":128,"word":"issue","meanings":["問題", "号", "発行する"]},
+  {"no":129,"word":"cheer","meanings":["声援を送る", "励ます", "声援", "励まし", "乾杯"]},
+  {"no":130,"word":"encourage","meanings":["促す", "奨励する", "励ます"]},
+  {"no":131,"word":"support","meanings":["支持する", "養う", "立証する", "支持", "支援<不可算>"]},
+  {"no":132,"word":"prevent","meanings":["妨げる", "予防する"]},
+  {"no":133,"word":"deny","meanings":["否定する", "与えない"]},
+  {"no":134,"word":"enable","meanings":["［が］可能にする"]},
+  {"no":135,"word":"succeed","meanings":["成功する", "継ぐ"]},
+  {"no":136,"word":"miss","meanings":["逃す", "休む", "恋しく思う"]},
+  {"no":137,"word":"fail","meanings":["失敗する", "できない", "落ちる"]},
+  {"no":138,"word":"mistake","meanings":["間違い", "間違える"]},
+  {"no":139,"word":"check","meanings":["調べる", "阻止する", "小切手", "勘定書", "検査", "点検", "抑制"]},
+  {"no":140,"word":"hide","meanings":["隠す", "隠れる"]},
+  {"no":141,"word":"draw","meanings":["描く", "引く", "引っ張る", "集める"]},
+  {"no":142,"word":"join","meanings":["加わる", "つなぐ", "もにする"]},
+  {"no":143,"word":"throw","meanings":["投げる", "捨てる", "催す", "投げること"]},
+  {"no":144,"word":"operate","meanings":["操作する", "手術する", "作動する", "運営される"]},
+  {"no":145,"word":"repair","meanings":["修理する", "修復する", "修理", "修復"]},
+  {"no":146,"word":"sew","meanings":["縫う", "縫いつける"]},
+  {"no":147,"word":"raise","meanings":["上げる", "育てる", "集める", "提起する"]},
+  {"no":148,"word":"serve","meanings":["出す", "役立つ", "役立つ"]},
+  {"no":149,"word":"pour","meanings":["注ぐ", "降りそそぐ"]},
+  {"no":150,"word":"spill","meanings":["こぼす", "流出"]},
+  {"no":151,"word":"pretend","meanings":["ふりをする"]},
+  {"no":152,"word":"behave","meanings":["ふるまう"]},
+  {"no":153,"word":"bear","meanings":["耐える", "持つ", "運ぶ", "産む"]},
+  {"no":154,"word":"explore","meanings":["探検する", "探索する", "探る"]},
+  {"no":155,"word":"happen","meanings":["起こる", "偶然する"]},
+  {"no":156,"word":"appear","meanings":["現れる", "のように思える"]},
+  {"no":157,"word":"remain","meanings":["のままでいる", "残る"]},
+  {"no":158,"word":"survive","meanings":["生き残る", "から生き延びる", "の後も存続する"]},
+  {"no":159,"word":"belong","meanings":["所属している"]},
+  {"no":160,"word":"represent","meanings":["代表する", "表す", "表現する"]},
+  {"no":161,"word":"base","meanings":["の基礎を置く", "基礎", "基盤", "基地"]},
+  {"no":162,"word":"include","meanings":["含む"]},
+  {"no":163,"word":"contain","meanings":["含む", "抑える"]},
+  {"no":164,"word":"own","meanings":["自分自身の", "自分自身のもの", "所有している"]},
+  {"no":165,"word":"share","meanings":["共有する", "伝える", "共有", "分け前"]},
+  {"no":166,"word":"collect","meanings":["集める", "徴収する", "回収する"]},
+  {"no":167,"word":"gather","meanings":["集める", "集まる"]},
+  {"no":168,"word":"history","meanings":["歴史", "履歴", "前歴", "病歴"]},
+  {"no":169,"word":"subject","meanings":["科目", "話題", "被験者", "受けやすい"]},
+  {"no":170,"word":"education","meanings":["教育"]},
+  {"no":171,"word":"knowledge","meanings":["知識", "知っていること"]},
+  {"no":172,"word":"uniform","meanings":["制服", "同一の", "一定の"]},
+  {"no":173,"word":"grade","meanings":["学年", "等級", "成績"]},
+  {"no":174,"word":"senior","meanings":["最上級生", "高齢者の", "上位の"]},
+  {"no":175,"word":"graduate","meanings":["卒業する"]},
+  {"no":176,"word":"decide","meanings":["決定する", "決心する", "決める"]},
+  {"no":177,"word":"judge","meanings":["判断する", "裁判官", "審判"]},
+  {"no":178,"word":"quit","meanings":["やめる"]},
+  {"no":179,"word":"retire","meanings":["引退する", "退職する"]},
+  {"no":180,"word":"review","meanings":["再検討", "批評", "復習"]},
+  {"no":181,"word":"choose","meanings":["選ぶ", "選ぶ"]},
+  {"no":182,"word":"imagine","meanings":["想像する"]},
+  {"no":183,"word":"guess","meanings":["推測する", "推測"]},
+  {"no":184,"word":"expect","meanings":["予期する", "期待する", "身ごもって"]},
+  {"no":185,"word":"predict","meanings":["予測する"]},
+  {"no":186,"word":"remember","meanings":["覚えている", "覚えている"]},
+  {"no":187,"word":"remind","meanings":["思い出させる", "to do）にするように念を"]},
+  {"no":188,"word":"realize","meanings":["理解する", "実現する"]},
+  {"no":189,"word":"appreciate","meanings":["理解する", "のよさがわかる", "感謝する"]},
+  {"no":190,"word":"accept","meanings":["受け入れる"]},
+  {"no":191,"word":"consider","meanings":["よく考える", "考慮する", "思いやる"]},
+  {"no":192,"word":"mind","meanings":["気にする", "精神", "頭脳", "人"]},
+  {"no":193,"word":"wonder","meanings":["かなと思う", "驚く"]},
+  {"no":194,"word":"seem","meanings":["のように思われる"]},
+  {"no":195,"word":"compare","meanings":["比較する", "例える"]},
+  {"no":196,"word":"concentrate","meanings":["集中する", "集中させる"]},
+  {"no":197,"word":"focus","meanings":["焦点を当てる", "力を注ぐ", "焦点"]},
+  {"no":198,"word":"allow","meanings":["許可する", "可能にする"]},
+  {"no":199,"word":"admit","meanings":["認める", "の入場［入学］を許可する"]},
+  {"no":200,"word":"ground","meanings":["地面", "根拠"]},
+  {"no":201,"word":"pollution","meanings":["汚染", "公害"]},
+  {"no":202,"word":"sight","meanings":["光景", "視力"]},
+  {"no":203,"word":"view","meanings":["眺め", "景色", "見解", "見方", "みなす"]},
+  {"no":204,"word":"landscape","meanings":["風景", "情勢"]},
+  {"no":205,"word":"nature","meanings":["自然", "性質"]},
+  {"no":206,"word":"seed","meanings":["種", "シード選手"]},
+  {"no":207,"word":"plant","meanings":["植物", "工場", "発電所", "植える"]},
+  {"no":208,"word":"bloom","meanings":["咲く", "開花"]},
+  {"no":209,"word":"harvest","meanings":["収穫", "収穫する", "摘出する"]},
+  {"no":210,"word":"insect","meanings":["昆虫"]},
+  {"no":211,"word":"earthquake","meanings":["地震"]},
+  {"no":212,"word":"temperature","meanings":["温度", "気温", "体温"]},
+  {"no":213,"word":"degree","meanings":["度", "程度", "学位"]},
+  {"no":214,"word":"flood","meanings":["洪水 <可算>", "水浸しにする"]},
+  {"no":215,"word":"freeze","meanings":["凍る", "凍りつく", "凍らせる"]},
+  {"no":216,"word":"reflect","meanings":["反射する", "反映する", "熟考する"]},
+  {"no":217,"word":"polite","meanings":["礼儀正しい"]},
+  {"no":218,"word":"rude","meanings":["無礼な", "不作法な"]},
+  {"no":219,"word":"lonely","meanings":["孤独な"]},
+  {"no":220,"word":"lazy","meanings":["怠惰な", "いい加減な", "くつろいだ"]},
+  {"no":221,"word":"strict","meanings":["厳しい"]},
+  {"no":222,"word":"ugly","meanings":["醜い"]},
+  {"no":223,"word":"intelligent","meanings":["知的な", "賢い"]},
+  {"no":224,"word":"silly","meanings":["ばかな"]},
+  {"no":225,"word":"nervous","meanings":["あがって", "落ち着かない", "神経質な", "臆病な", "神経の"]},
+  {"no":226,"word":"awake","meanings":["目を覚まして"]},
+  {"no":227,"word":"alone","meanings":["1人で", "だけ"]},
+  {"no":228,"word":"attitude","meanings":["態度", "姿勢"]},
+  {"no":229,"word":"character","meanings":["性格", "特徴", "登場人物", "文字"]},
+  {"no":230,"word":"characteristic","meanings":["特徴", "特有の", "特徴的な"]},
+  {"no":231,"word":"feature","meanings":["特徴", "特集記事", "特集する"]},
+  {"no":232,"word":"detail","meanings":["詳細", "細部"]},
+  {"no":233,"word":"advantage","meanings":["利点"]},
+  {"no":234,"word":"fault","meanings":["欠点", "不具合", "責任", "断層"]},
+  {"no":235,"word":"quality","meanings":["質", "資質"]},
+  {"no":236,"word":"correct","meanings":["正確な", "正しい", "訂正する", "矯正する"]},
+  {"no":237,"word":"ideal","meanings":["理想的な", "申し分のない", "理想", "理想的な姿"]},
+  {"no":238,"word":"fair","meanings":["公正な", "公平な", "品評会", "見本市"]},
+  {"no":239,"word":"appropriate","meanings":["適切な"]},
+  {"no":240,"word":"famous","meanings":["有名な", "有名な"]},
+  {"no":241,"word":"elementary","meanings":["初歩的な", "基本の"]},
+  {"no":242,"word":"major","meanings":["主要な", "専攻する", "専攻"]},
+  {"no":243,"word":"matter","meanings":["重要である", "物質 <不可算>", "事態", "状況"]},
+  {"no":244,"word":"bright","meanings":["明るい", "賢い"]},
+  {"no":245,"word":"brilliant","meanings":["輝いている", "すばらしい"]},
+  {"no":246,"word":"lively","meanings":["生き生きとした"]},
+  {"no":247,"word":"comfortable","meanings":["快適な", "心地よい"]},
+  {"no":248,"word":"pleasant","meanings":["楽しい", "心地よい"]},
+  {"no":249,"word":"convenient","meanings":["都合がよい", "近くて便利がよい"]},
+  {"no":250,"word":"false","meanings":["誤った", "偽の"]},
+  {"no":251,"word":"terrible","meanings":["ひどい", "苦手で"]},
+  {"no":252,"word":"awful","meanings":["ひどい", "不快な"]},
+  {"no":253,"word":"thin","meanings":["薄い", "やせた", "薄い"]},
+  {"no":254,"word":"tight","meanings":["引き締まった", "きつい", "厳しい"]},
+  {"no":255,"word":"loose","meanings":["ゆるい", "解き放たれた"]},
+  {"no":256,"word":"raw","meanings":["生の", "加工されていない"]},
+  {"no":257,"word":"empty","meanings":["空の", "中身のない", "空にする"]},
+  {"no":258,"word":"smooth","meanings":["滑らかな", "順調な", "のばす", "なでつける"]},
+  {"no":259,"word":"direct","meanings":["直接的な", "指揮［監督", "演出］する", "向ける", "道を教える"]},
+  {"no":260,"word":"familiar","meanings":["知られた", "知っている"]},
+  {"no":261,"word":"similar","meanings":["似た"]},
+  {"no":262,"word":"differ","meanings":["異なる"]},
+  {"no":263,"word":"vary","meanings":["さまざまだ", "変わる"]},
+  {"no":264,"word":"specific","meanings":["特定の", "明確な", "具体的な"]},
+  {"no":265,"word":"common","meanings":["普及した", "普通の", "共通の"]},
+  {"no":266,"word":"unusual","meanings":["珍しい"]},
+  {"no":267,"word":"add","meanings":["加える", "増やす"]},
+  {"no":268,"word":"increase","meanings":["増える", "増やす", "増加"]},
+  {"no":269,"word":"reduce","meanings":["減らす", "A をB にする"]},
+  {"no":270,"word":"divide","meanings":["分割する", "割る"]},
+  {"no":271,"word":"count","meanings":["数える", "数える", "重要である", "当てにする"]},
+  {"no":272,"word":"weigh","meanings":["の重さがある", "の重さを量る", "検討する"]},
+  {"no":273,"word":"quarter","meanings":["分の", "15分", "25セント", "地域"]},
+  {"no":274,"word":"lot","meanings":["多くの", "ても", "状況", "運命"]},
+  {"no":275,"word":"pile","meanings":["積み重ね", "山", "多量", "積み重ねる"]},
+  {"no":276,"word":"rate","meanings":["割合", "速さ", "料金", "評価する"]},
+  {"no":277,"word":"figure","meanings":["数字", "人物", "スタイル", "体つき", "図", "目立つ"]},
+  {"no":278,"word":"lack","meanings":["― of ）不足", "欠いている"]},
+  {"no":279,"word":"extra","meanings":["余分な", "追加の", "臨時の", "余分な［追加された］もの"]},
+  {"no":280,"word":"ready","meanings":["用意ができている", "進んでする"]},
+  {"no":281,"word":"prepare","meanings":["の準備をする", "用意をする", "準備をする", "用意をする"]},
+  {"no":282,"word":"adjust","meanings":["慣れる", "調整する"]},
+  {"no":283,"word":"apply","meanings":["当てはまる", "申し込む", "当てはめる", "応用す"]},
+  {"no":284,"word":"suit","meanings":["適している", "好都合だ", "似合う", "訴訟", "スー"]},
+  {"no":285,"word":"case","meanings":["場合", "事実", "事件", "症例", "主張"]},
+  {"no":286,"word":"scene","meanings":["場面", "現場", "界"]},
+  {"no":287,"word":"chance","meanings":["機会", "可能性"]},
+  {"no":288,"word":"opportunity","meanings":["機会", "好機"]},
+  {"no":289,"word":"experience","meanings":["経験", "体験", "経験する"]},
+  {"no":290,"word":"time","meanings":["時間", "時間", "回数", "倍", "情勢", "時代"]},
+  {"no":291,"word":"spring","meanings":["春", "泉", "温泉", "飛び出る", "突然出現する"]},
+  {"no":292,"word":"minute","meanings":["分", "ちょっとの間", "議事録", "ても小さい", "細かい"]},
+  {"no":293,"word":"age","meanings":["年齢", "時代", "長い間", "高齢化する"]},
+  {"no":294,"word":"generation","meanings":["世代", "生み出すこと", "発電"]},
+  {"no":295,"word":"anniversary","meanings":["記念日"]},
+  {"no":296,"word":"recently","meanings":["最近", "近ごろ"]},
+  {"no":298,"word":"early","meanings":["早く", "初期に", "早く", "早い", "初期の"]},
+  {"no":299,"word":"first","meanings":["第", "の", "初めて", "初めて", "まず第"]},
+  {"no":300,"word":"latest","meanings":["最新の"]},
+  {"no":301,"word":"modern","meanings":["現代の", "近代的な"]},
+  {"no":302,"word":"ancient","meanings":["古代の", "古びた"]},
+  {"no":303,"word":"spend","meanings":["費やす", "使う"]},
+  {"no":304,"word":"delay","meanings":["遅らせる", "遅延", "延期"]},
+  {"no":305,"word":"borrow","meanings":["借りる"]},
+  {"no":306,"word":"lend","meanings":["貸す", "貸す"]},
+  {"no":307,"word":"rent","meanings":["借りる", "賃貸しする", "家賃", "賃貸料", "使用料"]},
+  {"no":308,"word":"provide","meanings":["供給する", "与える"]},
+  {"no":309,"word":"board","meanings":["板", "委員会", "乗る"]},
+  {"no":310,"word":"garbage","meanings":["ごみ"]},
+  {"no":311,"word":"item","meanings":["品物", "...点", "個", "項目"]},
+  {"no":312,"word":"wheel","meanings":["車輪", "ハンドル", "動かす"]},
+  {"no":313,"word":"note","meanings":["メモ", "紙幣", "指摘する", "注意を払う"]},
+  {"no":314,"word":"present","meanings":["プレゼント", "現在", "現在の", "出席して", "存在して", "贈る", "提示する"]},
+  {"no":315,"word":"bargain","meanings":["買い得品<可算> 交渉する"]},
+  {"no":316,"word":"stuff","meanings":["もの", "詰める"]},
+  {"no":317,"word":"string","meanings":["ひも", "一連の", "弦"]},
+  {"no":318,"word":"leisure","meanings":["余暇", "余暇の"]},
+  {"no":319,"word":"diet","meanings":["食事", "規定食", "国会"]},
+  {"no":320,"word":"furniture","meanings":["家具"]},
+  {"no":321,"word":"refrigerator","meanings":["冷蔵庫"]},
+  {"no":322,"word":"traffic","meanings":["交通"]},
+  {"no":323,"word":"sell","meanings":["売る", "売れる"]},
+  {"no":324,"word":"pay","meanings":["支払う", "支払う"]},
+  {"no":325,"word":"wear","meanings":["身につけている", "すり減らす", "すり減る"]},
+  {"no":326,"word":"clothes","meanings":["服"]},
+  {"no":327,"word":"marry","meanings":["結婚する", "結婚している"]},
+  {"no":328,"word":"greet","meanings":["挨拶する", "出迎える"]},
+  {"no":329,"word":"order","meanings":["注文する", "命令する", "注文", "命令", "順序", "秩序"]},
+  {"no":330,"word":"room","meanings":["部屋", "余地", "空間"]},
+  {"no":331,"word":"story","meanings":["階"]},
+  {"no":332,"word":"site","meanings":["用地", "現場", "場所", "跡"]},
+  {"no":333,"word":"yard","meanings":["庭", "ヤード"]},
+  {"no":334,"word":"bottom","meanings":["底", "一番下", "最下位", "尻"]},
+  {"no":335,"word":"line","meanings":["列", "行", "線", "電話回線", "セリフ", "並ぶ"]},
+  {"no":336,"word":"row","meanings":["列", "こぐ"]},
+  {"no":337,"word":"background","meanings":["背景", "経歴", "生い立ち"]},
+  {"no":338,"word":"direction","meanings":["方向", "方角", "道順", "指示"]},
+  {"no":339,"word":"culture","meanings":["文化", "培養", "養殖", "教養", "耕す", "栽培［養殖］する"]},
+  {"no":340,"word":"art","meanings":["芸術", "技術", "一般教養"]},
+  {"no":341,"word":"cartoon","meanings":["漫画"]},
+  {"no":342,"word":"novel","meanings":["小説", "斬新な"]},
+  {"no":343,"word":"instrument","meanings":["楽器", "器具"]},
+  {"no":344,"word":"tune","meanings":["曲", "チャンネルを合わせる", "の調子を合わせる"]},
+  {"no":345,"word":"sentence","meanings":["文", "判決", "の刑にする"]},
+  {"no":346,"word":"article","meanings":["記事", "品物", "冠詞", "条項"]},
+  {"no":347,"word":"passage","meanings":["一節", "経過", "移動"]},
+  {"no":348,"word":"vocabulary","meanings":["語彙"]},
+  {"no":349,"word":"rumor","meanings":["うわさ"]},
+  {"no":350,"word":"spell","meanings":["つづる", "呪文", "期間"]},
+  {"no":351,"word":"pronounce","meanings":["発音する", "宣告する", "断言する"]},
+  {"no":352,"word":"sign","meanings":["兆候", "印", "標識", "看板", "掲示", "署名する"]},
+  {"no":353,"word":"mean","meanings":["意味する", "するつもりだ", "意地悪な"]},
+  {"no":354,"word":"publish","meanings":["出版する", "発表する"]},
+  {"no":355,"word":"display","meanings":["展示する", "発揮する", "誇示する", "展示", "表現", "誇示"]},
+  {"no":356,"word":"trust","meanings":["信頼する", "信頼", "信用"]},
+  {"no":357,"word":"depend","meanings":["次第である", "頼っている"]},
+  {"no":358,"word":"rely","meanings":["頼る"]},
+  {"no":359,"word":"pray","meanings":["祈る"]},
+  {"no":360,"word":"beg","meanings":["嘆願する", "求める"]},
+  {"no":361,"word":"prefer","meanings":["好む"]},
+  {"no":362,"word":"weep","meanings":["しくしく泣く"]},
+  {"no":363,"word":"hate","meanings":["嫌う"]},
+  {"no":364,"word":"worry","meanings":["心配をする", "心配"]},
+  {"no":365,"word":"anxious","meanings":["心配して", "切望して"]},
+  {"no":366,"word":"satisfy","meanings":["満足させる", "満たす"]},
+  {"no":367,"word":"annoy","meanings":["苛立たせる"]},
+  {"no":368,"word":"bother","meanings":["面倒をかける", "わざわざする", "面倒なもの"]},
+  {"no":369,"word":"disturb","meanings":["迷惑をかける", "乱す"]},
+  {"no":370,"word":"frighten","meanings":["怯えさせる"]},
+  {"no":371,"word":"regret","meanings":["後悔する", "残念ながらしないといけない", "後悔"]},
+  {"no":372,"word":"favor","meanings":["親切な行為", "支持"]},
+  {"no":373,"word":"interest","meanings":["関心", "利益", "利子"]},
+  {"no":374,"word":"pity","meanings":["残念なこと", "哀れみ"]},
+  {"no":375,"word":"due","meanings":["）が原因で", "締め切りの", "到着［出産］予定の"]},
+  {"no":376,"word":"reason","meanings":["理由", "理性", "推理する", "思考する", "判断する"]},
+  {"no":377,"word":"result","meanings":["結果", "結果としてなる", "結果として生じる"]},
+  {"no":378,"word":"effect","meanings":["効果", "影響", "結果"]},
+  {"no":379,"word":"influence","meanings":["影響", "影響を与える"]},
+  {"no":380,"word":"end","meanings":["結局することになる", "端", "終わり", "目的"]},
+  {"no":381,"word":"cause","meanings":["引き起こす", "原因"]},
+  {"no":382,"word":"affect","meanings":["影響を与える", "作用する"]},
+  {"no":383,"word":"way","meanings":["方法", "点", "道", "はるかに"]},
+  {"no":384,"word":"manner","meanings":["方法", "流儀", "態度", "マナー"]},
+  {"no":385,"word":"purpose","meanings":["目的"]},
+  {"no":386,"word":"sake","meanings":["ため", "日本酒"]},
+  {"no":387,"word":"right","meanings":["修飾して）ちょうど", "正しい", "適切な", "右の"]},
+  {"no":388,"word":"complete","meanings":["完全な", "完成させる"]},
+  {"no":389,"word":"hardly","meanings":["ほとんどない", "めったにない"]},
+  {"no":390,"word":"almost","meanings":["ほとんど"]},
+  {"no":391,"word":"partly","meanings":["ある程度", "部分的に"]},
+  {"no":392,"word":"indeed","meanings":["実際に", "本当に", "確かに"]},
+  {"no":393,"word":"even","meanings":["さえも", "さらに", "偶数の", "均一の", "ちょうどの"]},
+  {"no":394,"word":"exactly","meanings":["正確に", "そのとおり"]},
+  {"no":395,"word":"gradually","meanings":["徐々に"]},
+  {"no":396,"word":"therefore","meanings":["それゆえに"]},
+  {"no":397,"word":"instead","meanings":["代わりに", "代わりに"]},
+  {"no":398,"word":"until","meanings":["まで"]},
+  {"no":399,"word":"besides","meanings":["加えて", "おまけに"]},
+  {"no":400,"word":"except","meanings":["除いて", "除いて"]},
+  {"no":401,"word":"debate","meanings":["討論", "討論する"]},
+  {"no":402,"word":"criticize","meanings":["批判する"]},
+  {"no":403,"word":"accuse","meanings":["非難する", "告訴する"]},
+  {"no":404,"word":"insist","meanings":["言い張る", "主張する", "主張する", "求める"]},
+  {"no":405,"word":"object","meanings":["反対する", "物", "目的", "対象"]},
+  {"no":406,"word":"protest","meanings":["抗議する", "抗議"]},
+  {"no":407,"word":"controversial","meanings":["論争を招く", "物議をかもす"]},
+  {"no":408,"word":"bound","meanings":["きっと行きで"]},
+  {"no":409,"word":"bet","meanings":["きっとだと思う", "賭ける"]},
+  {"no":410,"word":"demand","meanings":["要求する", "要求", "需要"]},
+  {"no":411,"word":"desire","meanings":["願望", "強く望む"]},
+  {"no":412,"word":"praise","meanings":["褒める", "称える", "賞賛"]},
+  {"no":413,"word":"honor","meanings":["名誉", "栄誉", "敬う"]},
+  {"no":414,"word":"chat","meanings":["おしゃべりする", "おしゃべり"]},
+  {"no":415,"word":"refer","meanings":["言及する", "参照する", "示す"]},
+  {"no":416,"word":"mention","meanings":["ついて述べる", "言及する"]},
+  {"no":417,"word":"convey","meanings":["伝える", "運ぶ"]},
+  {"no":418,"word":"demonstrate","meanings":["示す", "実演する"]},
+  {"no":419,"word":"emphasize","meanings":["強調する"]},
+  {"no":420,"word":"exaggerate","meanings":["誇張する", "誇張する", "大げさに言う"]},
+  {"no":421,"word":"reply","meanings":["返事をする", "答える", "返事", "答え"]},
+  {"no":422,"word":"respond","meanings":["返答する", "対応する", "反応する"]},
+  {"no":423,"word":"whisper","meanings":["ささやく", "ささやき"]},
+  {"no":424,"word":"remark","meanings":["発言", "発言する"]},
+  {"no":425,"word":"observe","meanings":["観察する", "述べる", "遵守する"]},
+  {"no":426,"word":"theory","meanings":["理論", "説"]},
+  {"no":427,"word":"analysis","meanings":["分析"]},
+  {"no":428,"word":"phenomenon","meanings":["現象", "特異なもの", "天才"]},
+  {"no":429,"word":"device","meanings":["装置<可算>"]},
+  {"no":430,"word":"experiment","meanings":["実験", "実験する"]},
+  {"no":431,"word":"chemical","meanings":["化学物質", "化学の"]},
+  {"no":432,"word":"fuel","meanings":["燃料", "大きくする"]},
+  {"no":433,"word":"nuclear","meanings":["原子力の", "核の"]},
+  {"no":434,"word":"statistics","meanings":["統計", "統計学"]},
+  {"no":435,"word":"pursue","meanings":["追求する", "続ける", "追跡する"]},
+  {"no":436,"word":"accomplish","meanings":["やり遂げる"]},
+  {"no":437,"word":"overcome","meanings":["克服する"]},
+  {"no":438,"word":"fulfill","meanings":["果たす", "満たす"]},
+  {"no":439,"word":"devote","meanings":["ささげる"]},
+  {"no":440,"word":"strive","meanings":["努力する"]},
+  {"no":441,"word":"aim","meanings":["狙う", "向けだ", "狙い", "目的"]},
+  {"no":442,"word":"challenge","meanings":["難問", "課題<可算>", "異議を唱える"]},
+  {"no":443,"word":"trial","meanings":["試み", "裁判", "試練"]},
+  {"no":444,"word":"dizzy","meanings":["めまいがして"]},
+  {"no":445,"word":"appetite","meanings":["食欲"]},
+  {"no":446,"word":"starve","meanings":["餓死する", "てもお腹が空いている"]},
+  {"no":447,"word":"mental","meanings":["精神の", "知力の"]},
+  {"no":448,"word":"rest","meanings":["休憩", "残り", "休む", "次第だ"]},
+  {"no":449,"word":"surgery","meanings":["手術", "外科"]},
+  {"no":450,"word":"disease","meanings":["病気"]},
+  {"no":451,"word":"stomachache","meanings":["腹痛"]},
+  {"no":452,"word":"symptom","meanings":["症状", "兆候"]},
+  {"no":453,"word":"cancer","meanings":["がん", "かに座"]},
+  {"no":454,"word":"ambulance","meanings":["救急車"]},
+  {"no":455,"word":"recover","meanings":["回復する", "取り戻す"]},
+  {"no":456,"word":"sore","meanings":["痛い", "触れてほしくない", "心が痛む"]},
+  {"no":457,"word":"swell","meanings":["腫れる", "膨らむ"]},
+  {"no":458,"word":"cough","meanings":["咳をする", "咳"]},
+  {"no":459,"word":"bleed","meanings":["出血する"]},
+  {"no":460,"word":"faint","meanings":["かすかな", "気絶する", "気絶"]},
+  {"no":461,"word":"exhaust","meanings":["疲れ果てさせる", "使い果たす", "排出", "排気ガス"]},
+  {"no":462,"word":"cure","meanings":["治療する", "治療法"]},
+  {"no":463,"word":"disabled","meanings":["障がいのある", "障がいのある人"]},
+  {"no":464,"word":"stiff","meanings":["凝った", "痛い", "堅い"]},
+  {"no":465,"word":"muscle","meanings":["筋肉"]},
+  {"no":466,"word":"tongue","meanings":["舌", "言語", "言葉", "話し方"]},
+  {"no":467,"word":"sense","meanings":["感覚", "分別", "意味", "感じる"]},
+  {"no":468,"word":"sweat","meanings":["汗", "汗をかく"]},
+  {"no":469,"word":"gender","meanings":["性", "性別"]},
+  {"no":470,"word":"nationality","meanings":["国籍"]},
+  {"no":471,"word":"citizen","meanings":["市民", "国民"]},
+  {"no":472,"word":"civil","meanings":["市民の", "国内の", "礼儀正しい"]},
+  {"no":473,"word":"racial","meanings":["人種の", "民族の"]},
+  {"no":474,"word":"rural","meanings":["田舎の"]},
+  {"no":475,"word":"domestic","meanings":["国内の", "家庭内の"]},
+  {"no":476,"word":"global","meanings":["世界的な"]},
+  {"no":477,"word":"suburb","meanings":["郊外"]},
+  {"no":478,"word":"border","meanings":["国境", "境界", "縁取る"]},
+  {"no":479,"word":"burden","meanings":["重荷", "負担"]},
+  {"no":480,"word":"impact","meanings":["影響", "衝撃", "影響を及ぼす"]},
+  {"no":481,"word":"status","meanings":["地位", "状況"]},
+  {"no":482,"word":"equal","meanings":["等しい", "平等な", "等しい"]},
+  {"no":483,"word":"relationship","meanings":["関係", "親密な関係"]},
+  {"no":484,"word":"reputation","meanings":["評判"]},
+  {"no":485,"word":"trend","meanings":["風潮", "傾向", "流行"]},
+  {"no":486,"word":"service","meanings":["事業", "制度", "便", "サービス", "接客"]},
+  {"no":487,"word":"religion","meanings":["宗教"]},
+  {"no":488,"word":"moral","meanings":["道徳的な", "教訓", "道徳"]},
+  {"no":489,"word":"standard","meanings":["基準", "水準", "標準の"]},
+  {"no":490,"word":"prosperity","meanings":["繁栄"]},
+  {"no":491,"word":"crisis","meanings":["危機"]},
+  {"no":492,"word":"prejudice","meanings":["偏見", "先入観", "偏見をもたせる"]},
+  {"no":493,"word":"discrimination","meanings":["差別", "識別"]},
+  {"no":494,"word":"charity","meanings":["慈善", "慈善団体", "慈善のための"]},
+  {"no":495,"word":"benefit","meanings":["恩恵", "手当", "恩恵を得る", "恩恵を与える"]},
+  {"no":496,"word":"welfare","meanings":["福祉", "幸福", "生活保護"]},
+  {"no":497,"word":"community","meanings":["社会", "共同体<可算>"]},
+  {"no":498,"word":"individual","meanings":["個人", "個体", "個人の", "個々の"]},
+  {"no":499,"word":"official","meanings":["役人", "役員", "公式の"]},
+  {"no":500,"word":"immigrant","meanings":["移民"]},
+  {"no":501,"word":"volunteer","meanings":["ボランティア", "自発的に申し出る"]},
+  {"no":502,"word":"interact","meanings":["交流する", "相互作用する"]},
+  {"no":503,"word":"contribute","meanings":["貢献する", "一因となる", "寄付す"]},
+  {"no":504,"word":"abolish","meanings":["廃止する"]},
+  {"no":505,"word":"impose","meanings":["課す", "押しつける"]},
+  {"no":506,"word":"access","meanings":["利用する権利", "接近方法"]},
+  {"no":507,"word":"duty","meanings":["義務", "関税"]},
+  {"no":508,"word":"responsible","meanings":["責任がある", "原因となっている"]},
+  {"no":509,"word":"policy","meanings":["政策", "方針", "保険契約", "約款"]},
+  {"no":510,"word":"elect","meanings":["選ぶ"]},
+  {"no":511,"word":"industry","meanings":["工業", "産業", "業界", "勤勉"]},
+  {"no":512,"word":"income","meanings":["収入"]},
+  {"no":513,"word":"profit","meanings":["利益", "利潤"]},
+  {"no":514,"word":"tax","meanings":["税金"]},
+  {"no":515,"word":"expense","meanings":["費用", "経費", "犠牲"]},
+  {"no":516,"word":"debt","meanings":["借金"]},
+  {"no":517,"word":"deposit","meanings":["預金", "頭金", "保証金", "埋蔵物", "堆積物", "預ける"]},
+  {"no":518,"word":"charge","meanings":["料金", "責任", "管理", "非難", "告訴", "請"]},
+  {"no":519,"word":"wage","meanings":["賃金<可算>", "行う"]},
+  {"no":520,"word":"recession","meanings":["不況", "不景気"]},
+  {"no":521,"word":"consume","meanings":["消費する"]},
+  {"no":522,"word":"waste","meanings":["浪費する", "浪費", "無駄", "廃棄物"]},
+  {"no":523,"word":"invest","meanings":["投資する", "与える"]},
+  {"no":524,"word":"import","meanings":["輸入する", "輸入", "輸入品"]},
+  {"no":525,"word":"financial","meanings":["財政的な", "金銭的な"]},
+  {"no":526,"word":"hire","meanings":["雇う", "借りる"]},
+  {"no":527,"word":"employ","meanings":["雇う", "用いる"]},
+  {"no":528,"word":"resign","meanings":["辞職する", "辞める"]},
+  {"no":529,"word":"qualify","meanings":["資格がある", "資格を得る", "資格を与え"]},
+  {"no":530,"word":"assign","meanings":["割り当てる", "配属する"]},
+  {"no":531,"word":"occupation","meanings":["職業", "占有", "占領"]},
+  {"no":532,"word":"career","meanings":["職業", "経歴"]},
+  {"no":533,"word":"profession","meanings":["職業", "同業者集団"]},
+  {"no":534,"word":"unemployment","meanings":["失業", "失業率", "失業者数"]},
+  {"no":535,"word":"document","meanings":["書類", "資料", "記録する"]},
+  {"no":536,"word":"department","meanings":["部門", "課", "学科", "省"]},
+  {"no":537,"word":"branch","meanings":["支店", "支局", "部門", "枝"]},
+  {"no":538,"word":"retail","meanings":["小売り", "小売りされている"]},
+  {"no":539,"word":"colleague","meanings":["同僚"]},
+  {"no":540,"word":"system","meanings":["制度", "組織", "体系"]},
+  {"no":541,"word":"structure","meanings":["構造"]},
+  {"no":542,"word":"architecture","meanings":["建築"]},
+  {"no":543,"word":"construction","meanings":["建設"]},
+  {"no":544,"word":"function","meanings":["機能", "機能する"]},
+  {"no":545,"word":"surface","meanings":["表面<可算>", "表面化する"]},
+  {"no":546,"word":"aspect","meanings":["側面<可算>"]},
+  {"no":547,"word":"edge","meanings":["端", "刃", "優位"]},
+  {"no":548,"word":"makeup","meanings":["構成", "構造", "資質", "化粧", "追試験"]},
+  {"no":549,"word":"consist","meanings":["構成されている", "ある"]},
+  {"no":550,"word":"compose","meanings":["構成する", "組み立てる", "作曲［作文］する", "落ち着かせる"]},
+  {"no":551,"word":"attach","meanings":["くっつける", "添付する", "愛着を持たせる"]},
+  {"no":552,"word":"connect","meanings":["つなげる", "関連づける", "つながる"]},
+  {"no":553,"word":"relate","meanings":["関連づける", "話す"]},
+  {"no":554,"word":"associate","meanings":["関連づける", "から連想する"]},
+  {"no":555,"word":"stick","meanings":["貼り付ける", "出す", "守る", "固執する"]},
+  {"no":556,"word":"thief","meanings":["泥棒"]},
+  {"no":557,"word":"crime","meanings":["犯罪"]},
+  {"no":558,"word":"motive","meanings":["動機"]},
+  {"no":559,"word":"punish","meanings":["for ）を罰する"]},
+  {"no":560,"word":"violate","meanings":["違反する", "侵害する"]},
+  {"no":561,"word":"legal","meanings":["合法の", "法律の", "法的な"]},
+  {"no":562,"word":"enemy","meanings":["敵<可算>", "敵の"]},
+  {"no":563,"word":"conflict","meanings":["対立", "紛争", "葛藤", "矛盾する"]},
+  {"no":564,"word":"compete","meanings":["競争する", "参加する"]},
+  {"no":565,"word":"defeat","meanings":["打ち負かす", "敗北"]},
+  {"no":566,"word":"victim","meanings":["犠牲者"]},
+  {"no":567,"word":"obstacle","meanings":["障害"]},
+  {"no":568,"word":"harm","meanings":["害", "害を与える"]},
+  {"no":569,"word":"invade","meanings":["侵害する", "侵入する", "侵略する"]},
+  {"no":570,"word":"endanger","meanings":["危険にさらす"]},
+  {"no":571,"word":"interrupt","meanings":["中断する", "遮る", "人の話を遮る"]},
+  {"no":572,"word":"spoil","meanings":["台無しにする", "甘やかす"]},
+  {"no":573,"word":"spectator","meanings":["観客"]},
+  {"no":574,"word":"relative","meanings":["親戚", "相対的な"]},
+  {"no":575,"word":"departure","meanings":["出発", "逸脱"]},
+  {"no":576,"word":"destination","meanings":["目的地", "観光地", "旅行先"]},
+  {"no":577,"word":"transportation","meanings":["交通機関"]},
+  {"no":578,"word":"vehicle","meanings":["車両", "伝達手段"]},
+  {"no":579,"word":"baggage","meanings":["手荷物<不可算>"]},
+  {"no":580,"word":"via","meanings":["経由で", "よって"]},
+  {"no":581,"word":"lead","meanings":["至る", "送る", "A にさせる"]},
+  {"no":582,"word":"rise","meanings":["上がる", "昇る", "上昇"]},
+  {"no":583,"word":"flow","meanings":["流れる", "流れ"]},
+  {"no":584,"word":"burst","meanings":["破裂する", "爆発する", "突然し始める"]},
+  {"no":585,"word":"melt","meanings":["溶ける", "溶かす"]},
+  {"no":586,"word":"commute","meanings":["通勤"]},
+  {"no":587,"word":"accompany","meanings":["一緒に行く", "伴う"]},
+  {"no":588,"word":"emit","meanings":["排出する"]},
+  {"no":589,"word":"progress","meanings":["進歩", "前進", "進歩する", "進む"]},
+  {"no":590,"word":"advance","meanings":["進歩", "前進", "前進する", "進歩する", "事前の"]},
+  {"no":591,"word":"deal","meanings":["扱う", "取り引き"]},
+  {"no":592,"word":"handle","meanings":["扱う", "扱う", "触れる", "取っ手"]},
+  {"no":593,"word":"treat","meanings":["扱う", "治療する", "おごる"]},
+  {"no":594,"word":"clue","meanings":["手がかり"]},
+  {"no":595,"word":"restrict","meanings":["制限する"]},
+  {"no":596,"word":"limit","meanings":["制限する", "制限"]},
+  {"no":597,"word":"forbid","meanings":["禁じる"]},
+  {"no":598,"word":"ban","meanings":["禁止", "禁止する"]},
+  {"no":599,"word":"refuse","meanings":["するのを拒む", "断る"]},
+  {"no":600,"word":"reject","meanings":["拒絶する", "拒む", "除け者にする"]},
+  {"no":601,"word":"persuade","meanings":["説得してさせる"]},
+  {"no":602,"word":"convince","meanings":["確信させる", "確信させる"]},
+  {"no":603,"word":"inspire","meanings":["奮起させる", "かき立てる", "創作のヒントを与える"]},
+  {"no":604,"word":"discourage","meanings":["のやる気をなくさせる", "落胆させる"]},
+  {"no":605,"word":"promote","meanings":["促進する", "出世［昇進］する"]},
+  {"no":606,"word":"boost","meanings":["促進させる", "増大させる"]},
+  {"no":607,"word":"expand","meanings":["拡大する", "膨張する", "拡大する", "膨張させる"]},
+  {"no":608,"word":"extend","meanings":["延長する", "広げる", "伸びる", "広がる"]},
+  {"no":609,"word":"broaden","meanings":["広げる", "広がる"]},
+  {"no":610,"word":"spread","meanings":["広げる", "広がる", "広がり"]},
+  {"no":611,"word":"tie","meanings":["縛る", "結ぶ", "ネクタイ"]},
+  {"no":612,"word":"fasten","meanings":["固定する", "かける", "留める"]},
+  {"no":613,"word":"fix","meanings":["固定する", "修理する", "作る"]},
+  {"no":614,"word":"install","meanings":["設置する", "インストールする"]},
+  {"no":615,"word":"resist","meanings":["我慢する", "抵抗する"]},
+  {"no":616,"word":"obey","meanings":["従う"]},
+  {"no":617,"word":"engage","meanings":["従事する", "関与する"]},
+  {"no":618,"word":"bump","meanings":["ぶつかる", "偶然出会う"]},
+  {"no":619,"word":"bend","meanings":["身をかがめる", "曲げる", "カーブ"]},
+  {"no":620,"word":"hug","meanings":["抱きしめる", "抱擁"]},
+  {"no":621,"word":"stare","meanings":["じっと見つめる", "凝視"]},
+  {"no":622,"word":"gaze","meanings":["見つめる", "視線", "凝視"]},
+  {"no":623,"word":"glance","meanings":["ちらりと見る", "ちらりと見ること"]},
+  {"no":624,"word":"glimpse","meanings":["がちらりと見える", "ちらりと見えること"]},
+  {"no":625,"word":"stretch","meanings":["伸ばす", "広げる", "伸びる", "広がる", "広がり"]},
+  {"no":626,"word":"stumble","meanings":["つまずく", "偶然出会う"]},
+  {"no":627,"word":"press","meanings":["押す", "押しつける", "勧める", "報道機関", "出版"]},
+  {"no":628,"word":"drag","meanings":["引きずる"]},
+  {"no":629,"word":"lean","meanings":["寄りかかる", "身を乗り出す", "痩"]},
+  {"no":630,"word":"scratch","meanings":["ひっかく", "かく", "ひっかき傷"]},
+  {"no":631,"word":"bow","meanings":["おじぎする", "おじぎ"]},
+  {"no":632,"word":"nod","meanings":["うなずく", "うたた寝する", "うなずき", "会釈"]},
+  {"no":633,"word":"sigh","meanings":["ため息をつく", "ため息"]},
+  {"no":634,"word":"yawn","meanings":["あくびをする", "あくび"]},
+  {"no":635,"word":"sneeze","meanings":["くしゃみをする"]},
+  {"no":636,"word":"bury","meanings":["埋める", "埋葬する"]},
+  {"no":637,"word":"perform","meanings":["遂行する", "演じる", "演奏する", "やる"]},
+  {"no":638,"word":"adopt","meanings":["採用する", "養子にする", "引き取る"]},
+  {"no":639,"word":"escape","meanings":["逃れる", "避ける", "逃亡"]},
+  {"no":640,"word":"scatter","meanings":["まき散らす", "散る"]},
+  {"no":641,"word":"fold","meanings":["折る", "折りたたむ", "組む", "折りたためる"]},
+  {"no":642,"word":"hang","meanings":["掛ける", "絞首刑にする", "ぶら下がる"]},
+  {"no":643,"word":"release","meanings":["解放する", "発表する", "出す", "放出する", "解放", "発売"]},
+  {"no":644,"word":"strike","meanings":["打つ", "襲う", "思い浮かぶ"]},
+  {"no":645,"word":"beat","meanings":["打つ", "勝つ"]},
+  {"no":646,"word":"protect","meanings":["守る", "保護する"]},
+  {"no":647,"word":"twist","meanings":["曲げる", "ひねる", "捻挫する"]},
+  {"no":648,"word":"skip","meanings":["サボる", "抜かす"]},
+  {"no":649,"word":"expose","meanings":["さらす", "暴露する"]},
+  {"no":650,"word":"stir","meanings":["混ぜる", "呼び覚ます"]},
+  {"no":651,"word":"shake","meanings":["振る", "揺さぶる", "震える"]},
+  {"no":652,"word":"polish","meanings":["磨く"]},
+  {"no":653,"word":"attend","meanings":["出席する", "通う", "注意を向ける", "世話する"]},
+  {"no":654,"word":"imitate","meanings":["まねる"]},
+  {"no":655,"word":"conduct","meanings":["行う", "伝える", "行為"]},
+  {"no":656,"word":"struggle","meanings":["苦闘する", "もがく", "苦闘", "もがくこと"]},
+  {"no":657,"word":"burn","meanings":["焼ける", "燃やす"]},
+  {"no":658,"word":"cheat","meanings":["ごまかす", "だます"]},
+  {"no":659,"word":"participate","meanings":["参加する"]},
+  {"no":660,"word":"exist","meanings":["存在する"]},
+  {"no":661,"word":"arise","meanings":["生じる"]},
+  {"no":662,"word":"occur","meanings":["生じる", "）に）思いつく"]},
+  {"no":663,"word":"involve","meanings":["巻き込まれる", "参加する"]},
+  {"no":664,"word":"require","meanings":["必要とする"]},
+  {"no":665,"word":"counterpart","meanings":["対応する［同等の］人［物", "事］"]},
+  {"no":666,"word":"advent","meanings":["到来", "キリストの降臨"]},
+  {"no":667,"word":"maintain","meanings":["維持する", "主張する"]},
+  {"no":668,"word":"last","meanings":["続く", "長持ちする", "この前の", "最後の"]},
+  {"no":669,"word":"persist","meanings":["持続する", "残る", "貫く", "固執する"]},
+  {"no":670,"word":"examine","meanings":["調査する", "検査する"]},
+  {"no":671,"word":"gain","meanings":["増す", "得る", "利益", "増加"]},
+  {"no":672,"word":"obtain","meanings":["得る"]},
+  {"no":673,"word":"acquire","meanings":["習得する", "獲得する", "買収する"]},
+  {"no":674,"word":"search","meanings":["求めてA）を捜す", "捜索", "調査"]},
+  {"no":675,"word":"logical","meanings":["論理的な"]},
+  {"no":676,"word":"scholarship","meanings":["奨学金", "学問", "学識"]},
+  {"no":677,"word":"instruction","meanings":["指示"]},
+  {"no":678,"word":"determine","meanings":["決める", "大きく影響する", "することを決意している"]},
+  {"no":679,"word":"conclude","meanings":["結論を下す"]},
+  {"no":680,"word":"distinguish","meanings":["区別する"]},
+  {"no":681,"word":"classify","meanings":["分類する"]},
+  {"no":682,"word":"estimate","meanings":["推定する", "見積もる", "見積もり"]},
+  {"no":683,"word":"organize","meanings":["まとめる", "組織化する", "取りまとめる"]},
+  {"no":684,"word":"recognize","meanings":["が誰だかわかる", "認識する"]},
+  {"no":685,"word":"suppose","meanings":["することになっている", "思う", "仮定する"]},
+  {"no":686,"word":"assume","meanings":["思い込む", "決めつける", "引き受ける"]},
+  {"no":687,"word":"care","meanings":["気にする", "世話をする", "世話", "心配"]},
+  {"no":688,"word":"approve","meanings":["認める", "承認する", "承認する"]},
+  {"no":689,"word":"notice","meanings":["気がついている", "通知", "掲示", "注意"]},
+  {"no":690,"word":"aware","meanings":["気づいている"]},
+  {"no":691,"word":"conscious","meanings":["意識している", "気づいている", "意識がある"]},
+  {"no":692,"word":"concerned","meanings":["関心を持っている", "重視している", "扱って"]},
+  {"no":693,"word":"regard","meanings":["みなす", "評価する", "点"]},
+  {"no":694,"word":"commit","meanings":["専念する", "委ねる", "充てる"]},
+  {"no":695,"word":"doubt","meanings":["疑う", "は思わない", "疑い"]},
+  {"no":696,"word":"memorize","meanings":["暗記する"]},
+  {"no":697,"word":"forgive","meanings":["許す"]},
+  {"no":698,"word":"grant","meanings":["当然のことと思う", "与える", "交付", "補助金"]},
+  {"no":699,"word":"recall","meanings":["思い出す", "回収する", "リコールする"]},
+  {"no":700,"word":"outlook","meanings":["考え方", "見通し"]},
+  {"no":701,"word":"perspective","meanings":["視点", "見方", "遠近法"]},
+  {"no":702,"word":"abandon","meanings":["捨てる", "放棄する"]},
+  {"no":703,"word":"eliminate","meanings":["排除する", "敗退する"]},
+  {"no":704,"word":"rid","meanings":["処分する", "取り除く"]},
+  {"no":705,"word":"remove","meanings":["取り除く", "取り去る", "脱ぐ"]},
+  {"no":706,"word":"resource","meanings":["資源", "財産", "力量"]},
+  {"no":707,"word":"conservation","meanings":["保護", "保存"]},
+  {"no":708,"word":"preserve","meanings":["保護する", "保つ"]},
+  {"no":709,"word":"disaster","meanings":["災害", "大失敗"]},
+  {"no":710,"word":"planet","meanings":["惑星", "地球"]},
+  {"no":711,"word":"environment","meanings":["環境", "周囲"]},
+  {"no":712,"word":"horizon","meanings":["水平線", "地平線", "視野"]},
+  {"no":713,"word":"layer","meanings":["層 <可算>"]},
+  {"no":714,"word":"agriculture","meanings":["農業"]},
+  {"no":715,"word":"crop","meanings":["作物", "収穫生じる"]},
+  {"no":716,"word":"soil","meanings":["土", "土壌"]},
+  {"no":717,"word":"weed","meanings":["雑草", "海草", "の雑草を抜く"]},
+  {"no":718,"word":"pollen","meanings":["花粉"]},
+  {"no":719,"word":"drown","meanings":["溺れ死ぬ"]},
+  {"no":720,"word":"leak","meanings":["漏れる", "漏らす", "漏れ"]},
+  {"no":721,"word":"climate","meanings":["気候", "状況"]},
+  {"no":722,"word":"atmosphere","meanings":["大気", "雰囲気", "―）大気圏"]},
+  {"no":723,"word":"forecast","meanings":["予報", "予報する"]},
+  {"no":724,"word":"humid","meanings":["湿気が多い"]},
+  {"no":725,"word":"tropical","meanings":["熱帯の"]},
+  {"no":726,"word":"solar","meanings":["太陽の"]},
+  {"no":727,"word":"species","meanings":["種"]},
+  {"no":728,"word":"pesticide","meanings":["殺虫剤", "駆除剤"]},
+  {"no":729,"word":"extinct","meanings":["絶滅した"]},
+  {"no":730,"word":"feed","meanings":["えさを与える", "養う", "常食とする"]},
+  {"no":731,"word":"energetic","meanings":["活発な"]},
+  {"no":732,"word":"greedy","meanings":["貪欲な"]},
+  {"no":733,"word":"brave","meanings":["勇敢な"]},
+  {"no":734,"word":"generous","meanings":["気前のよい"]},
+  {"no":735,"word":"intellectual","meanings":["知的な"]},
+  {"no":736,"word":"curious","meanings":["好奇心が強い", "奇妙な", "好奇心をそそる"]},
+  {"no":737,"word":"imaginative","meanings":["想像力豊かな"]},
+  {"no":738,"word":"afford","meanings":["する余裕がある", "O2を与える"]},
+  {"no":739,"word":"eager","meanings":["熱心な"]},
+  {"no":740,"word":"selfish","meanings":["利己的な", "自分勝手な"]},
+  {"no":741,"word":"aggressive","meanings":["攻撃的な", "積極的な"]},
+  {"no":742,"word":"cruel","meanings":["残酷な"]},
+  {"no":743,"word":"addicted","meanings":["の中毒になっている"]},
+  {"no":744,"word":"stubborn","meanings":["頑固な"]},
+  {"no":745,"word":"bold","meanings":["大胆な"]},
+  {"no":746,"word":"guilty","meanings":["申し訳なく思う", "罪の意識がある", "罪を犯した"]},
+  {"no":747,"word":"innocent","meanings":["無実の", "無邪気な"]},
+  {"no":748,"word":"sincere","meanings":["誠実な", "心からの", "偽りのない"]},
+  {"no":749,"word":"modest","meanings":["謙虚な", "大きくない", "高くない"]},
+  {"no":750,"word":"stupid","meanings":["ばかな"]},
+  {"no":751,"word":"indifferent","meanings":["無関心で"]},
+  {"no":752,"word":"punctual","meanings":["時間を守る"]},
+  {"no":753,"word":"coward","meanings":["臆病者"]},
+  {"no":754,"word":"precise","meanings":["正確な", "精密な"]},
+  {"no":755,"word":"accurate","meanings":["正確な"]},
+  {"no":756,"word":"proper","meanings":["適切な"]},
+  {"no":757,"word":"tidy","meanings":["きちんとした", "整然とした", "整頓する"]},
+  {"no":758,"word":"efficient","meanings":["能率的な", "無駄がない", "有能な"]},
+  {"no":759,"word":"reasonable","meanings":["理にかなった", "手ごろな"]},
+  {"no":760,"word":"significant","meanings":["重要な", "有意な", "かなりの"]},
+  {"no":761,"word":"precious","meanings":["貴重な", "高価な"]},
+  {"no":762,"word":"essential","meanings":["不可欠な", "不可欠なもの"]},
+  {"no":763,"word":"fundamental","meanings":["根本的な", "基本的な", "基本事項"]},
+  {"no":764,"word":"outweigh","meanings":["勝る"]},
+  {"no":765,"word":"critical","meanings":["重大な", "危機的な状況の", "批判的な"]},
+  {"no":766,"word":"serious","meanings":["深刻な", "真剣な", "本気の"]},
+  {"no":767,"word":"complex","meanings":["複雑な", "複合体", "強迫観念"]},
+  {"no":768,"word":"complicated","meanings":["複雑な", "ややこしい"]},
+  {"no":769,"word":"delicate","meanings":["繊細な", "微妙な", "虚弱な"]},
+  {"no":770,"word":"plain","meanings":["明白な", "わかりやすい", "質素な", "平野", "原野"]},
+  {"no":771,"word":"obvious","meanings":["明白な"]},
+  {"no":772,"word":"remarkable","meanings":["注目すべき", "すばらしい"]},
+  {"no":773,"word":"outstanding","meanings":["傑出した", "目立った"]},
+  {"no":774,"word":"various","meanings":["さまざまな"]},
+  {"no":775,"word":"diversity","meanings":["多様性"]},
+  {"no":776,"word":"sort","meanings":["種多少", "分類する"]},
+  {"no":777,"word":"marvelous","meanings":["驚くべき", "素晴らしい"]},
+  {"no":778,"word":"active","meanings":["積極的な", "活発な"]},
+  {"no":779,"word":"positive","meanings":["前向きな", "積極的な", "確信している"]},
+  {"no":780,"word":"pure","meanings":["純粋な", "澄んだ"]},
+  {"no":781,"word":"steady","meanings":["着実な", "一定の"]},
+  {"no":782,"word":"flexible","meanings":["柔軟な", "融通のきく"]},
+  {"no":783,"word":"ripe","meanings":["熟した"]},
+  {"no":784,"word":"stable","meanings":["安定した", "馬小屋", "きゅう舎"]},
+  {"no":785,"word":"negative","meanings":["否定的な", "否定の"]},
+  {"no":786,"word":"vague","meanings":["曖昧な", "漠然とした"]},
+  {"no":787,"word":"weird","meanings":["変な"]},
+  {"no":788,"word":"rough","meanings":["粗い", "おおざっぱな", "荒れている"]},
+  {"no":789,"word":"severe","meanings":["厳しい", "ひどい"]},
+  {"no":790,"word":"passive","meanings":["受動的な", "消極的な"]},
+  {"no":791,"word":"vain","meanings":["無駄に", "無駄な", "うぬぼれの強い"]},
+  {"no":792,"word":"fake","meanings":["偽の", "偽造の", "偽造品"]},
+  {"no":793,"word":"risky","meanings":["危険な", "危うい"]},
+  {"no":794,"word":"odd","meanings":["奇妙な", "奇数の", "半端な", "雑多な", "可能性"]},
+  {"no":795,"word":"ignorant","meanings":["無知の"]},
+  {"no":796,"word":"contrast","meanings":["対比", "対比する", "対照をなす"]},
+  {"no":797,"word":"valid","meanings":["妥当な", "正当な", "有効な"]},
+  {"no":798,"word":"rare","meanings":["珍しい"]},
+  {"no":799,"word":"casual","meanings":["気楽な", "ふとした", "何気ない"]},
+  {"no":800,"word":"available","meanings":["手に入る", "利用できる", "空いている"]},
+  {"no":801,"word":"practical","meanings":["現実的な", "実際の", "実用的な", "実践的な"]},
+  {"no":802,"word":"abstract","meanings":["抽象的な", "要旨"]},
+  {"no":803,"word":"brand-new","meanings":["新品の", "真新しい"]},
+  {"no":804,"word":"secondhand","meanings":["中古の", "間接的な"]},
+  {"no":805,"word":"rapid","meanings":["急速な", "急流"]},
+  {"no":806,"word":"urgent","meanings":["緊急の", "差し迫った"]},
+  {"no":807,"word":"shallow","meanings":["浅い", "浅はかな"]},
+  {"no":808,"word":"sharp","meanings":["急激な", "きつい", "鋭い"]},
+  {"no":809,"word":"calm","meanings":["落ち着いた", "落ち着く", "落ち着かせる"]},
+  {"no":810,"word":"naked","meanings":["裸の", "むき出しの"]},
+  {"no":811,"word":"independent","meanings":["独立した", "無所属の", "無所属の人"]},
+  {"no":812,"word":"tense","meanings":["張り詰めた", "緊張した", "時制"]},
+  {"no":813,"word":"narrow","meanings":["狭い", "狭くする", "細める"]},
+  {"no":814,"word":"vacant","meanings":["空いている", "使用されていない"]},
+  {"no":815,"word":"vivid","meanings":["鮮明な", "鮮明な"]},
+  {"no":816,"word":"awkward","meanings":["ぎこちない", "気まずい", "扱いにくい"]},
+  {"no":817,"word":"objective","meanings":["客観的な", "目標"]},
+  {"no":818,"word":"manual","meanings":["手を使う", "身体を使う", "手動の", "手引き書"]},
+  {"no":819,"word":"alike","meanings":["似ている", "同様に"]},
+  {"no":820,"word":"alien","meanings":["異質な", "外国の", "地球圏外の"]},
+  {"no":821,"word":"tend","meanings":["する傾向にある"]},
+  {"no":822,"word":"deserve","meanings":["値する"]},
+  {"no":823,"word":"fragment","meanings":["破片"]},
+  {"no":824,"word":"range","meanings":["範囲", "範囲に及ぶ"]},
+  {"no":825,"word":"scale","meanings":["規模", "体重計", "うろこ"]},
+  {"no":826,"word":"unique","meanings":["特有の", "独自の", "独特の"]},
+  {"no":827,"word":"particular","meanings":["ある特定の", "特有の", "好みがうるさい", "特に"]},
+  {"no":828,"word":"typical","meanings":["典型的な"]},
+  {"no":829,"word":"general","meanings":["一般的な", "全体の", "大将", "将軍"]},
+  {"no":830,"word":"ordinary","meanings":["平凡な", "ふつうの"]},
+  {"no":831,"word":"account","meanings":["占める", "説明する", "説明", "口座"]},
+  {"no":832,"word":"calculate","meanings":["計算する"]},
+  {"no":833,"word":"measure","meanings":["測る", "の寸法がある", "手段"]},
+  {"no":834,"word":"decline","meanings":["減る", "衰退する", "断る", "衰退", "減少"]},
+  {"no":835,"word":"split","meanings":["割る", "分裂させる", "分裂する", "分裂", "裂け目", "割れ目"]},
+  {"no":836,"word":"volume","meanings":["容積", "体積", "ボリューム", "音量", "1巻"]},
+  {"no":837,"word":"proportion","meanings":["比率", "部分", "規模", "大きさ"]},
+  {"no":838,"word":"dozen","meanings":["ダース", "数十の"]},
+  {"no":839,"word":"amount","meanings":["量", "達する", "結局になる"]},
+  {"no":840,"word":"mass","meanings":["大量", "大衆", "かたまり", "質量", "ミサ"]},
+  {"no":841,"word":"shortage","meanings":["不足"]},
+  {"no":842,"word":"enormous","meanings":["莫大な", "巨大な"]},
+  {"no":843,"word":"spare","meanings":["余分な", "予備の", "割く", "惜しむ"]},
+  {"no":844,"word":"arrange","meanings":["手配する", "の段取りをつける", "整理する"]},
+  {"no":845,"word":"adapt","meanings":["適応する", "適応させる"]},
+  {"no":846,"word":"match","meanings":["調和する", "匹敵する", "釣り合う人［物］", "好敵手"]},
+  {"no":847,"word":"fit","meanings":["合う", "健康な", "適した"]},
+  {"no":848,"word":"emergency","meanings":["緊急事態", "緊急の"]},
+  {"no":849,"word":"occasion","meanings":["場合", "行事", "祝い事"]},
+  {"no":850,"word":"accidental","meanings":["偶然の", "偶発的な"]},
+  {"no":851,"word":"current","meanings":["最新の", "今の", "流通して", "流れ", "風潮"]},
+  {"no":852,"word":"temporary","meanings":["一時的な"]},
+  {"no":853,"word":"permanent","meanings":["永久的な"]},
+  {"no":854,"word":"previous","meanings":["前の", "以前の"]},
+  {"no":855,"word":"former","meanings":["前者", "元の", "前の", "旧"]},
+  {"no":856,"word":"contemporary","meanings":["現代の", "同時代の", "同時代の人"]},
+  {"no":857,"word":"lately","meanings":["最近"]},
+  {"no":858,"word":"immediately","meanings":["すぐに", "直接に"]},
+  {"no":859,"word":"deadline","meanings":["締め切り <可算>"]},
+  {"no":860,"word":"decade","meanings":["10年"]},
+  {"no":861,"word":"supply","meanings":["供給する", "供給"]},
+  {"no":862,"word":"replace","meanings":["取って代わる", "取り替える"]},
+  {"no":863,"word":"exchange","meanings":["交換する", "交換"]},
+  {"no":864,"word":"substitute","meanings":["代わりにを用いる", "代わりになる", "代わり"]},
+  {"no":865,"word":"submit","meanings":["提出する", "服従する"]},
+  {"no":866,"word":"alternative","meanings":["代わりのもの", "選択肢", "代わりの", "既存のものとは違う"]},
+  {"no":867,"word":"deliver","meanings":["配達する", "する"]},
+  {"no":868,"word":"enclose","meanings":["同封する", "囲む", "閉じ込める"]},
+  {"no":869,"word":"envelope","meanings":["封筒"]},
+  {"no":870,"word":"trick","meanings":["いたずら", "手口", "策略", "芸", "手品", "秘けつ"]},
+  {"no":871,"word":"load","meanings":["荷", "積む"]},
+  {"no":872,"word":"content","meanings":["中身", "内容", "満足して"]},
+  {"no":873,"word":"household","meanings":["所帯", "家庭", "家庭の"]},
+  {"no":874,"word":"good","meanings":["商品", "利益", "かなりの"]},
+  {"no":875,"word":"luxury","meanings":["高級", "ぜいたく品", "豪華な", "ぜいたくな"]},
+  {"no":876,"word":"credit","meanings":["クレジットカード", "功績", "手柄", "単位", "の功績を認める"]},
+  {"no":877,"word":"questionnaire","meanings":["アンケート"]},
+  {"no":878,"word":"reservation","meanings":["予約", "慎重な姿勢"]},
+  {"no":879,"word":"fuss","meanings":["大騒ぎ"]},
+  {"no":880,"word":"reward","meanings":["報酬", "褒美", "懸賞金", "褒美を与える", "報いる"]},
+  {"no":881,"word":"farewell","meanings":["別れ"]},
+  {"no":882,"word":"reception","meanings":["もてなし", "歓迎会", "フロント", "受信状況"]},
+  {"no":883,"word":"portion","meanings":["1盛り", "1人前", "一部"]},
+  {"no":884,"word":"laundry","meanings":["洗濯", "洗濯物", "クリーニング店"]},
+  {"no":885,"word":"nap","meanings":["昼寝", "仮眠", "昼寝をする", "仮眠をとる"]},
+  {"no":886,"word":"wake","meanings":["目が覚める", "起こす"]},
+  {"no":887,"word":"vending machine","meanings":["自動販売機"]},
+  {"no":888,"word":"grocery","meanings":["食料雑貨店", "食料雑貨類"]},
+  {"no":889,"word":"appointment","meanings":["予約", "約束", "任命", "指名"]},
+  {"no":890,"word":"consult","meanings":["相談する", "引く", "相談する"]},
+  {"no":891,"word":"register","meanings":["登録する", "記録する", "登録する", "記帳"]},
+  {"no":892,"word":"dye","meanings":["染める", "染料"]},
+  {"no":893,"word":"subscribe","meanings":["定期購読する", "加入している"]},
+  {"no":894,"word":"guarantee","meanings":["保証する", "保証"]},
+  {"no":895,"word":"wipe","meanings":["拭く", "一掃する", "壊滅させる"]},
+  {"no":896,"word":"sweep","meanings":["掃く", "押し流す"]},
+  {"no":897,"word":"transfer","meanings":["乗り換える", "転勤［転校", "移籍］する", "移す"]},
+  {"no":898,"word":"divorce","meanings":["離婚する", "離婚する", "離婚"]},
+  {"no":899,"word":"fate","meanings":["運命", "宿命"]},
+  {"no":900,"word":"destiny","meanings":["運命"]},
+  {"no":901,"word":"flavor","meanings":["風味", "味"]},
+  {"no":902,"word":"perfume","meanings":["香り", "香水"]},
+  {"no":903,"word":"ingredient","meanings":["材料", "要因", "成分"]},
+  {"no":904,"word":"bitter","meanings":["苦い", "つらい", "憤慨して"]},
+  {"no":905,"word":"aisle","meanings":["通路"]},
+  {"no":906,"word":"track","meanings":["足跡", "小道", "線路", "プラットホーム", "追跡する"]},
+  {"no":907,"word":"district","meanings":["地区"]},
+  {"no":908,"word":"facility","meanings":["施設", "設備", "能力", "器用さ"]},
+  {"no":909,"word":"height","meanings":["高さ", "高い所", "最盛期"]},
+  {"no":910,"word":"distant","meanings":["遠い"]},
+  {"no":911,"word":"locate","meanings":["位置している", "ある", "の場所を見つける"]},
+  {"no":912,"word":"occupy","meanings":["占める"]},
+  {"no":913,"word":"surround","meanings":["取り囲む", "包囲する"]},
+  {"no":914,"word":"classical","meanings":["クラシックの", "古典的な"]},
+  {"no":915,"word":"civilization","meanings":["文明"]},
+  {"no":916,"word":"heritage","meanings":["遺産"]},
+  {"no":917,"word":"script","meanings":["台本", "脚本", "文字", "文字"]},
+  {"no":918,"word":"tale","meanings":["話"]},
+  {"no":919,"word":"literature","meanings":["文学", "文献"]},
+  {"no":920,"word":"tragedy","meanings":["悲劇"]},
+  {"no":921,"word":"poetry","meanings":["詩"]},
+  {"no":922,"word":"biography","meanings":["伝記"]},
+  {"no":923,"word":"term","meanings":["用語", "言葉", "期間", "学期", "任期", "間"]},
+  {"no":924,"word":"proverb","meanings":["諺"]},
+  {"no":925,"word":"dialect","meanings":["方言"]},
+  {"no":926,"word":"fluent","meanings":["流暢な"]},
+  {"no":927,"word":"translate","meanings":["翻訳する", "変わる"]},
+  {"no":928,"word":"define","meanings":["定義する", "規定する"]},
+  {"no":929,"word":"interpret","meanings":["解釈する", "通訳する", "通訳する"]},
+  {"no":930,"word":"quote","meanings":["引用する", "価格を提示する", "引用文", "提示価格", "見積り"]},
+  {"no":931,"word":"literally","meanings":["文字どおりに"]},
+  {"no":932,"word":"indicate","meanings":["示す", "指し示す"]},
+  {"no":933,"word":"reveal","meanings":["明らかにする", "暴露する"]},
+  {"no":934,"word":"announce","meanings":["発表する"]},
+  {"no":935,"word":"broadcast","meanings":["放送する", "放送"]},
+  {"no":936,"word":"prove","meanings":["証明する", "だとわかる"]},
+  {"no":937,"word":"advertise","meanings":["宣伝する"]},
+  {"no":938,"word":"clarify","meanings":["明らかにする"]},
+  {"no":939,"word":"seek","meanings":["求める", "しようと努める"]},
+  {"no":940,"word":"entertain","meanings":["楽しませる", "もてなす"]},
+  {"no":941,"word":"amuse","meanings":["楽しませる"]},
+  {"no":942,"word":"attract","meanings":["引きつける", "魅了する"]},
+  {"no":943,"word":"fascinate","meanings":["魅了する", "ても興味をもたせる"]},
+  {"no":944,"word":"absorb","meanings":["没頭する", "吸収する"]},
+  {"no":945,"word":"fond","meanings":["好きだ", "懐かしい"]},
+  {"no":946,"word":"scare","meanings":["おびえさせる"]},
+  {"no":947,"word":"alarm","meanings":["ぎょっとさせる", "恐怖", "不安"]},
+  {"no":948,"word":"amaze","meanings":["驚かせる"]},
+  {"no":949,"word":"irritate","meanings":["いらいらさせる"]},
+  {"no":950,"word":"upset","meanings":["動揺させる", "乱す", "動揺して", "腹を立てて"]},
+  {"no":951,"word":"puzzle","meanings":["当惑させる", "難問", "パズル"]},
+  {"no":952,"word":"confuse","meanings":["混乱させる", "困惑させる", "混同する"]},
+  {"no":953,"word":"bore","meanings":["うんざりさせる", "退屈させる"]},
+  {"no":954,"word":"frustrate","meanings":["欲求不満にさせる", "挫折させる"]},
+  {"no":955,"word":"disappoint","meanings":["失望させる"]},
+  {"no":956,"word":"embarrass","meanings":["恥ずかしい思いをさせる", "困惑させる"]},
+  {"no":957,"word":"ashamed","meanings":["恥ずかしい"]},
+  {"no":958,"word":"uneasy","meanings":["不安な", "胸騒ぎがする"]},
+  {"no":959,"word":"hesitate","meanings":["ためらう"]},
+  {"no":960,"word":"reluctant","meanings":["気が進まない"]},
+  {"no":961,"word":"tremble","meanings":["震える"]},
+  {"no":962,"word":"boast","meanings":["自慢する", "誇りにしている"]},
+  {"no":963,"word":"jealous","meanings":["嫉妬した"]},
+  {"no":964,"word":"envy","meanings":["羨ましく思う", "羨望"]},
+  {"no":965,"word":"yell","meanings":["叫ぶ", "大声をあげる", "叫び", "わめき声"]},
+  {"no":966,"word":"respect","meanings":["尊敬する", "尊重する", "尊敬", "尊重"]},
+  {"no":967,"word":"despair","meanings":["絶望"]},
+  {"no":968,"word":"emotion","meanings":["感情"]},
+  {"no":969,"word":"sympathy","meanings":["同情", "共感"]},
+  {"no":970,"word":"shame","meanings":["残念なこと", "恥"]},
+  {"no":971,"word":"confidence","meanings":["自信", "信頼"]},
+  {"no":972,"word":"courage","meanings":["勇気"]},
+  {"no":973,"word":"passion","meanings":["情熱"]},
+  {"no":974,"word":"sorrow","meanings":["悲しみ"]},
+  {"no":975,"word":"ignore","meanings":["無視する"]},
+  {"no":976,"word":"offend","meanings":["怒らせる", "の気分を害する"]},
+  {"no":977,"word":"depress","meanings":["憂うつにさせる", "落ち込ませる"]},
+  {"no":978,"word":"owe","meanings":["はおかげだ", "借りている"]},
+  {"no":979,"word":"fear","meanings":["恐怖", "恐れる", "心配する"]},
+  {"no":980,"word":"method","meanings":["方法"]},
+  {"no":981,"word":"medium","meanings":["手段", "媒体", "メディア", "中間の"]},
+  {"no":982,"word":"means","meanings":["手段", "財産", "収入"]},
+  {"no":983,"word":"extent","meanings":["程度"]},
+  {"no":984,"word":"extremely","meanings":["極度に", "非常に"]},
+  {"no":985,"word":"total","meanings":["全体の", "まったくの", "合計"]},
+  {"no":986,"word":"largely","meanings":["大部分は", "主に"]},
+  {"no":987,"word":"moderate","meanings":["適度な", "節度のある"]},
+  {"no":988,"word":"somewhat","meanings":["いくぶん"]},
+  {"no":989,"word":"subtle","meanings":["かすかな"]},
+  {"no":990,"word":"possibly","meanings":["ひょっとすると", "どうしても"]},
+  {"no":991,"word":"eventually","meanings":["最終的に", "ついに"]},
+  {"no":992,"word":"necessarily","meanings":["必ずしも"]},
+  {"no":993,"word":"frankly","meanings":["率直に"]},
+  {"no":994,"word":"ironically","meanings":["皮肉なことに"]},
+  {"no":995,"word":"moreover","meanings":["その上"]},
+  {"no":996,"word":"otherwise","meanings":["さもなければ", "ほかの点では", "ほかの方法で"]},
+  {"no":997,"word":"regardless","meanings":["無関係に"]},
+  {"no":998,"word":"worth","meanings":["の価値がある", "価値がある", "価値", "相当"]},
+  {"no":999,"word":"according to","meanings":["よれば", "応じて"]},
+  {"no":1000,"word":"despite","meanings":["もかかわらず"]},
+  {"no":1001,"word":"propose","meanings":["提案する", "結婚を申し込む"]},
+  {"no":1002,"word":"dismiss","meanings":["退ける", "解雇する"]},
+  {"no":1003,"word":"bless","meanings":["祝福する"]},
+  {"no":1004,"word":"glory","meanings":["栄光"]},
+  {"no":1005,"word":"compliment","meanings":["褒め言葉", "賛辞", "褒める"]},
+  {"no":1006,"word":"feast","meanings":["宴会", "祝宴", "ても楽しいこと", "喜ばせるもの"]},
+  {"no":1007,"word":"declare","meanings":["宣言する", "申告する"]},
+  {"no":1008,"word":"highlight","meanings":["強調する", "呼び物", "目玉商品", "ハイライト"]},
+  {"no":1009,"word":"imply","meanings":["ほのめかす", "意味する"]},
+  {"no":1010,"word":"recite","meanings":["暗唱する"]},
+  {"no":1011,"word":"ray","meanings":["光線", "放射線", "一縷の", "わずかな"]},
+  {"no":1012,"word":"radiation","meanings":["放射線"]},
+  {"no":1013,"word":"laboratory","meanings":["研究室", "研究所"]},
+  {"no":1014,"word":"oxygen","meanings":["酸素"]},
+  {"no":1015,"word":"molecule","meanings":["分子"]},
+  {"no":1016,"word":"compound","meanings":["化合物", "複合的な"]},
+  {"no":1017,"word":"tissue","meanings":["組織", "ティッシュペーパー"]},
+  {"no":1018,"word":"cell","meanings":["細胞", "電池", "独房"]},
+  {"no":1019,"word":"gene","meanings":["遺伝子"]},
+  {"no":1020,"word":"substance","meanings":["物質", "本質", "根拠 <不可算>"]},
+  {"no":1021,"word":"solid","meanings":["固体の", "ぎっしり詰まった", "固体"]},
+  {"no":1022,"word":"satellite","meanings":["衛星", "人工衛星"]},
+  {"no":1023,"word":"orbit","meanings":["軌道", "周回する"]},
+  {"no":1024,"word":"launch","meanings":["打ち上げる", "始める", "打ち上げ", "開始", "発売"]},
+  {"no":1025,"word":"attempt","meanings":["試み", "試みる"]},
+  {"no":1026,"word":"capacity","meanings":["能力", "容量", "収容力"]},
+  {"no":1027,"word":"capable","meanings":["力がある", "有能な"]},
+  {"no":1028,"word":"attain","meanings":["達成する", "到達する"]},
+  {"no":1029,"word":"desperate","meanings":["必死の", "絶望的な"]},
+  {"no":1030,"word":"dedicate","meanings":["捧げる"]},
+  {"no":1031,"word":"pain","meanings":["苦痛", "苦労"]},
+  {"no":1032,"word":"strain","meanings":["負担", "無理", "痛める"]},
+  {"no":1033,"word":"remedy","meanings":["治療法", "治療薬", "改善策", "対策"]},
+  {"no":1034,"word":"pharmacy","meanings":["薬局"]},
+  {"no":1035,"word":"physician","meanings":["医師", "内科医"]},
+  {"no":1036,"word":"disorder","meanings":["不調"]},
+  {"no":1037,"word":"pregnant","meanings":["妊娠した"]},
+  {"no":1038,"word":"clinical","meanings":["臨床の"]},
+  {"no":1039,"word":"heal","meanings":["治す", "治る"]},
+  {"no":1040,"word":"infect","meanings":["感染させる", "伝染する"]},
+  {"no":1041,"word":"ankle","meanings":["足首"]},
+  {"no":1042,"word":"thumb","meanings":["親指"]},
+  {"no":1043,"word":"forehead","meanings":["額", "おでこ"]},
+  {"no":1044,"word":"chin","meanings":["下あご", "あごの先端"]},
+  {"no":1045,"word":"chest","meanings":["胸箱", "密閉容器"]},
+  {"no":1046,"word":"breast","meanings":["胸", "乳房"]},
+  {"no":1047,"word":"lung","meanings":["肺"]},
+  {"no":1048,"word":"organ","meanings":["臓器", "器官", "オルガン"]},
+  {"no":1049,"word":"vision","meanings":["視力", "視野", "未来像", "未来を見通す力", "先見の明"]},
+  {"no":1050,"word":"skeleton","meanings":["骸骨", "骨格"]},
+  {"no":1051,"word":"sensation","meanings":["感覚", "感情"]},
+  {"no":1052,"word":"code","meanings":["規定", "暗号"]},
+  {"no":1053,"word":"agenda","meanings":["議題", "協議事項"]},
+  {"no":1054,"word":"liberty","meanings":["自由"]},
+  {"no":1055,"word":"committee","meanings":["委員会"]},
+  {"no":1056,"word":"humanity","meanings":["人類", "人文科学", "人間性"]},
+  {"no":1057,"word":"mankind","meanings":["人類"]},
+  {"no":1058,"word":"authority","meanings":["権威", "権力", "当局"]},
+  {"no":1059,"word":"justice","meanings":["正義"]},
+  {"no":1060,"word":"insurance","meanings":["保険"]},
+  {"no":1061,"word":"hardship","meanings":["苦難"]},
+  {"no":1062,"word":"poverty","meanings":["貧困"]},
+  {"no":1063,"word":"chaos","meanings":["大混乱", "混沌"]},
+  {"no":1064,"word":"isolation","meanings":["孤立", "分離", "孤独感"]},
+  {"no":1065,"word":"region","meanings":["地域"]},
+  {"no":1066,"word":"proof","meanings":["証拠", "証明", "防ぐ", "耐える"]},
+  {"no":1067,"word":"warranty","meanings":["保証"]},
+  {"no":1068,"word":"principle","meanings":["原理", "原則", "主義", "信念"]},
+  {"no":1069,"word":"origin","meanings":["起源"]},
+  {"no":1070,"word":"setting","meanings":["環境", "状況", "設定", "舞台"]},
+  {"no":1071,"word":"mission","meanings":["任務", "使命", "使節団", "布教"]},
+  {"no":1072,"word":"project","meanings":["計画", "企画", "見積もる", "投影する"]},
+  {"no":1073,"word":"monument","meanings":["記念碑", "遺跡", "史跡"]},
+  {"no":1074,"word":"revolution","meanings":["革命"]},
+  {"no":1075,"word":"contract","meanings":["契約", "契約する", "感染する"]},
+  {"no":1076,"word":"infrastructure","meanings":["インフラ", "基本的施設"]},
+  {"no":1077,"word":"negotiate","meanings":["交渉する", "取り決める"]},
+  {"no":1078,"word":"cooperate","meanings":["協力する", "協力する"]},
+  {"no":1079,"word":"restore","meanings":["回復する", "修復する"]},
+  {"no":1080,"word":"found","meanings":["創立する"]},
+  {"no":1081,"word":"conservative","meanings":["保守的な"]},
+  {"no":1082,"word":"affair","meanings":["情勢", "事件", "情事", "浮気"]},
+  {"no":1083,"word":"agency","meanings":["機関", "代理店"]},
+  {"no":1084,"word":"council","meanings":["議会"]},
+  {"no":1085,"word":"kingdom","meanings":["界", "社会", "王国"]},
+  {"no":1086,"word":"republic","meanings":["共和国"]},
+  {"no":1087,"word":"empire","meanings":["帝国"]},
+  {"no":1088,"word":"aid","meanings":["援助", "救援物資"]},
+  {"no":1089,"word":"reform","meanings":["改革"]},
+  {"no":1090,"word":"minister","meanings":["大臣", "牧師"]},
+  {"no":1091,"word":"parliament","meanings":["議会"]},
+  {"no":1092,"word":"territory","meanings":["領土", "縄張り", "領域"]},
+  {"no":1093,"word":"poll","meanings":["世論調査", "投票", "得る"]},
+  {"no":1094,"word":"fortune","meanings":["財産", "運"]},
+  {"no":1095,"word":"property","meanings":["財産", "資産", "特性", "所有地"]},
+  {"no":1096,"word":"fund","meanings":["資金", "基金", "資金を出す"]},
+  {"no":1097,"word":"stock","meanings":["株", "在庫品", "蓄え"]},
+  {"no":1098,"word":"labor","meanings":["労働", "労働者", "努力", "陣痛"]},
+  {"no":1099,"word":"overwork","meanings":["働きすぎる", "働かせすぎる", "酷使する", "過労"]},
+  {"no":1100,"word":"firm","meanings":["会社", "固い", "引き締まった"]},
+  {"no":1101,"word":"union","meanings":["労働組合", "合併", "連邦"]},
+  {"no":1102,"word":"administration","meanings":["経営", "運営", "行政", "政権"]},
+  {"no":1103,"word":"secretary","meanings":["秘書", "長官", "事務局長"]},
+  {"no":1104,"word":"editor","meanings":["編集長", "編集者"]},
+  {"no":1105,"word":"client","meanings":["依頼人", "取引先"]},
+  {"no":1106,"word":"recruit","meanings":["新規採用する", "新兵", "新人"]},
+  {"no":1107,"word":"basis","meanings":["基礎", "根拠", "基準"]},
+  {"no":1108,"word":"element","meanings":["要素", "元素", "自然の力", "悪天候", "少し"]},
+  {"no":1109,"word":"constitute","meanings":["構成する", "である"]},
+  {"no":1110,"word":"unify","meanings":["統一する"]},
+  {"no":1111,"word":"combine","meanings":["結びつける", "同時に行う", "結びつく"]},
+  {"no":1112,"word":"unite","meanings":["団結する", "団結させる"]},
+  {"no":1113,"word":"link","meanings":["関連", "つながり", "関連づける"]},
+  {"no":1114,"word":"relevant","meanings":["関連のある", "重要な"]},
+  {"no":1115,"word":"murder","meanings":["殺人", "殺人の", "殺す"]},
+  {"no":1116,"word":"arrest","meanings":["逮捕する", "逮捕", "停止"]},
+  {"no":1117,"word":"prison","meanings":["刑務所"]},
+  {"no":1118,"word":"vice","meanings":["犯罪", "悪徳", "副"]},
+  {"no":1119,"word":"witness","meanings":["目撃者", "証人", "証言", "目撃する"]},
+  {"no":1120,"word":"bullet","meanings":["弾丸"]},
+  {"no":1121,"word":"sword","meanings":["剣"]},
+  {"no":1122,"word":"wound","meanings":["傷", "傷つける"]},
+  {"no":1123,"word":"triumph","meanings":["勝利", "勝利する"]},
+  {"no":1124,"word":"military","meanings":["軍事的な"]},
+  {"no":1125,"word":"strategy","meanings":["戦略"]},
+  {"no":1126,"word":"conquer","meanings":["征服する", "克服する"]},
+  {"no":1127,"word":"defend","meanings":["守る"]},
+  {"no":1128,"word":"dominate","meanings":["支配する"]},
+  {"no":1129,"word":"rob","meanings":["襲う", "から奪う"]},
+  {"no":1130,"word":"deprive","meanings":["から奪う"]},
+  {"no":1131,"word":"devastate","meanings":["壊滅させる", "打ちのめす"]},
+  {"no":1132,"word":"crash","meanings":["激突する", "墜落する", "激突", "墜落"]},
+  {"no":1133,"word":"hazard","meanings":["危険<可算>"]},
+  {"no":1134,"word":"debris","meanings":["破片", "残骸"]},
+  {"no":1135,"word":"orphan","meanings":["孤児"]},
+  {"no":1136,"word":"slave","meanings":["奴隷", "奴隷"]},
+  {"no":1137,"word":"acquaintance","meanings":["知人", "面識", "知識"]},
+  {"no":1138,"word":"merchant","meanings":["商人"]},
+  {"no":1139,"word":"resident","meanings":["住人", "居住者", "滞在者", "住んでいる"]},
+  {"no":1140,"word":"crew","meanings":["乗組員", "チーム"]},
+  {"no":1141,"word":"chase","meanings":["追いかける", "追跡"]},
+  {"no":1142,"word":"proceed","meanings":["進む", "する"]},
+  {"no":1143,"word":"fade","meanings":["薄れる"]},
+  {"no":1144,"word":"dissolve","meanings":["溶ける", "溶かす", "解散する"]},
+  {"no":1145,"word":"float","meanings":["浮かぶ", "浮かべる"]},
+  {"no":1146,"word":"sink","meanings":["沈む", "沈める", "流し"]},
+  {"no":1147,"word":"bounce","meanings":["跳ねる", "返送する"]},
+  {"no":1148,"word":"transform","meanings":["変える", "変形する", "変身する"]},
+  {"no":1149,"word":"shift","meanings":["転換", "交替"]},
+  {"no":1150,"word":"modify","meanings":["修正する"]},
+  {"no":1151,"word":"revise","meanings":["修正する", "改正する"]},
+  {"no":1152,"word":"enhance","meanings":["向上させる"]},
+  {"no":1153,"word":"lower","meanings":["下げる"]},
+  {"no":1154,"word":"voyage","meanings":["航海", "船旅"]},
+  {"no":1155,"word":"confirm","meanings":["確認する", "裏付ける"]},
+  {"no":1156,"word":"ensure","meanings":["確実にする"]},
+  {"no":1157,"word":"address","meanings":["取り組む", "呼びかける", "演説", "住所"]},
+  {"no":1158,"word":"approach","meanings":["取り組み方", "接近", "取り組む", "接近する"]},
+  {"no":1159,"word":"resolve","meanings":["解決する", "決心をする"]},
+  {"no":1160,"word":"settle","meanings":["解決する", "置く", "据える", "定住する", "決める"]},
+  {"no":1161,"word":"enrich","meanings":["豊かにする"]},
+  {"no":1162,"word":"warn","meanings":["警告する", "警告する"]},
+  {"no":1163,"word":"force","meanings":["強いる", "力", "武力"]},
+  {"no":1164,"word":"appeal","meanings":["訴える", "魅力", "人気", "訴え"]},
+  {"no":1165,"word":"applause","meanings":["拍手"]},
+  {"no":1166,"word":"leap","meanings":["跳ぶ", "躍進", "急増"]},
+  {"no":1167,"word":"grab","meanings":["つかむ", "る"]},
+  {"no":1168,"word":"seize","meanings":["つかむ", "押収する", "捕らえる"]},
+  {"no":1169,"word":"cast","meanings":["投げる", "投げかける", "役を与える"]},
+  {"no":1170,"word":"stun","meanings":["気絶させる", "ぼう然とさせる"]},
+  {"no":1171,"word":"illuminate","meanings":["照らす", "解明する"]},
+  {"no":1172,"word":"uncover","meanings":["明らかにする", "暴く"]},
+  {"no":1173,"word":"mend","meanings":["修繕する"]},
+  {"no":1174,"word":"react","meanings":["反応する"]},
+  {"no":1175,"word":"endure","meanings":["耐える"]},
+  {"no":1176,"word":"bind","meanings":["結びつける", "縛る"]},
+  {"no":1177,"word":"encounter","meanings":["偶然出会う", "遭う", "出会い"]},
+  {"no":1178,"word":"trace","meanings":["捜し出す", "の追跡調査をする", "跡"]},
+  {"no":1179,"word":"undergo","meanings":["経験する"]},
+  {"no":1180,"word":"seal","meanings":["密封する", "印鑑", "ハンコ"]},
+  {"no":1181,"word":"incorporate","meanings":["取り入れる"]},
+  {"no":1182,"word":"emerge","meanings":["現れる", "台頭する"]},
+  {"no":1183,"word":"unfold","meanings":["展開する", "はっきりしてくる", "広げる"]},
+  {"no":1184,"word":"derive","meanings":["由来する", "引き出す", "得る"]},
+  {"no":1185,"word":"generate","meanings":["生み出す"]},
+  {"no":1186,"word":"possess","meanings":["所有している"]},
+  {"no":1187,"word":"retain","meanings":["保持する"]},
+  {"no":1188,"word":"secure","meanings":["確保する", "安全で", "守られて"]},
+  {"no":1189,"word":"capture","meanings":["捕らえる", "捕獲", "攻略"]},
+  {"no":1190,"word":"monitor","meanings":["監視する", "画面"]},
+  {"no":1191,"word":"investigate","meanings":["調査する", "捜査する"]},
+  {"no":1192,"word":"detect","meanings":["探知する", "発見する", "見抜く"]},
+  {"no":1193,"word":"inquiry","meanings":["調査", "質問", "問い合わせ"]},
+  {"no":1194,"word":"specialize","meanings":["専攻する", "専門にする"]},
+  {"no":1195,"word":"semester","meanings":["学期"]},
+  {"no":1196,"word":"biology","meanings":["生物学"]},
+  {"no":1197,"word":"ecology","meanings":["生態"]},
+  {"no":1198,"word":"philosophy","meanings":["哲学", "人生哲学", "考え方"]},
+  {"no":1199,"word":"geography","meanings":["地理"]},
+  {"no":1200,"word":"institution","meanings":["機関", "制度"]},
+  {"no":1201,"word":"faculty","meanings":["能力", "学部", "全教員"]},
+  {"no":1202,"word":"intermediate","meanings":["中級の", "中間の"]},
+  {"no":1203,"word":"notion","meanings":["考え"]},
+  {"no":1204,"word":"concept","meanings":["概念", "考え"]},
+  {"no":1205,"word":"meditation","meanings":["瞑想", "熟考"]},
+  {"no":1206,"word":"insight","meanings":["洞察", "見識"]},
+  {"no":1207,"word":"caution","meanings":["用心", "警告", "注意［警告］を与える"]},
+  {"no":1208,"word":"will","meanings":["意志", "遺書"]},
+  {"no":1209,"word":"option","meanings":["選択肢", "選択"]},
+  {"no":1210,"word":"prospect","meanings":["見通し"]},
+  {"no":1211,"word":"cherish","meanings":["大切にする", "胸に抱く"]},
+  {"no":1212,"word":"intend","meanings":["するつもりだ"]},
+  {"no":1213,"word":"suspect","meanings":["ではないかと思う", "嫌疑をかける", "容疑者"]},
+  {"no":1214,"word":"identify","meanings":["特定する", "《生物》を同定する", "同一視する"]},
+  {"no":1215,"word":"permit","meanings":["許可する", "許可証"]},
+  {"no":1216,"word":"acknowledge","meanings":["認める"]},
+  {"no":1217,"word":"perceive","meanings":["認識する", "知覚する"]},
+  {"no":1218,"word":"evaluate","meanings":["評価する"]},
+  {"no":1219,"word":"cultivate","meanings":["耕す", "育む", "磨く"]},
+  {"no":1220,"word":"shade","meanings":["日陰", "陰の部分", "ブラインド", "わずかな違い"]},
+  {"no":1221,"word":"breeze","meanings":["そよ風"]},
+  {"no":1222,"word":"desert","meanings":["砂漠", "見捨てる"]},
+  {"no":1223,"word":"fog","meanings":["霧"]},
+  {"no":1224,"word":"moisture","meanings":["湿気", "水分"]},
+  {"no":1225,"word":"damp","meanings":["湿った", "じめじめした"]},
+  {"no":1226,"word":"path","meanings":["道"]},
+  {"no":1227,"word":"trail","meanings":["山道", "跡", "爪跡"]},
+  {"no":1228,"word":"stream","meanings":["小川", "流れ"]},
+  {"no":1229,"word":"tide","meanings":["潮", "潮流", "時流"]},
+  {"no":1230,"word":"reef","meanings":["礁"]},
+  {"no":1231,"word":"habitat","meanings":["生息地"]},
+  {"no":1232,"word":"volcano","meanings":["火山"]},
+  {"no":1233,"word":"mine","meanings":["鉱山", "地雷"]},
+  {"no":1234,"word":"swallow","meanings":["ツバメ", "飲み込む"]},
+  {"no":1235,"word":"web","meanings":["巣", "インターネット"]},
+  {"no":1236,"word":"mosquito","meanings":["蚊"]},
+  {"no":1237,"word":"cattle","meanings":["ウシ"]},
+  {"no":1238,"word":"kitten","meanings":["子ネコ"]},
+  {"no":1239,"word":"organism","meanings":["生物"]},
+  {"no":1240,"word":"wildlife","meanings":["野生生物"]},
+  {"no":1241,"word":"beast","meanings":["野獣"]},
+  {"no":1242,"word":"ape","meanings":["類人猿"]},
+  {"no":1243,"word":"flock","meanings":["群れ", "群れる"]},
+  {"no":1244,"word":"vein","meanings":["静脈"]},
+  {"no":1245,"word":"breed","meanings":["繁殖する", "繁殖させる", "引き起こす", "品種", "血統"]},
+  {"no":1246,"word":"reproduce","meanings":["繁殖する", "繁殖させる", "再現する"]},
+  {"no":1247,"word":"talkative","meanings":["おしゃべりの"]},
+  {"no":1248,"word":"earnest","meanings":["真面目な", "真面目"]},
+  {"no":1249,"word":"diligent","meanings":["勤勉な"]},
+  {"no":1250,"word":"principal","meanings":["主要な", "校長"]},
+  {"no":1251,"word":"prime","meanings":["最重要な", "素数"]},
+  {"no":1252,"word":"definite","meanings":["明確な"]},
+  {"no":1253,"word":"evident","meanings":["明らかな"]},
+  {"no":1254,"word":"prominent","meanings":["目立った", "著名な", "重要な"]},
+  {"no":1255,"word":"marked","meanings":["際立った", "著しい"]},
+  {"no":1256,"word":"grace","meanings":["優美さ", "感謝の祈り"]},
+  {"no":1257,"word":"charm","meanings":["魅力", "お守り", "まじない"]},
+  {"no":1258,"word":"fancy","meanings":["高級な", "が欲しい", "したい", "思う"]},
+  {"no":1259,"word":"rational","meanings":["理性的な"]},
+  {"no":1260,"word":"magnificent","meanings":["壮大な", "素晴らしい"]},
+  {"no":1261,"word":"superior","meanings":["より優れている", "上役", "上司"]},
+  {"no":1262,"word":"loyal","meanings":["忠実な"]},
+  {"no":1263,"word":"horrible","meanings":["てもひどい", "ぞっとする"]},
+  {"no":1264,"word":"miserable","meanings":["悲惨な", "ても不幸な"]},
+  {"no":1265,"word":"dull","meanings":["退屈な", "切れ味が悪い", "鈍い"]},
+  {"no":1266,"word":"nasty","meanings":["不快な"]},
+  {"no":1267,"word":"insane","meanings":["正気でない"]},
+  {"no":1268,"word":"ridiculous","meanings":["ばかげた"]},
+  {"no":1269,"word":"rotten","meanings":["腐った"]},
+  {"no":1270,"word":"notorious","meanings":["悪名高い"]},
+  {"no":1271,"word":"evil","meanings":["悪い", "悪"]},
+  {"no":1272,"word":"mess","meanings":["乱雑", "からかう", "ちょっかいを出す"]},
+  {"no":1273,"word":"vast","meanings":["広大な", "莫大な"]},
+  {"no":1274,"word":"huge","meanings":["巨大な"]},
+  {"no":1275,"word":"tiny","meanings":["ても小さな"]},
+  {"no":1276,"word":"sphere","meanings":["球体", "領域", "範囲"]},
+  {"no":1277,"word":"strip","meanings":["細長い一片", "から奪う", "裸になる"]},
+  {"no":1278,"word":"vessel","meanings":["管", "船"]},
+  {"no":1279,"word":"internal","meanings":["内部の", "体内の", "国内の"]},
+  {"no":1280,"word":"mobile","meanings":["流動的な", "携帯電話"]},
+  {"no":1281,"word":"steep","meanings":["険しい", "急な", "異常に高い"]},
+  {"no":1282,"word":"intense","meanings":["強烈な"]},
+  {"no":1283,"word":"inevitable","meanings":["避けられない", "必然的な"]},
+  {"no":1284,"word":"neutral","meanings":["中立の", "中立"]},
+  {"no":1285,"word":"brief","meanings":["手短な", "簡潔な", "要約"]},
+  {"no":1286,"word":"bare","meanings":["むき出しの", "最低限の"]},
+  {"no":1287,"word":"mutual","meanings":["相互の", "共通の"]},
+  {"no":1288,"word":"potential","meanings":["潜在的な", "潜在能力", "可能性"]},
+  {"no":1289,"word":"tough","meanings":["たくましい", "頑強な", "骨の折れる", "厳しい"]},
+  {"no":1290,"word":"conventional","meanings":["従来の", "慣習的な"]},
+  {"no":1291,"word":"supreme","meanings":["最高の"]},
+  {"no":1292,"word":"resemble","meanings":["似ている"]},
+  {"no":1293,"word":"contrary","meanings":["それどころか", "反対に", "to the ―"]},
+  {"no":1294,"word":"category","meanings":["範疇"]},
+  {"no":1295,"word":"scope","meanings":["範囲"]},
+  {"no":1296,"word":"given","meanings":["定められた", "考慮すると"]},
+  {"no":1297,"word":"peculiar","meanings":["固有の", "独特な", "変な"]},
+  {"no":1298,"word":"sufficient","meanings":["十分な"]},
+  {"no":1299,"word":"numerous","meanings":["多くの"]},
+  {"no":1300,"word":"substantial","meanings":["かなりの", "たくさんの", "内容のある", "重要な"]},
+  {"no":1301,"word":"unit","meanings":["単位"]},
+  {"no":1302,"word":"diameter","meanings":["直径"]},
+  {"no":1303,"word":"arithmetic","meanings":["算術"]},
+  {"no":1304,"word":"quantity","meanings":["量"]},
+  {"no":1305,"word":"deficiency","meanings":["欠乏", "不足"]},
+  {"no":1306,"word":"maximum","meanings":["最大限"]},
+  {"no":1307,"word":"bunch","meanings":["束", "房"]},
+  {"no":1308,"word":"lessen","meanings":["減らす"]},
+  {"no":1309,"word":"era","meanings":["時代"]},
+  {"no":1310,"word":"session","meanings":["期間", "会期", "集まり"]},
+  {"no":1311,"word":"pause","meanings":["休止", "休止する"]},
+  {"no":1312,"word":"annual","meanings":["年に1度の", "1年間の"]},
+  {"no":1313,"word":"eternal","meanings":["永遠の"]},
+  {"no":1314,"word":"initial","meanings":["最初の", "頭文字", "イニシャル"]},
+  {"no":1315,"word":"prior","meanings":["より前の", "前の"]},
+  {"no":1316,"word":"subsequent","meanings":["続いて起こる"]},
+  {"no":1317,"word":"meanwhile","meanings":["その間", "その一方で"]},
+  {"no":1318,"word":"routine","meanings":["決まりきった仕事", "日常の"]},
+  {"no":1319,"word":"souvenir","meanings":["土産", "記念品"]},
+  {"no":1320,"word":"brick","meanings":["れんが", "積み木"]},
+  {"no":1321,"word":"pole","meanings":["棒", "さお", "柱", "極"]},
+  {"no":1322,"word":"mischief","meanings":["いたずら"]},
+  {"no":1323,"word":"superstition","meanings":["迷信"]},
+  {"no":1324,"word":"storage","meanings":["貯蔵", "保管"]},
+  {"no":1325,"word":"shelter","meanings":["避難", "住居"]},
+  {"no":1326,"word":"garment","meanings":["衣類"]},
+  {"no":1327,"word":"canal","meanings":["運河"]},
+  {"no":1328,"word":"cabinet","meanings":["戸棚", "内閣"]},
+  {"no":1329,"word":"incident","meanings":["出来事"]},
+  {"no":1330,"word":"circumstance","meanings":["状況", "事情"]},
+  {"no":1331,"word":"fetch","meanings":["取って来る"]},
+  {"no":1332,"word":"distribute","meanings":["分配する", "配る", "分布している"]},
+  {"no":1333,"word":"purchase","meanings":["購入する", "購入"]},
+  {"no":1334,"word":"statue","meanings":["像"]},
+  {"no":1335,"word":"sculpture","meanings":["彫刻"]},
+  {"no":1336,"word":"myth","meanings":["神話", "神話"]},
+  {"no":1337,"word":"craft","meanings":["工芸技術", "船", "乗り物"]},
+  {"no":1338,"word":"journal","meanings":["雑誌", "専門誌", "日誌", "日記"]},
+  {"no":1339,"word":"encyclopedia","meanings":["百科事典"]},
+  {"no":1340,"word":"heaven","meanings":["天国", "空"]},
+  {"no":1341,"word":"funeral","meanings":["葬式"]},
+  {"no":1342,"word":"soul","meanings":["魂", "人"]},
+  {"no":1343,"word":"priest","meanings":["神父", "僧侶", "牧師", "聖職者"]},
+  {"no":1344,"word":"faith","meanings":["信仰", "信頼"]},
+  {"no":1345,"word":"sacred","meanings":["神聖な"]},
+  {"no":1346,"word":"divine","meanings":["神の"]},
+  {"no":1347,"word":"muslim","meanings":["イスラム教徒"]},
+  {"no":1348,"word":"context","meanings":["文脈", "状況"]},
+  {"no":1349,"word":"singular","meanings":["単数の", "比類なき", "奇妙な"]},
+  {"no":1350,"word":"command","meanings":["言語を操る力", "命令", "集める", "見渡せる"]},
+  {"no":1351,"word":"instance","meanings":["例"]},
+  {"no":1352,"word":"dialogue","meanings":["会話", "対談", "対話"]},
+  {"no":1353,"word":"usage","meanings":["語法"]},
+  {"no":1354,"word":"vowel","meanings":["母音"]},
+  {"no":1355,"word":"pronoun","meanings":["代名詞"]},
+  {"no":1356,"word":"accent","meanings":["訛", "アクセント"]},
+  {"no":1358,"word":"remote","meanings":["辺鄙な", "遠い"]},
+  {"no":1359,"word":"ambition","meanings":["願望", "野望"]},
+  {"no":1360,"word":"temper","meanings":["気性", "平静"]},
+  {"no":1361,"word":"affection","meanings":["愛情"]},
+  {"no":1362,"word":"enthusiasm","meanings":["情熱", "熱意"]},
+  {"no":1363,"word":"rage","meanings":["激怒", "激しく続く", "猛威をふるう"]},
+  {"no":1364,"word":"incredible","meanings":["信じられない"]},
+  {"no":1365,"word":"chuckle","meanings":["くすくす笑う", "くすくす笑うこと"]},
+  {"no":1366,"word":"dare","meanings":["思い切ってする"]},
+  {"no":1367,"word":"scream","meanings":["悲鳴を上げる", "悲鳴"]},
+  {"no":1368,"word":"soothe","meanings":["なだめる", "やわらげる"]},
+  {"no":1369,"word":"tempt","meanings":["誘惑する"]},
+  {"no":1370,"word":"scold","meanings":["叱る"]},
+  {"no":1371,"word":"oppress","meanings":["圧迫する", "虐げる"]},
+  {"no":1372,"word":"threaten","meanings":["脅かす", "すると脅す", "の恐れがある"]},
+  {"no":1373,"word":"mourn","meanings":["嘆く", "悼む"]},
+  {"no":1374,"word":"sacrifice","meanings":["犠牲にする", "犠牲"]},
+  {"no":1375,"word":"curse","meanings":["災いの元", "呪い", "呪う", "ののしる"]},
+  {"no":1376,"word":"stem","meanings":["原因である", "茎", "幹", "ワイングラスの脚"]},
+  {"no":1377,"word":"trigger","meanings":["のきっかけになる", "誘発する", "引き金"]},
+  {"no":1378,"word":"consequence","meanings":["結果", "重要性"]},
+  {"no":1379,"word":"process","meanings":["過程", "加工する", "処理する"]},
+  {"no":1380,"word":"resort","meanings":["訴える", "行楽地", "手段"]},
+  {"no":1381,"word":"formula","meanings":["方法", "秘けつ", "式", "公式"]},
+  {"no":1382,"word":"procedure","meanings":["手続き", "手順"]},
+  {"no":1383,"word":"extraordinary","meanings":["並外れた", "臨時の"]},
+  {"no":1384,"word":"absolute","meanings":["絶対的な"]},
+  {"no":1385,"word":"overwhelming","meanings":["圧倒的な"]},
+  {"no":1386,"word":"altogether","meanings":["完全に", "全部で"]},
+  {"no":1387,"word":"entire","meanings":["すべての"]},
+  {"no":1388,"word":"tremendous","meanings":["すさまじい"]},
+  {"no":1389,"word":"sheer","meanings":["てつもないの", "まったくの"]},
+  {"no":1390,"word":"partial","meanings":["部分的な", "不公平な", "大好きで"]},
+  {"no":1391,"word":"barely","meanings":["かろうじて", "ほとんどない"]},
+  {"no":1392,"word":"approximately","meanings":["おおよそ", "約"]},
+  {"no":1393,"word":"frequently","meanings":["頻繁に"]},
+  {"no":1394,"word":"apparently","meanings":["見たところでは", "<口語>どうやららしい"]},
+  {"no":1395,"word":"merely","meanings":["すぎない", "単に"]},
+  {"no":1396,"word":"nevertheless","meanings":["それにもかかわらず"]},
+  {"no":1397,"word":"somehow","meanings":["何らかの方法で", "何らかの理由で", "どういうわけか"]},
+  {"no":1398,"word":"thus","meanings":["それゆえ", "このように"]},
+  {"no":1401,"word":"assert","meanings":["断定する", "主張する"]},
+  {"no":1402,"word":"defy","meanings":["逆らう", "拒む"]},
+  {"no":1403,"word":"condemn","meanings":["非難する", "宣告をする", "強いる"]},
+  {"no":1404,"word":"cite","meanings":["引き合いに出す", "引用する"]},
+  {"no":1405,"word":"illustrate","meanings":["説明する", "例証する", "挿絵を入れる", "図解する"]},
+  {"no":1406,"word":"refute","meanings":["論駁する", "反論する"]},
+  {"no":1407,"word":"sue","meanings":["訴える"]},
+  {"no":1408,"word":"articulate","meanings":["はっきり述べる", "考えを明確に表現できる"]},
+  {"no":1409,"word":"version","meanings":["解釈", "意見", "版"]},
+  {"no":1410,"word":"advocate","meanings":["提唱者", "支持者", "主張する", "支持する"]},
+  {"no":1411,"word":"breakthrough","meanings":["飛躍的進歩", "大発見"]},
+  {"no":1412,"word":"evolution","meanings":["進化"]},
+  {"no":1413,"word":"innovation","meanings":["革新"]},
+  {"no":1414,"word":"probe","meanings":["探査機", "調査する"]},
+  {"no":1415,"word":"fluid","meanings":["流体", "流動的な", "なめらかな"]},
+  {"no":1416,"word":"particle","meanings":["粒子", "かけら"]},
+  {"no":1417,"word":"gravity","meanings":["重力", "重大さ"]},
+  {"no":1418,"word":"hypothesis","meanings":["仮説"]},
+  {"no":1419,"word":"specimen","meanings":["標本", "サンプル"]},
+  {"no":1420,"word":"microbe","meanings":["微生物"]},
+  {"no":1421,"word":"poison","meanings":["毒"]},
+  {"no":1422,"word":"acid","meanings":["酸性の", "辛辣な"]},
+  {"no":1423,"word":"toxic","meanings":["有害な", "有毒な"]},
+  {"no":1424,"word":"endeavor","meanings":["努力", "試み", "努力する", "試みる"]},
+  {"no":1425,"word":"doom","meanings":["の運命にある"]},
+  {"no":1426,"word":"manufacture","meanings":["製造する", "製造", "製品"]},
+  {"no":1427,"word":"yield","meanings":["産出する", "屈する", "産出量"]},
+  {"no":1428,"word":"duplicate","meanings":["複製する", "複製品", "複製の"]},
+  {"no":1429,"word":"assemble","meanings":["組み立てる", "集まる"]},
+  {"no":1430,"word":"mold","meanings":["作る", "形成する"]},
+  {"no":1431,"word":"coin","meanings":["作り出す", "硬貨"]},
+  {"no":1432,"word":"therapy","meanings":["治療"]},
+  {"no":1433,"word":"injection","meanings":["注射"]},
+  {"no":1434,"word":"dose","meanings":["服用量"]},
+  {"no":1435,"word":"sanitation","meanings":["衛生"]},
+  {"no":1436,"word":"germ","meanings":["細菌", "ばい菌"]},
+  {"no":1437,"word":"tumor","meanings":["腫瘍"]},
+  {"no":1438,"word":"stroke","meanings":["卒中", "発作"]},
+  {"no":1439,"word":"agony","meanings":["苦痛"]},
+  {"no":1440,"word":"plague","meanings":["疫病", "伝染病", "災害", "苦しめる"]},
+  {"no":1441,"word":"fatigue","meanings":["疲労"]},
+  {"no":1442,"word":"diagnosis","meanings":["診断"]},
+  {"no":1443,"word":"mortality","meanings":["死亡率", "死すべき運命"]},
+  {"no":1444,"word":"nursing","meanings":["看護"]},
+  {"no":1445,"word":"chronic","meanings":["慢性の"]},
+  {"no":1446,"word":"immune","meanings":["免疫の"]},
+  {"no":1447,"word":"terminal","meanings":["末期の", "終着"]},
+  {"no":1448,"word":"sound","meanings":["健全な", "堅実な"]},
+  {"no":1449,"word":"respiratory","meanings":["呼吸の"]},
+  {"no":1450,"word":"choke","meanings":["息が詰まる", "窒息する", "窒息させる"]},
+  {"no":1451,"word":"paralyze","meanings":["麻痺させる"]},
+  {"no":1452,"word":"prescribe","meanings":["処方する", "指示する"]},
+  {"no":1453,"word":"digest","meanings":["消化する", "理解する", "要約"]},
+  {"no":1454,"word":"weary","meanings":["疲れている", "うんざり"]},
+  {"no":1455,"word":"nourish","meanings":["栄養を与える", "抱く"]},
+  {"no":1456,"word":"appalling","meanings":["ぞっとするような"]},
+  {"no":1457,"word":"flesh","meanings":["肉"]},
+  {"no":1458,"word":"limb","meanings":["手足"]},
+  {"no":1459,"word":"erect","meanings":["直立した", "建てる"]},
+  {"no":1460,"word":"spinal","meanings":["脊椎の"]},
+  {"no":1461,"word":"suck","meanings":["吸う"]},
+  {"no":1462,"word":"shrug","meanings":["すくめる", "肩をすくめる"]},
+  {"no":1463,"word":"compensate","meanings":["補償する"]},
+  {"no":1464,"word":"abuse","meanings":["虐待", "乱用", "悪用する"]},
+  {"no":1465,"word":"bias","meanings":["偏見"]},
+  {"no":1466,"word":"prestige","meanings":["名声", "威信"]},
+  {"no":1467,"word":"privilege","meanings":["特権"]},
+  {"no":1468,"word":"feat","meanings":["偉業"]},
+  {"no":1469,"word":"dignity","meanings":["威厳"]},
+  {"no":1470,"word":"virtue","meanings":["美徳", "長所", "のために"]},
+  {"no":1471,"word":"aristocracy","meanings":["貴族"]},
+  {"no":1472,"word":"rebel","meanings":["反逆者", "反逆する", "反抗する"]},
+  {"no":1473,"word":"scheme","meanings":["計画", "陰謀"]},
+  {"no":1474,"word":"convention","meanings":["会議", "大会", "慣習", "条約"]},
+  {"no":1475,"word":"conference","meanings":["会議"]},
+  {"no":1476,"word":"consent","meanings":["合意", "合意する"]},
+  {"no":1477,"word":"initiative","meanings":["新構想", "新計画", "主導権"]},
+  {"no":1478,"word":"province","meanings":["州", "省", "地方"]},
+  {"no":1479,"word":"colony","meanings":["植民地", "群落"]},
+  {"no":1480,"word":"frontier","meanings":["辺境", "国境", "最前線"]},
+  {"no":1481,"word":"treaty","meanings":["条約"]},
+  {"no":1482,"word":"tribe","meanings":["部族", "種族"]},
+  {"no":1483,"word":"pension","meanings":["年金"]},
+  {"no":1484,"word":"stake","meanings":["利害関係", "危険", "賭け金", "配当金"]},
+  {"no":1485,"word":"coverage","meanings":["報道", "補償"]},
+  {"no":1486,"word":"obligation","meanings":["責務", "恩義"]},
+  {"no":1487,"word":"hygiene","meanings":["衛生", "衛生学"]},
+  {"no":1488,"word":"supervisor","meanings":["監督者"]},
+  {"no":1489,"word":"norm","meanings":["普通のこと", "規範"]},
+  {"no":1490,"word":"patent","meanings":["特許", "の特許をとる", "明白な", "見えすいた"]},
+  {"no":1491,"word":"primitive","meanings":["原始的な", "未開の"]},
+  {"no":1492,"word":"ethnic","meanings":["民族の", "民族的な"]},
+  {"no":1493,"word":"anonymous","meanings":["匿名の"]},
+  {"no":1494,"word":"metropolitan","meanings":["大都市の"]},
+  {"no":1495,"word":"entitled","meanings":["権利がある", "題された"]},
+  {"no":1496,"word":"demographic","meanings":["人口統計上の", "年齢層"]},
+  {"no":1497,"word":"donate","meanings":["寄付する", "提供する"]},
+  {"no":1498,"word":"flourish","meanings":["栄える"]},
+  {"no":1499,"word":"conform","meanings":["合わせる"]},
+  {"no":1500,"word":"comply","meanings":["従う", "遵守する"]},
+  {"no":1501,"word":"legislation","meanings":["法律"]},
+  {"no":1502,"word":"testimony","meanings":["証言"]},
+  {"no":1503,"word":"jury","meanings":["陪審"]},
+  {"no":1504,"word":"legitimate","meanings":["正当な", "合法の"]},
+  {"no":1505,"word":"enforce","meanings":["施行する", "強制する"]},
+  {"no":1506,"word":"regime","meanings":["政権", "政治体制"]},
+  {"no":1507,"word":"bureaucracy","meanings":["官僚制度", "官僚主義", "官僚"]},
+  {"no":1508,"word":"corruption","meanings":["腐敗", "汚職"]},
+  {"no":1509,"word":"tyranny","meanings":["圧政", "専制政治", "暴虐"]},
+  {"no":1510,"word":"sanction","meanings":["制裁", "認可"]},
+  {"no":1511,"word":"candidate","meanings":["候補", "人"]},
+  {"no":1512,"word":"senator","meanings":["上院議員"]},
+  {"no":1513,"word":"ambassador","meanings":["大使"]},
+  {"no":1514,"word":"diplomat","meanings":["外交官"]},
+  {"no":1515,"word":"refugee","meanings":["難民"]},
+  {"no":1516,"word":"ally","meanings":["同盟国", "協力者", "提携する"]},
+  {"no":1517,"word":"reign","meanings":["統治", "君臨する"]},
+  {"no":1518,"word":"federal","meanings":["連邦の"]},
+  {"no":1519,"word":"communist","meanings":["共産主義の", "共産主義者"]},
+  {"no":1520,"word":"municipal","meanings":["市の", "地方自治の"]},
+  {"no":1521,"word":"estate","meanings":["財産", "地所"]},
+  {"no":1522,"word":"asset","meanings":["財産", "資産"]},
+  {"no":1523,"word":"revenue","meanings":["歳入", "収益"]},
+  {"no":1524,"word":"deficit","meanings":["赤字"]},
+  {"no":1525,"word":"commerce","meanings":["商業"]},
+  {"no":1526,"word":"output","meanings":["生産高", "出力"]},
+  {"no":1527,"word":"subsidy","meanings":["補助金"]},
+  {"no":1528,"word":"transaction","meanings":["取り引き"]},
+  {"no":1529,"word":"bankrupt","meanings":["倒産した", "破産した"]},
+  {"no":1530,"word":"monetary","meanings":["貨幣の", "金銭的な"]},
+  {"no":1531,"word":"corporation","meanings":["企業", "法人"]},
+  {"no":1532,"word":"enterprise","meanings":["企業", "事業"]},
+  {"no":1533,"word":"venture","meanings":["事業", "危険を冒して行く"]},
+  {"no":1534,"word":"headquarters","meanings":["本社", "本部"]},
+  {"no":1535,"word":"personnel","meanings":["全職員", "人事"]},
+  {"no":1536,"word":"entrepreneur","meanings":["起業家"]},
+  {"no":1537,"word":"predecessor","meanings":["前任者", "以前あったもの"]},
+  {"no":1538,"word":"toil","meanings":["骨折って働く", "骨の折れる仕事"]},
+  {"no":1539,"word":"undertake","meanings":["引き受ける", "始める"]},
+  {"no":1540,"word":"merge","meanings":["合併する", "合併させる"]},
+  {"no":1541,"word":"comprise","meanings":["から成る", "占める"]},
+  {"no":1542,"word":"component","meanings":["構成要素", "成分", "部品"]},
+  {"no":1543,"word":"framework","meanings":["枠組", "骨組み"]},
+  {"no":1544,"word":"prototype","meanings":["原型", "試作品", "典型"]},
+  {"no":1545,"word":"dimension","meanings":["側面", "要因", "次元", "寸法", "大きさ"]},
+  {"no":1546,"word":"margin","meanings":["余白", "欄外", "差", "端"]},
+  {"no":1547,"word":"excel","meanings":["優れている"]},
+  {"no":1548,"word":"contradict","meanings":["矛盾する", "反論する"]},
+  {"no":1549,"word":"consensus","meanings":["合意", "総意"]},
+  {"no":1550,"word":"converse","meanings":["正反対", "正反対の", "会話する"]},
+  {"no":1551,"word":"inequality","meanings":["不平等"]},
+  {"no":1552,"word":"equivalent","meanings":["等しい", "同等のもの"]},
+  {"no":1553,"word":"compatible","meanings":["適合する", "互換性がある"]},
+  {"no":1554,"word":"identical","meanings":["同一の", "うり二つの"]},
+  {"no":1555,"word":"correspond","meanings":["一致する", "やりとりをする"]},
+  {"no":1556,"word":"random","meanings":["無作為の", "でたらめの"]},
+  {"no":1557,"word":"warrior","meanings":["戦士"]},
+  {"no":1558,"word":"assault","meanings":["襲撃", "暴行"]},
+  {"no":1559,"word":"troop","meanings":["軍隊"]},
+  {"no":1560,"word":"shield","meanings":["盾", "防御物"]},
+  {"no":1561,"word":"torture","meanings":["拷問", "辛いこと", "拷問にかける"]},
+  {"no":1562,"word":"dispute","meanings":["論争", "紛争", "異議を唱える"]},
+  {"no":1563,"word":"combat","meanings":["戦闘", "戦う"]},
+  {"no":1564,"word":"tactics","meanings":["戦術"]},
+  {"no":1565,"word":"quarrel","meanings":["口論する", "口論"]},
+  {"no":1566,"word":"contend","meanings":["戦う", "主張する"]},
+  {"no":1567,"word":"slaughter","meanings":["虐殺する", "殺す"]},
+  {"no":1568,"word":"suppress","meanings":["鎮圧する", "抑える"]},
+  {"no":1569,"word":"surrender","meanings":["降伏する", "引き渡す"]},
+  {"no":1570,"word":"hostile","meanings":["敵意のある", "敵の", "厳しい"]},
+  {"no":1571,"word":"wreck","meanings":["残骸", "ボロボロの人"]},
+  {"no":1572,"word":"toll","meanings":["犠牲"]},
+  {"no":1573,"word":"disrupt","meanings":["かき乱す"]},
+  {"no":1574,"word":"interfere","meanings":["邪魔する", "干渉する"]},
+  {"no":1575,"word":"confront","meanings":["立ちふさがる", "直面する", "立ち向かう"]},
+  {"no":1576,"word":"explode","meanings":["爆発する", "爆発的に増加する"]},
+  {"no":1577,"word":"collide","meanings":["衝突する"]},
+  {"no":1578,"word":"nephew","meanings":["甥"]},
+  {"no":1579,"word":"infant","meanings":["幼児"]},
+  {"no":1580,"word":"spouse","meanings":["配偶者"]},
+  {"no":1581,"word":"heir","meanings":["相続人", "後継者"]},
+  {"no":1582,"word":"folk","meanings":["人々", "民間の"]},
+  {"no":1583,"word":"peer","meanings":["同等の人", "同輩", "じっと見る"]},
+  {"no":1584,"word":"recipient","meanings":["受け取る人", "被移植者"]},
+  {"no":1585,"word":"navigate","meanings":["進路を決める", "克服して進む", "航行する"]},
+  {"no":1586,"word":"flee","meanings":["逃亡する"]},
+  {"no":1587,"word":"retreat","meanings":["退く", "撤退", "退却"]},
+  {"no":1588,"word":"crawl","meanings":["這って進む", "這うように進む"]},
+  {"no":1589,"word":"hover","meanings":["空中にとどまる", "うろつく", "さまよう"]},
+  {"no":1590,"word":"drift","meanings":["漂う"]},
+  {"no":1591,"word":"alter","meanings":["変える"]},
+  {"no":1592,"word":"convert","meanings":["転換する", "改宗させる"]},
+  {"no":1593,"word":"overtake","meanings":["追い越す"]},
+  {"no":1594,"word":"dispatch","meanings":["派遣する", "送る"]},
+  {"no":1595,"word":"shrink","meanings":["縮む", "減る", "縮ませる", "減らす"]},
+  {"no":1596,"word":"wither","meanings":["しおれる", "しぼむ"]},
+  {"no":1597,"word":"descend","meanings":["降下する"]},
+  {"no":1598,"word":"accelerate","meanings":["加速する"]},
+  {"no":1599,"word":"fluctuate","meanings":["変動する"]},
+  {"no":1600,"word":"distort","meanings":["歪める"]},
+  {"no":1601,"word":"crack","meanings":["割れる", "砕ける", "音を出す", "割る", "砕く", "割れ目"]},
+  {"no":1602,"word":"transition","meanings":["移り変わり", "推移"]},
+  {"no":1603,"word":"game-changer","meanings":["革命的なこと"]},
+  {"no":1604,"word":"reinforce","meanings":["補強する"]},
+  {"no":1605,"word":"foster","meanings":["育成する", "の里親になる", "里親の"]},
+  {"no":1606,"word":"breakdown","meanings":["崩壊", "故障", "衰弱"]},
+  {"no":1607,"word":"collapse","meanings":["崩壊する", "倒れる", "崩壊", "倒れること"]},
+  {"no":1608,"word":"render","meanings":["する", "与える"]},
+  {"no":1609,"word":"impair","meanings":["低下させる", "損なう"]},
+  {"no":1610,"word":"undermine","meanings":["弱める", "揺るがす"]},
+  {"no":1611,"word":"cope","meanings":["対処する"]},
+  {"no":1612,"word":"tackle","meanings":["取り組む"]},
+  {"no":1613,"word":"demolish","meanings":["取り壊す"]},
+  {"no":1614,"word":"confine","meanings":["閉じ込める", "制限する"]},
+  {"no":1615,"word":"designate","meanings":["指定する"]},
+  {"no":1616,"word":"regulate","meanings":["規制する", "調整する"]},
+  {"no":1617,"word":"refrain","meanings":["控える"]},
+  {"no":1618,"word":"prohibit","meanings":["禁じる"]},
+  {"no":1619,"word":"halt","meanings":["止める", "止まる", "停止"]},
+  {"no":1620,"word":"constraint","meanings":["制約"]},
+  {"no":1621,"word":"stimulate","meanings":["刺激する"]},
+  {"no":1622,"word":"animate","meanings":["活気づける", "アニメ化する"]},
+  {"no":1623,"word":"spur","meanings":["駆り立てる", "促す", "拍車", "刺激", "動機"]},
+  {"no":1624,"word":"urge","meanings":["せき立てる", "強く勧める", "衝動"]},
+  {"no":1625,"word":"compel","meanings":["強制する"]},
+  {"no":1626,"word":"blur","meanings":["ぼやかす", "ぼやける"]},
+  {"no":1627,"word":"divert","meanings":["の方向を変える", "そらす"]},
+  {"no":1628,"word":"reverse","meanings":["逆転する", "覆す", "逆", "逆の"]},
+  {"no":1629,"word":"overshadow","meanings":["の影を薄くさせる"]},
+  {"no":1630,"word":"worsen","meanings":["悪化させる"]},
+  {"no":1631,"word":"jeopardize","meanings":["危険にさらす"]},
+  {"no":1632,"word":"supplement","meanings":["補う", "補充", "栄養補助食品", "付録"]},
+  {"no":1633,"word":"pose","meanings":["もたらす"]},
+  {"no":1634,"word":"induce","meanings":["引き起こす", "to do)にするよう説得する"]},
+  {"no":1635,"word":"betray","meanings":["裏切る", "漏らす", "さらけ出す"]},
+  {"no":1636,"word":"bully","meanings":["いじめる", "いじめっ子"]},
+  {"no":1637,"word":"disregard","meanings":["無視する"]},
+  {"no":1638,"word":"squeeze","meanings":["搾る", "強く押す"]},
+  {"no":1639,"word":"rub","meanings":["こする", "こすりつける"]},
+  {"no":1640,"word":"smash","meanings":["粉砕する"]},
+  {"no":1641,"word":"insert","meanings":["差し込む", "書き込む"]},
+  {"no":1642,"word":"detach","meanings":["切り離す"]},
+  {"no":1643,"word":"withdraw","meanings":["引っ込める", "引き出す", "退く"]},
+  {"no":1644,"word":"compile","meanings":["まとめる", "編纂する"]},
+  {"no":1645,"word":"browse","meanings":["拾い読みする", "拾い読みする"]},
+  {"no":1646,"word":"manipulate","meanings":["操作する"]},
+  {"no":1647,"word":"implement","meanings":["実行する", "道具"]},
+  {"no":1648,"word":"execute","meanings":["遂行する", "実行する", "処刑する"]},
+  {"no":1649,"word":"host","meanings":["主催する", "多くの", "主人", "主催者"]},
+  {"no":1650,"word":"mount","meanings":["据え付ける", "乗る", "増加する"]},
+  {"no":1651,"word":"discharge","meanings":["排出する", "解放する"]},
+  {"no":1652,"word":"drain","meanings":["の水を抜く", "の水分を切る", "流出する", "乾く"]},
+  {"no":1653,"word":"soak","meanings":["浸す", "吸収する"]},
+  {"no":1654,"word":"dip","meanings":["つける", "浸す", "少し下げる"]},
+  {"no":1655,"word":"suspend","meanings":["吊るす", "中断する", "停職［停学］にする"]},
+  {"no":1656,"word":"extract","meanings":["取り出す", "抽出する", "抽出したもの", "抜粋"]},
+  {"no":1657,"word":"slap","meanings":["平手打ちする"]},
+  {"no":1658,"word":"embrace","meanings":["抱擁する", "受け入れる"]},
+  {"no":1659,"word":"embark","meanings":["着手する", "乗り込む"]},
+  {"no":1660,"word":"intervene","meanings":["介入する"]},
+  {"no":1661,"word":"penetrate","meanings":["入り込む", "貫通する", "貫通する", "入る"]},
+  {"no":1662,"word":"intrude","meanings":["立ち入る"]},
+  {"no":1663,"word":"utilize","meanings":["利用する"]},
+  {"no":1664,"word":"embed","meanings":["埋め込む"]},
+  {"no":1665,"word":"allocate","meanings":["割り当てる"]},
+  {"no":1666,"word":"coordinate","meanings":["うまく調整する"]},
+  {"no":1667,"word":"blink","meanings":["まばたきする"]},
+  {"no":1668,"word":"spin","meanings":["ぐるぐる回る", "回す", "紡ぐ"]},
+  {"no":1669,"word":"rotate","meanings":["回転する", "回転させる"]},
+  {"no":1670,"word":"scramble","meanings":["急いで動く"]},
+  {"no":1671,"word":"vanish","meanings":["消える"]},
+  {"no":1672,"word":"snap","meanings":["ポキンと折れる", "ポキンと折る", "パチンと鳴らす"]},
+  {"no":1673,"word":"rattle","meanings":["ガタガタ鳴る", "鳴らす", "ガラガラ"]},
+  {"no":1674,"word":"cease","meanings":["しなくなる"]},
+  {"no":1675,"word":"haste","meanings":["急ぐこと"]},
+  {"no":1676,"word":"conceal","meanings":["隠す"]},
+  {"no":1677,"word":"disguise","meanings":["隠す", "変装する", "変装"]},
+  {"no":1678,"word":"deceive","meanings":["だます"]},
+  {"no":1679,"word":"neglect","meanings":["怠る", "放置する", "の世話をしない", "放置"]},
+  {"no":1680,"word":"evacuate","meanings":["避難させる"]},
+  {"no":1681,"word":"coincide","meanings":["同時に起きる", "一致する"]},
+  {"no":1682,"word":"prevail","meanings":["普及している", "優勢となる"]},
+  {"no":1683,"word":"sustain","meanings":["維持する", "支える"]},
+  {"no":1684,"word":"linger","meanings":["残る", "長居する"]},
+  {"no":1685,"word":"revive","meanings":["生き返る", "よみがえる", "生き返らせる"]},
+  {"no":1686,"word":"resume","meanings":["再開する", "再開する", "履歴書", "概要", "レジュメ"]},
+  {"no":1687,"word":"outbreak","meanings":["発生", "勃発"]},
+  {"no":1688,"word":"inspect","meanings":["検査する"]},
+  {"no":1689,"word":"expedition","meanings":["探検", "遠征", "探検隊"]},
+  {"no":1690,"word":"enroll","meanings":["入学する", "在籍している"]},
+  {"no":1691,"word":"discipline","meanings":["躾ける", "躾", "規律", "分野"]},
+  {"no":1692,"word":"tuition","meanings":["授業料", "授業"]},
+  {"no":1693,"word":"ethic","meanings":["倫理", "倫理"]},
+  {"no":1694,"word":"psychology","meanings":["心理学", "心理"]},
+  {"no":1695,"word":"astronomy","meanings":["天文学"]},
+  {"no":1696,"word":"archaeologist","meanings":["考古学者"]},
+  {"no":1697,"word":"thesis","meanings":["論文", "テーマ"]},
+  {"no":1698,"word":"dormitory","meanings":["寮"]},
+  {"no":1699,"word":"grasp","meanings":["理解する", "つかむ", "理解", "つかむこと"]},
+  {"no":1700,"word":"anticipate","meanings":["予想する", "期待する"]},
+  {"no":1701,"word":"foresee","meanings":["予知する"]},
+  {"no":1702,"word":"infer","meanings":["推測する"]},
+  {"no":1703,"word":"deduce","meanings":["推定する"]},
+  {"no":1704,"word":"deem","meanings":["Ｃ)ＯをＣだと思う"]},
+  {"no":1705,"word":"ponder","meanings":["熟考する"]},
+  {"no":1706,"word":"assure","meanings":["保証する", "確信させる"]},
+  {"no":1707,"word":"assess","meanings":["評価する", "査定する"]},
+  {"no":1708,"word":"concede","meanings":["認める"]},
+  {"no":1709,"word":"compromise","meanings":["妥協する", "曲げる", "妥協"]},
+  {"no":1710,"word":"comprehend","meanings":["理解する"]},
+  {"no":1711,"word":"reconcile","meanings":["調和させる", "和解させる", "仕方なく受け入れる"]},
+  {"no":1712,"word":"instill","meanings":["教える", "植え付ける"]},
+  {"no":1713,"word":"alert","meanings":["油断のない", "用心深い", "警告"]},
+  {"no":1714,"word":"cognitive","meanings":["認知の"]},
+  {"no":1715,"word":"intuition","meanings":["直感"]},
+  {"no":1716,"word":"vow","meanings":["誓い", "誓う"]},
+  {"no":1717,"word":"nightmare","meanings":["悪夢", "悪夢のようなこと"]},
+  {"no":1718,"word":"stereotype","meanings":["固定観念"]},
+  {"no":1719,"word":"illusion","meanings":["幻想"]},
+  {"no":1720,"word":"criterion","meanings":["基準"]},
+  {"no":1721,"word":"ideology","meanings":["イデオロギー", "思想"]},
+  {"no":1722,"word":"tolerate","meanings":["大目に見る", "我慢する"]},
+  {"no":1723,"word":"overlook","meanings":["見落とす", "見逃す", "大目に見る", "見渡す"]},
+  {"no":1724,"word":"conceive","meanings":["思い浮かべる", "妊娠する", "想像する"]},
+  {"no":1725,"word":"misunderstand","meanings":["誤解している"]},
+  {"no":1726,"word":"keen","meanings":["鋭い", "熱中して", "好きで"]},
+  {"no":1727,"word":"subjective","meanings":["主観的な"]},
+  {"no":1728,"word":"compulsory","meanings":["義務的な", "規定の"]},
+  {"no":1729,"word":"relieve","meanings":["取り除く", "安心させる"]},
+  {"no":1730,"word":"trim","meanings":["刈り込む", "切り取る", "こぎれいな"]},
+  {"no":1731,"word":"disposal","meanings":["処分", "廃棄", "自由にする"]},
+  {"no":1732,"word":"scent","meanings":["香り", "臭い"]},
+  {"no":1733,"word":"grain","meanings":["穀物", "粒", "少量"]},
+  {"no":1734,"word":"wheat","meanings":["小麦"]},
+  {"no":1735,"word":"deforestation","meanings":["森林伐採"]},
+  {"no":1736,"word":"drought","meanings":["干ばつ"]},
+  {"no":1737,"word":"irrigation","meanings":["灌漑"]},
+  {"no":1738,"word":"spectacle","meanings":["光景", "見せ物"]},
+  {"no":1739,"word":"altitude","meanings":["標高", "高度"]},
+  {"no":1740,"word":"catastrophe","meanings":["大災害", "災難"]},
+  {"no":1741,"word":"wilderness","meanings":["荒野", "野原"]},
+  {"no":1742,"word":"decay","meanings":["腐敗", "腐敗する", "衰える"]},
+  {"no":1743,"word":"erosion","meanings":["侵食"]},
+  {"no":1744,"word":"flame","meanings":["炎"]},
+  {"no":1745,"word":"galaxy","meanings":["銀河"]},
+  {"no":1746,"word":"chill","meanings":["寒気", "冷やす"]},
+  {"no":1747,"word":"thermal","meanings":["熱の"]},
+  {"no":1748,"word":"fertile","meanings":["肥沃な", "肥えた"]},
+  {"no":1749,"word":"fossil","meanings":["化石化した", "化石"]},
+  {"no":1750,"word":"exploit","meanings":["利用する", "搾取する"]},
+  {"no":1751,"word":"contaminate","meanings":["汚染する"]},
+  {"no":1752,"word":"erupt","meanings":["噴火する"]},
+  {"no":1753,"word":"roar","meanings":["ほえる", "うなり声", "怒号", "轟音"]},
+  {"no":1754,"word":"inhabit","meanings":["生息している", "ある"]},
+  {"no":1755,"word":"nurture","meanings":["育てる", "養育", "教育"]},
+  {"no":1756,"word":"owl","meanings":["フクロウ"]},
+  {"no":1757,"word":"instinct","meanings":["本能"]},
+  {"no":1758,"word":"prey","meanings":["餌食", "餌食にする"]},
+  {"no":1759,"word":"anatomy","meanings":["解剖", "構造"]},
+  {"no":1760,"word":"mammal","meanings":["哺乳動物", "哺乳類"]},
+  {"no":1761,"word":"predator","meanings":["捕食動物", "捕食者"]},
+  {"no":1762,"word":"hybrid","meanings":["交配種", "雑種", "ハイブリッド"]},
+  {"no":1763,"word":"skull","meanings":["頭蓋骨"]},
+  {"no":1764,"word":"timber","meanings":["材木"]},
+  {"no":1765,"word":"textile","meanings":["織物", "織物の"]},
+  {"no":1766,"word":"fabric","meanings":["布地", "織物", "組織", "構造"]},
+  {"no":1767,"word":"mill","meanings":["製造工場"]},
+  {"no":1768,"word":"weave","meanings":["織る", "編む"]},
+  {"no":1769,"word":"competent","meanings":["有能な"]},
+  {"no":1770,"word":"optimistic","meanings":["楽観的な"]},
+  {"no":1771,"word":"patriotic","meanings":["愛国的な"]},
+  {"no":1772,"word":"noble","meanings":["高潔な", "貴族の", "貴族"]},
+  {"no":1773,"word":"naughty","meanings":["いたずらな"]},
+  {"no":1774,"word":"arrogant","meanings":["傲慢な"]},
+  {"no":1775,"word":"vigorous","meanings":["精力的な", "活発な"]},
+  {"no":1776,"word":"humble","meanings":["控えめな", "卑しい", "貧しい"]},
+  {"no":1777,"word":"eligible","meanings":["資格のある"]},
+  {"no":1778,"word":"courtesy","meanings":["礼儀正しさ"]},
+  {"no":1779,"word":"resilient","meanings":["回復の早い", "回復力のある"]},
+  {"no":1780,"word":"inclined","meanings":["する傾向がある", "したい気持ちだ"]},
+  {"no":1781,"word":"haunt","meanings":["つきまとう", "出没する", "好んで行く場所", "たまり場"]},
+  {"no":1782,"word":"intent","meanings":["没頭した", "決心した", "意図"]},
+  {"no":1783,"word":"indulge","meanings":["ふける", "思いのままにさせる"]},
+  {"no":1784,"word":"flaw","meanings":["傷", "欠点"]},
+  {"no":1785,"word":"defect","meanings":["欠陥"]},
+  {"no":1786,"word":"trait","meanings":["特性"]},
+  {"no":1787,"word":"analogy","meanings":["類似点", "類推", "例え"]},
+  {"no":1788,"word":"parallel","meanings":["類似", "平行の", "類似した"]},
+  {"no":1789,"word":"indispensable","meanings":["不可欠な"]},
+  {"no":1790,"word":"crucial","meanings":["重大な"]},
+  {"no":1791,"word":"grave","meanings":["重大な", "墓"]},
+  {"no":1792,"word":"primary","meanings":["主な", "第", "の", "初期の", "原始の"]},
+  {"no":1793,"word":"vital","meanings":["不可欠な", "きわめて重要な"]},
+  {"no":1794,"word":"integral","meanings":["不可欠な", "完全な"]},
+  {"no":1795,"word":"profound","meanings":["深い"]},
+  {"no":1796,"word":"grim","meanings":["厳しい"]},
+  {"no":1797,"word":"fierce","meanings":["激しい", "どう猛な"]},
+  {"no":1798,"word":"harsh","meanings":["厳しい"]},
+  {"no":1799,"word":"acute","meanings":["深刻な", "鋭い", "急性の"]},
+  {"no":1800,"word":"ambiguous","meanings":["曖昧な"]},
+  {"no":1801,"word":"misleading","meanings":["誤解を招く", "紛らわしい"]},
+  {"no":1802,"word":"obscure","meanings":["ぼやけた", "わかりにくい", "無名の"]},
+  {"no":1803,"word":"mature","meanings":["成熟した", "熟成した", "成熟する", "熟成する"]},
+  {"no":1804,"word":"neat","meanings":["きちんとした"]},
+  {"no":1805,"word":"decent","meanings":["まともな", "きちんとした"]},
+  {"no":1806,"word":"straightforward","meanings":["わかりやすい", "率直な"]},
+  {"no":1807,"word":"sophisticated","meanings":["高度な", "洗練された", "教養のある"]},
+  {"no":1808,"word":"elaborate","meanings":["手の込んだ", "凝った", "苦労して作り上げる", "詳しく話す"]},
+  {"no":1809,"word":"prompt","meanings":["迅速な", "促す"]},
+  {"no":1810,"word":"swift","meanings":["素早い"]},
+  {"no":1811,"word":"mighty","meanings":["強力な"]},
+  {"no":1812,"word":"explicit","meanings":["明確な"]},
+  {"no":1813,"word":"authentic","meanings":["本物の"]},
+  {"no":1814,"word":"wit","meanings":["機知", "機知に富んだ人"]},
+  {"no":1815,"word":"thrive","meanings":["好調である", "繁栄する", "健康に育つ"]},
+  {"no":1816,"word":"dim","meanings":["薄暗い", "ぼんやりした", "暗くする"]},
+  {"no":1817,"word":"gloomy","meanings":["薄暗い", "陰気な", "悲観的な"]},
+  {"no":1818,"word":"barren","meanings":["不毛な"]},
+  {"no":1819,"word":"idle","meanings":["何もしていない", "怠惰な", "何もしないでいる"]},
+  {"no":1820,"word":"adverse","meanings":["不都合な", "悪い"]},
+  {"no":1821,"word":"tiresome","meanings":["退屈な", "うんざりする"]},
+  {"no":1822,"word":"clumsy","meanings":["無器用な"]},
+  {"no":1823,"word":"foul","meanings":["不快な", "違反", "ファウル"]},
+  {"no":1824,"word":"shabby","meanings":["みすぼらしい", "おんぼろの"]},
+  {"no":1825,"word":"outrageous","meanings":["常軌を逸した", "奇想天外な"]},
+  {"no":1826,"word":"absurd","meanings":["ばかげた"]},
+  {"no":1827,"word":"fragile","meanings":["壊れやすい", "もろい"]},
+  {"no":1828,"word":"vulnerable","meanings":["傷つきやすい", "弱い", "受けやすい", "かかりやすい"]},
+  {"no":1829,"word":"static","meanings":["静的な", "変化のない", "活気のない"]},
+  {"no":1830,"word":"innate","meanings":["先天的な", "生まれつきの"]},
+  {"no":1831,"word":"exotic","meanings":["外来の", "異国情緒のある"]},
+  {"no":1832,"word":"tame","meanings":["飼い慣らされた", "従順な", "飼い慣らす"]},
+  {"no":1833,"word":"manifest","meanings":["明らかな", "明らかにする"]},
+  {"no":1834,"word":"dense","meanings":["密集した", "濃い"]},
+  {"no":1835,"word":"transparent","meanings":["透明な"]},
+  {"no":1836,"word":"consistent","meanings":["矛盾のない", "一致している", "安定した", "不変の"]},
+  {"no":1837,"word":"coherent","meanings":["一貫している"]},
+  {"no":1838,"word":"universal","meanings":["普遍的な"]},
+  {"no":1839,"word":"underlying","meanings":["根底にある"]},
+  {"no":1840,"word":"spontaneous","meanings":["自然発生的な"]},
+  {"no":1841,"word":"mock","meanings":["模擬の", "見せかけの", "まねる", "あざける"]},
+  {"no":1842,"word":"collective","meanings":["集団の", "共同の"]},
+  {"no":1843,"word":"vertical","meanings":["垂直の", "縦の"]},
+  {"no":1844,"word":"ongoing","meanings":["進行中の", "継続中の"]},
+  {"no":1845,"word":"tender","meanings":["柔らかい", "優しい", "弱い"]},
+  {"no":1846,"word":"upright","meanings":["直立して", "直立した"]},
+  {"no":1847,"word":"ease","meanings":["簡単さ", "和らげる", "楽にする"]},
+  {"no":1848,"word":"rust","meanings":["さび", "さびる"]},
+  {"no":1849,"word":"stain","meanings":["シミ", "汚れ", "シミをつける", "汚す"]},
+  {"no":1850,"word":"rag","meanings":["ぼろ切れ"]},
+  {"no":1851,"word":"texture","meanings":["感触", "手触り"]},
+  {"no":1852,"word":"preliminary","meanings":["予備的な", "事前の", "予選の", "予選"]},
+  {"no":1853,"word":"mandatory","meanings":["義務的な"]},
+  {"no":1854,"word":"indigenous","meanings":["固有の"]},
+  {"no":1855,"word":"respective","meanings":["それぞれの"]},
+  {"no":1856,"word":"multiply","meanings":["増やす", "掛ける", "増える"]},
+  {"no":1857,"word":"soar","meanings":["急上昇する", "舞い上がる"]},
+  {"no":1858,"word":"diminish","meanings":["減少する"]},
+  {"no":1859,"word":"accumulate","meanings":["蓄積する", "蓄積する"]},
+  {"no":1860,"word":"exceed","meanings":["越える"]},
+  {"no":1861,"word":"abundant","meanings":["豊富な"]},
+  {"no":1862,"word":"ample","meanings":["豊富な"]},
+  {"no":1863,"word":"gross","meanings":["総計の", "ひどい"]},
+  {"no":1864,"word":"infinite","meanings":["無限の"]},
+  {"no":1865,"word":"sole","meanings":["唯一の", "足の裏", "靴底"]},
+  {"no":1866,"word":"heap","meanings":["山", "たくさんの"]},
+  {"no":1867,"word":"fraction","meanings":["少量", "分数", "端数"]},
+  {"no":1868,"word":"simultaneous","meanings":["同時の"]},
+  {"no":1869,"word":"medieval","meanings":["中世の"]},
+  {"no":1870,"word":"dawn","meanings":["夜明け", "夜が明ける", "わかり始める"]},
+  {"no":1871,"word":"span","meanings":["期間", "期間"]},
+  {"no":1872,"word":"adolescent","meanings":["思春期の若者", "思春期の"]},
+  {"no":1873,"word":"millennium","meanings":["1000年間"]},
+  {"no":1874,"word":"expire","meanings":["期限が切れる"]},
+  {"no":1875,"word":"postpone","meanings":["延期する"]},
+  {"no":1876,"word":"periodically","meanings":["定期的に", "周期的に", "時折"]},
+  {"no":1877,"word":"array","meanings":["さまざまな", "多彩な"]},
+  {"no":1878,"word":"realm","meanings":["領域", "領土"]},
+  {"no":1879,"word":"domain","meanings":["領域"]},
+  {"no":1880,"word":"boundary","meanings":["境界"]},
+  {"no":1881,"word":"spectrum","meanings":["範囲", "スペクトル"]},
+  {"no":1882,"word":"equip","meanings":["装備させる", "備え付ける", "身につけさせる"]},
+  {"no":1883,"word":"transmit","meanings":["送る", "伝える", "うつす"]},
+  {"no":1884,"word":"endow","meanings":["授ける"]},
+  {"no":1885,"word":"inherit","meanings":["受け継ぐ"]},
+  {"no":1886,"word":"retrieve","meanings":["回収する", "取り戻す", "検索する"]},
+  {"no":1887,"word":"displace","meanings":["取って代わる", "追い出す"]},
+  {"no":1888,"word":"bond","meanings":["きずな", "公債", "社債"]},
+  {"no":1889,"word":"hospitality","meanings":["もてなし", "歓迎"]},
+  {"no":1890,"word":"certificate","meanings":["証明書", "免許状", "鑑定書"]},
+  {"no":1891,"word":"brochure","meanings":["パンフレット"]},
+  {"no":1892,"word":"outlet","meanings":["コンセント", "店", "はけ口"]},
+  {"no":1893,"word":"accommodation","meanings":["宿泊施設"]},
+  {"no":1894,"word":"haven","meanings":["避難所", "保護区"]},
+  {"no":1895,"word":"venue","meanings":["開催地", "会場"]},
+  {"no":1896,"word":"intersection","meanings":["交差点"]},
+  {"no":1897,"word":"pavement","meanings":["歩道"]},
+  {"no":1898,"word":"pedestrian","meanings":["歩行者"]},
+  {"no":1899,"word":"excursion","meanings":["小旅行", "遠足"]},
+  {"no":1900,"word":"shipping","meanings":["発送"]},
+  {"no":1901,"word":"thread","meanings":["糸", "糸を通す"]},
+  {"no":1902,"word":"ornament","meanings":["飾り", "置物"]},
+  {"no":1903,"word":"cosmetic","meanings":["化粧品", "美容の", "化粧の"]},
+  {"no":1904,"word":"chamber","meanings":["部屋", "会議所", "議院"]},
+  {"no":1905,"word":"commodity","meanings":["商品", "有用なもの"]},
+  {"no":1906,"word":"dwell","meanings":["住む", "考える"]},
+  {"no":1907,"word":"acoustic","meanings":["音響の", "アコースティックの"]},
+  {"no":1908,"word":"recipe","meanings":["レシピ", "調理法", "秘訣", "原因"]},
+  {"no":1909,"word":"intake","meanings":["摂取"]},
+  {"no":1910,"word":"precede","meanings":["先行する"]},
+  {"no":1911,"word":"phase","meanings":["段階", "位相"]},
+  {"no":1912,"word":"priority","meanings":["優先"]},
+  {"no":1913,"word":"premise","meanings":["前提", "敷地"]},
+  {"no":1914,"word":"tomb","meanings":["墓", "古墳"]},
+  {"no":1915,"word":"legend","meanings":["伝説", "言い伝え", "伝説的人物"]},
+  {"no":1916,"word":"masterpiece","meanings":["傑作"]},
+  {"no":1917,"word":"ritual","meanings":["儀式", "儀式の"]},
+  {"no":1918,"word":"worship","meanings":["崇拝", "礼拝", "崇拝する", "お参りする"]},
+  {"no":1919,"word":"doctrine","meanings":["教義"]},
+  {"no":1920,"word":"legacy","meanings":["遺産"]},
+  {"no":1921,"word":"sin","meanings":["罪"]},
+  {"no":1922,"word":"swear","meanings":["誓う", "罵る"]},
+  {"no":1923,"word":"confess","meanings":["白状する", "認める"]},
+  {"no":1924,"word":"carve","meanings":["彫る", "刻む"]},
+  {"no":1925,"word":"murmur","meanings":["つぶやく"]},
+  {"no":1926,"word":"verbal","meanings":["言葉による"]},
+  {"no":1927,"word":"oral","meanings":["口述の", "口の"]},
+  {"no":1928,"word":"eloquent","meanings":["雄弁な"]},
+  {"no":1929,"word":"linguistic","meanings":["言語の", "言語学の"]},
+  {"no":1930,"word":"metaphor","meanings":["隠喩", "比喩"]},
+  {"no":1931,"word":"prose","meanings":["散文"]},
+  {"no":1932,"word":"narrative","meanings":["語り", "物語"]},
+  {"no":1933,"word":"plot","meanings":["筋", "悪だくみ", "陰謀"]},
+  {"no":1934,"word":"draft","meanings":["下書き", "草稿", "徴兵する", "生の"]},
+  {"no":1935,"word":"manuscript","meanings":["原稿", "写本"]},
+  {"no":1936,"word":"paradox","meanings":["逆説"]},
+  {"no":1937,"word":"slang","meanings":["俗語"]},
+  {"no":1938,"word":"riddle","meanings":["なぞなぞ", "謎"]},
+  {"no":1939,"word":"exhibit","meanings":["展示する", "示す", "展示物", "展覧会"]},
+  {"no":1940,"word":"portray","meanings":["描く"]},
+  {"no":1941,"word":"depict","meanings":["描く"]},
+  {"no":1942,"word":"landmark","meanings":["目印", "名所", "画期的な出来事"]},
+  {"no":1943,"word":"tease","meanings":["からかう", "冷やかす"]},
+  {"no":1944,"word":"delight","meanings":["喜ばせる", "喜び"]},
+  {"no":1945,"word":"astonish","meanings":["驚かせる"]},
+  {"no":1946,"word":"dread","meanings":["恐れる", "恐怖"]},
+  {"no":1947,"word":"attribute","meanings":["のせいだとする", "特性", "属性"]},
+  {"no":1948,"word":"console","meanings":["慰める"]},
+  {"no":1949,"word":"arouse","meanings":["呼び起こす"]},
+  {"no":1950,"word":"distract","meanings":["そらす", "の気を紛らす"]},
+  {"no":1951,"word":"startle","meanings":["驚かせる"]},
+  {"no":1952,"word":"thrill","meanings":["ぞくぞく［わくわく］させる", "スリル"]},
+  {"no":1953,"word":"humiliate","meanings":["恥をかかせる"]},
+  {"no":1954,"word":"adore","meanings":["熱愛している"]},
+  {"no":1955,"word":"utter","meanings":["発する", "まったくの"]},
+  {"no":1956,"word":"exclaim","meanings":["叫ぶ"]},
+  {"no":1957,"word":"shed","meanings":["流す", "当てる", "取り除く"]},
+  {"no":1958,"word":"resent","meanings":["憤慨する"]},
+  {"no":1959,"word":"plead","meanings":["懇願する", "申し立てる"]},
+  {"no":1960,"word":"yearn","meanings":["切望する", "切望する"]},
+  {"no":1961,"word":"long","meanings":["切望する"]},
+  {"no":1962,"word":"immerse","meanings":["没頭させる"]},
+  {"no":1963,"word":"bewilder","meanings":["当惑させる"]},
+  {"no":1964,"word":"despise","meanings":["軽蔑する"]},
+  {"no":1965,"word":"willing","meanings":["嫌がらずにする"]},
+  {"no":1966,"word":"furious","meanings":["激怒した"]},
+  {"no":1967,"word":"intimate","meanings":["親密な", "深い"]},
+  {"no":1968,"word":"aesthetic","meanings":["美的な", "審美眼がある"]},
+  {"no":1969,"word":"conscience","meanings":["良心"]},
+  {"no":1970,"word":"mercy","meanings":["慈悲", "情け", "幸運"]},
+  {"no":1971,"word":"compassion","meanings":["同情", "思いやり"]},
+  {"no":1972,"word":"impulse","meanings":["衝動"]},
+  {"no":1973,"word":"aspiration","meanings":["熱望"]},
+  {"no":1974,"word":"grief","meanings":["深い悲しみ"]},
+  {"no":1975,"word":"contempt","meanings":["軽蔑"]},
+  {"no":1976,"word":"insult","meanings":["侮辱", "侮辱する"]},
+  {"no":1977,"word":"nuisance","meanings":["迷惑"]},
+  {"no":1978,"word":"surge","meanings":["高まり", "急増"]},
+  {"no":1979,"word":"incentive","meanings":["励み"]},
+  {"no":1980,"word":"outcome","meanings":["結果"]},
+  {"no":1981,"word":"factor","meanings":["要因"]},
+  {"no":1982,"word":"liable","meanings":["しがちだ", "かかりやすい"]},
+  {"no":1983,"word":"thorough","meanings":["完全な", "徹底的な"]},
+  {"no":1984,"word":"adequate","meanings":["十分な", "適切な"]},
+  {"no":1985,"word":"overall","meanings":["全体的な", "全面的な", "全体的に", "全面的に"]},
+  {"no":1986,"word":"ultimate","meanings":["究極の", "最終の"]},
+  {"no":1987,"word":"genuine","meanings":["心からの", "本物の"]},
+  {"no":1988,"word":"slight","meanings":["わずかな"]},
+  {"no":1989,"word":"radical","meanings":["根本的な", "抜本的な", "過激な"]},
+  {"no":1990,"word":"trivial","meanings":["ささいな"]},
+  {"no":1991,"word":"potent","meanings":["強力な"]},
+  {"no":1992,"word":"likewise","meanings":["同様に", "同じように"]},
+  {"no":1993,"word":"virtually","meanings":["事実上", "ほとんど"]},
+  {"no":1994,"word":"abruptly","meanings":["不意に", "突然"]},
+  {"no":1995,"word":"deliberately","meanings":["故意に", "慎重に"]},
+  {"no":1996,"word":"exclusively","meanings":["もっぱら", "専用で"]},
+  {"no":1997,"word":"hence","meanings":["だから", "それゆえに"]},
+  {"no":1998,"word":"namely","meanings":["すなわち"]},
+  {"no":1999,"word":"allegedly","meanings":["伝えられるところによると"]},
+  {"no":2000,"word":"whereas","meanings":["だが一方"]},
+  {"no":2001,"word":"roam","meanings":["歩き回る"]},
+  {"no":2002,"word":"stroll","meanings":["散策する"]},
+  {"no":2003,"word":"circulate","meanings":["循環する", "循環させる"]},
+  {"no":2004,"word":"wane","meanings":["衰える", "欠ける"]},
+  {"no":2005,"word":"deteriorate","meanings":["悪化する"]},
+  {"no":2006,"word":"plunge","meanings":["突っ込む", "突っ込む"]},
+  {"no":2007,"word":"backfire","meanings":["裏目に出る"]},
+  {"no":2008,"word":"cram","meanings":["詰め込み勉強をする", "詰め込む"]},
+  {"no":2009,"word":"speculate","meanings":["推測する", "投機をする"]},
+  {"no":2010,"word":"evaporate","meanings":["蒸発する"]},
+  {"no":2011,"word":"vomit","meanings":["吐く", "吐く"]},
+  {"no":2012,"word":"frown","meanings":["眉をひそめる", "難色を示す"]},
+  {"no":2013,"word":"hatch","meanings":["かえる", "孵化する", "かえす", "企てる"]},
+  {"no":2014,"word":"cling","meanings":["固執する", "しがみつく"]},
+  {"no":2015,"word":"adhere","meanings":["忠実に従う"]},
+  {"no":2016,"word":"collaborate","meanings":["共同して働く"]},
+  {"no":2017,"word":"lag","meanings":["遅れる"]},
+  {"no":2018,"word":"cater","meanings":["料理を提供する", "応える"]},
+  {"no":2019,"word":"flush","meanings":["紅潮する", "水で流す"]},
+  {"no":2020,"word":"ascribe","meanings":["の原因はと主張する"]},
+  {"no":2021,"word":"endorse","meanings":["支持する"]},
+  {"no":2022,"word":"disclose","meanings":["公表する", "暴く"]},
+  {"no":2023,"word":"improvise","meanings":["即興で作る［歌う", "演奏する］"]},
+  {"no":2024,"word":"transplant","meanings":["移植する", "移植"]},
+  {"no":2025,"word":"encompass","meanings":["含む"]},
+  {"no":2026,"word":"forge","meanings":["築く", "偽造する"]},
+  {"no":2027,"word":"entangle","meanings":["に絡まる"]},
+  {"no":2028,"word":"entail","meanings":["伴う"]},
+  {"no":2029,"word":"herald","meanings":["の先触れをする"]},
+  {"no":2030,"word":"surpass","meanings":["上回る"]},
+  {"no":2031,"word":"transcend","meanings":["超える"]},
+  {"no":2032,"word":"flatter","meanings":["お世辞を言う"]},
+  {"no":2033,"word":"enact","meanings":["制定する"]},
+  {"no":2034,"word":"amend","meanings":["修正する"]},
+  {"no":2035,"word":"kidnap","meanings":["誘拐する"]},
+  {"no":2036,"word":"smuggle","meanings":["密輸する"]},
+  {"no":2037,"word":"convict","meanings":["有罪判決を下す", "有罪判決を受けた者"]},
+  {"no":2038,"word":"hinder","meanings":["妨げる"]},
+  {"no":2039,"word":"inflict","meanings":["）を与える"]},
+  {"no":2040,"word":"alleviate","meanings":["軽減する"]},
+  {"no":2041,"word":"eradicate","meanings":["根絶する"]},
+  {"no":2042,"word":"expel","meanings":["追放する", "退学処分にする"]},
+  {"no":2043,"word":"omit","meanings":["省く"]},
+  {"no":2044,"word":"discard","meanings":["捨てる"]},
+  {"no":2045,"word":"curb","meanings":["抑制する", "縁石"]},
+  {"no":2046,"word":"restrain","meanings":["抑制する"]},
+  {"no":2047,"word":"inhibit","meanings":["抑制する"]},
+  {"no":2048,"word":"hamper","meanings":["妨げる", "邪魔をする"]},
+  {"no":2049,"word":"lure","meanings":["誘い込む", "魅力", "誘惑"]},
+  {"no":2050,"word":"reassure","meanings":["安心させる"]},
+  {"no":2051,"word":"dictate","meanings":["書き取らせる", "命令する", "規定する"]},
+  {"no":2052,"word":"provoke","meanings":["引き起こす", "怒らせる"]},
+  {"no":2053,"word":"refine","meanings":["洗練させる"]},
+  {"no":2054,"word":"enlighten","meanings":["啓蒙する"]},
+  {"no":2055,"word":"unleash","meanings":["爆発させる", "の束縛を解く"]},
+  {"no":2056,"word":"prolong","meanings":["長引かせる"]},
+  {"no":2057,"word":"mitigate","meanings":["緩和する"]},
+  {"no":2058,"word":"grind","meanings":["挽く"]},
+  {"no":2059,"word":"withstand","meanings":["耐える"]},
+  {"no":2060,"word":"exert","meanings":["働かせる"]},
+  {"no":2061,"word":"summon","meanings":["呼ぶ", "召喚する", "喚問する", "奮い立たせる"]},
+  {"no":2062,"word":"thrust","meanings":["強く押しつける", "突き刺す"]},
+  {"no":2063,"word":"pierce","meanings":["突き刺す", "突き通す"]},
+  {"no":2064,"word":"harness","meanings":["利用する"]},
+  {"no":2065,"word":"excavate","meanings":["発掘する"]},
+  {"no":2066,"word":"evade","meanings":["逃れる"]},
+  {"no":2067,"word":"embody","meanings":["具体化する"]},
+  {"no":2068,"word":"assimilate","meanings":["吸収する", "同化する"]},
+  {"no":2069,"word":"discern","meanings":["見分ける"]},
+  {"no":2070,"word":"scrutinize","meanings":["詳細に調べる", "精査する"]},
+  {"no":2071,"word":"streamline","meanings":["合理化する"]},
+  {"no":2072,"word":"mentor","meanings":["指導する", "指導者"]},
+  {"no":2073,"word":"contemplate","meanings":["熟考する"]},
+  {"no":2074,"word":"conjecture","meanings":["推測する"]},
+  {"no":2075,"word":"presume","meanings":["推定する", "前提とする"]},
+  {"no":2076,"word":"gauge","meanings":["判断する", "評価する"]},
+  {"no":2077,"word":"verify","meanings":["確かめる", "検証する"]},
+  {"no":2078,"word":"pledge","meanings":["誓う"]},
+  {"no":2079,"word":"dismay","meanings":["狼狽させる", "狼狽"]},
+  {"no":2080,"word":"lament","meanings":["深く悲しむ", "嘆く"]},
+  {"no":2081,"word":"perplex","meanings":["困惑させる"]},
+  {"no":2082,"word":"disgust","meanings":["嫌悪を抱かせる", "嫌悪"]},
+  {"no":2083,"word":"evoke","meanings":["呼び起こす"]},
+  {"no":2084,"word":"harbor","meanings":["心に抱く", "住まわせる"]},
+  {"no":2085,"word":"friction","meanings":["摩擦"]},
+  {"no":2086,"word":"mutation","meanings":["突然変異"]},
+  {"no":2087,"word":"heredity","meanings":["遺伝"]},
+  {"no":2088,"word":"synthesis","meanings":["合成", "統合"]},
+  {"no":2089,"word":"veterinarian","meanings":["獣医"]},
+  {"no":2090,"word":"epidemic","meanings":["流行"]},
+  {"no":2091,"word":"obesity","meanings":["肥満"]},
+  {"no":2092,"word":"neuron","meanings":["ニューロン", "神経単位"]},
+  {"no":2093,"word":"dementia","meanings":["認知症"]},
+  {"no":2094,"word":"diabetes","meanings":["糖尿病"]},
+  {"no":2095,"word":"placebo","meanings":["偽薬", "プラシーボ"]},
+  {"no":2096,"word":"malnutrition","meanings":["栄養失調"]},
+  {"no":2097,"word":"dehydration","meanings":["脱水"]},
+  {"no":2098,"word":"abortion","meanings":["中絶"]},
+  {"no":2099,"word":"antibiotic","meanings":["抗生物質"]},
+  {"no":2100,"word":"psychiatry","meanings":["精神科", "精神医学"]},
+  {"no":2101,"word":"cardiologist","meanings":["心臓専門医"]},
+  {"no":2102,"word":"kidney","meanings":["腎臓"]},
+  {"no":2103,"word":"posture","meanings":["姿勢"]},
+  {"no":2104,"word":"metabolism","meanings":["代謝", "代謝作用"]},
+  {"no":2105,"word":"famine","meanings":["飢饉"]},
+  {"no":2106,"word":"riot","meanings":["暴動"]},
+  {"no":2107,"word":"asylum","meanings":["亡命"]},
+  {"no":2108,"word":"workforce","meanings":["労働人口", "総労働力"]},
+  {"no":2109,"word":"prefecture","meanings":["県", "府"]},
+  {"no":2110,"word":"hierarchy","meanings":["階層構造"]},
+  {"no":2111,"word":"autonomy","meanings":["自治", "自主性"]},
+  {"no":2112,"word":"delegation","meanings":["代表団", "使節団"]},
+  {"no":2113,"word":"congress","meanings":["議会", "会議"]},
+  {"no":2114,"word":"census","meanings":["国勢［公的］調査"]},
+  {"no":2115,"word":"monarch","meanings":["君主"]},
+  {"no":2116,"word":"monopoly","meanings":["独占", "独占企業"]},
+  {"no":2117,"word":"surplus","meanings":["余剰", "余剰金", "黒字"]},
+  {"no":2118,"word":"expertise","meanings":["専門的知識", "専門的技術"]},
+  {"no":2119,"word":"quota","meanings":["ノルマ", "割り当て"]},
+  {"no":2120,"word":"subordinate","meanings":["部下", "下位の"]},
+  {"no":2121,"word":"warehouse","meanings":["倉庫", "問屋"]},
+  {"no":2122,"word":"peasant","meanings":["小作農"]},
+  {"no":2123,"word":"correlation","meanings":["相関"]},
+  {"no":2124,"word":"asymmetry","meanings":["非対称", "不釣り合い"]},
+  {"no":2125,"word":"disparity","meanings":["相違", "不均衡"]},
+  {"no":2126,"word":"divergence","meanings":["逸脱", "相違", "《数学》発散"]},
+  {"no":2127,"word":"clash","meanings":["衝突", "対立", "衝突する"]},
+  {"no":2128,"word":"persecution","meanings":["迫害"]},
+  {"no":2129,"word":"genocide","meanings":["大量虐殺"]},
+  {"no":2130,"word":"atrocity","meanings":["残虐行為"]},
+  {"no":2131,"word":"bribe","meanings":["賄賂"]},
+  {"no":2132,"word":"culprit","meanings":["犯人", "元凶"]},
+  {"no":2133,"word":"hostage","meanings":["人質"]},
+  {"no":2134,"word":"conspiracy","meanings":["陰謀"]},
+  {"no":2135,"word":"peril","meanings":["危機"]},
+  {"no":2136,"word":"pitfall","meanings":["落とし穴", "隠れた危険"]},
+  {"no":2137,"word":"itinerary","meanings":["旅程"]},
+  {"no":2138,"word":"upheaval","meanings":["大変動"]},
+  {"no":2139,"word":"commencement","meanings":["開始", "卒業式", "学位授与式"]},
+  {"no":2140,"word":"threshold","meanings":["始まり"]},
+  {"no":2141,"word":"onset","meanings":["始まり"]},
+  {"no":2142,"word":"momentum","meanings":["勢い", "はずみ"]},
+  {"no":2143,"word":"deterrent","meanings":["抑止するもの"]},
+  {"no":2144,"word":"geometry","meanings":["幾何学"]},
+  {"no":2145,"word":"anthropologist","meanings":["人類学者"]},
+  {"no":2146,"word":"internship","meanings":["実務研修", "医学研修"]},
+  {"no":2147,"word":"paradigm","meanings":["理論的枠組", "パラダイム"]},
+  {"no":2148,"word":"altruism","meanings":["利他主義"]},
+  {"no":2149,"word":"claustrophobia","meanings":["閉所恐怖症"]},
+  {"no":2150,"word":"antarctic","meanings":["南極"]},
+  {"no":2151,"word":"latitude","meanings":["緯度"]},
+  {"no":2152,"word":"odor","meanings":["臭い"]},
+  {"no":2153,"word":"meadow","meanings":["草地", "牧草地"]},
+  {"no":2154,"word":"calamity","meanings":["災害"]},
+  {"no":2155,"word":"precipitation","meanings":["降水", "沈殿"]},
+  {"no":2156,"word":"meteor","meanings":["流星", "隕石"]},
+  {"no":2157,"word":"asteroid","meanings":["小惑星"]},
+  {"no":2158,"word":"eclipse","meanings":["食"]},
+  {"no":2159,"word":"glacier","meanings":["氷河"]},
+  {"no":2160,"word":"peninsula","meanings":["半島"]},
+  {"no":2161,"word":"hemisphere","meanings":["半球"]},
+  {"no":2162,"word":"lump","meanings":["かたまり", "しこり", "ひとかたまりにする"]},
+  {"no":2163,"word":"cluster","meanings":["集団", "房"]},
+  {"no":2164,"word":"offspring","meanings":["子", "子孫"]},
+  {"no":2165,"word":"livestock","meanings":["家畜"]},
+  {"no":2166,"word":"carnivore","meanings":["肉食動物"]},
+  {"no":2167,"word":"vertebrate","meanings":["脊椎動物", "脊椎動物の"]},
+  {"no":2168,"word":"primate","meanings":["霊長類"]},
+  {"no":2169,"word":"parasite","meanings":["寄生虫［動物", "植物］"]},
+  {"no":2170,"word":"cortex","meanings":["皮質"]},
+  {"no":2171,"word":"sibling","meanings":["兄弟姉妹"]},
+  {"no":2172,"word":"extrovert","meanings":["外交的な人"]},
+  {"no":2173,"word":"stigma","meanings":["汚名"]},
+  {"no":2174,"word":"plight","meanings":["窮状", "苦境"]},
+  {"no":2175,"word":"turmoil","meanings":["混乱"]},
+  {"no":2176,"word":"fallacy","meanings":["誤びゅう"]},
+  {"no":2177,"word":"loophole","meanings":["抜け穴"]},
+  {"no":2178,"word":"congestion","meanings":["混雑", "充血"]},
+  {"no":2179,"word":"vacuum","meanings":["真空", "空白", "掃除機をかける"]},
+  {"no":2180,"word":"digit","meanings":["桁"]},
+  {"no":2181,"word":"bulk","meanings":["大半"]},
+  {"no":2182,"word":"longevity","meanings":["長寿", "長いこと"]},
+  {"no":2183,"word":"detour","meanings":["回り道"]},
+  {"no":2184,"word":"sewage","meanings":["下水", "汚物", "汚水"]},
+  {"no":2185,"word":"landfill","meanings":["埋め立て", "埋め立て地"]},
+  {"no":2186,"word":"appliance","meanings":["器具"]},
+  {"no":2187,"word":"cuisine","meanings":["料理"]},
+  {"no":2188,"word":"beverage","meanings":["飲料"]},
+  {"no":2189,"word":"staple","meanings":["必需食料品", "主要作物", "主要な"]},
+  {"no":2190,"word":"scenario","meanings":["筋書き", "事態", "科学的モデル"]},
+  {"no":2191,"word":"autograph","meanings":["サイン"]},
+  {"no":2192,"word":"archive","meanings":["記録文書", "公文書", "公文書保管庫"]},
+  {"no":2193,"word":"rhetoric","meanings":["美辞麗句", "修辞", "修辞的な"]},
+  {"no":2194,"word":"connotation","meanings":["言外の意味", "含意"]},
+  {"no":2195,"word":"anecdote","meanings":["逸話", "秘話"]},
+  {"no":2196,"word":"lord","meanings":["神", "高位の貴族", "支配者"]},
+  {"no":2197,"word":"saint","meanings":["聖人", "聖..."]},
+  {"no":2198,"word":"prophet","meanings":["預言者", "予言者"]},
+  {"no":2199,"word":"pilgrim","meanings":["巡礼者"]},
+  {"no":2200,"word":"salvation","meanings":["救済"]},
+  {"no":2201,"word":"artifact","meanings":["人工遺物", "出土品"]},
+  {"no":2202,"word":"token","meanings":["しるし代用硬貨", "トークン", "〈英"]},
+  {"no":2203,"word":"cue","meanings":["合図", "キュー"]},
+  {"no":2204,"word":"quest","meanings":["探求"]},
+  {"no":2205,"word":"melancholy","meanings":["憂うつ", "ふさぎ込み"]},
+  {"no":2206,"word":"self-esteem","meanings":["自尊心"]},
+  {"no":2207,"word":"empathy","meanings":["共感", "感情移入"]},
+  {"no":2208,"word":"precaution","meanings":["用心", "予防策"]},
+  {"no":2209,"word":"distress","meanings":["苦しみ", "苦難", "苦しめる"]},
+  {"no":2210,"word":"apprehension","meanings":["不安", "逮捕"]},
+  {"no":2211,"word":"scorn","meanings":["軽蔑"]},
+  {"no":2212,"word":"menace","meanings":["厄介なもの［人］", "脅威"]},
+  {"no":2213,"word":"sentiment","meanings":["感情"]},
+  {"no":2214,"word":"verge","meanings":["瀬戸際", "寸前", "道路べり", "縁"]},
+  {"no":2215,"word":"plausible","meanings":["もっともらしい"]},
+  {"no":2216,"word":"holistic","meanings":["全体的な"]},
+  {"no":2217,"word":"contagious","meanings":["感染の"]},
+  {"no":2218,"word":"vocal","meanings":["発声の", "遠慮なく意見を述べる"]},
+  {"no":2219,"word":"sensory","meanings":["感覚の"]},
+  {"no":2220,"word":"numb","meanings":["麻痺している", "感覚を失った"]},
+  {"no":2221,"word":"physiological","meanings":["生理的な"]},
+  {"no":2222,"word":"bilateral","meanings":["二国間の", "双方の"]},
+  {"no":2223,"word":"feudal","meanings":["封建制の"]},
+  {"no":2224,"word":"imperial","meanings":["帝国の"]},
+  {"no":2225,"word":"complementary","meanings":["相補的な"]},
+  {"no":2226,"word":"pertinent","meanings":["関連のある", "適切な"]},
+  {"no":2227,"word":"intrinsic","meanings":["固有の", "本来備わっている"]},
+  {"no":2228,"word":"unprecedented","meanings":["前例のない", "空前の"]},
+  {"no":2229,"word":"tentative","meanings":["仮の", "試験的な"]},
+  {"no":2230,"word":"drastic","meanings":["抜本的な", "思い切った"]},
+  {"no":2231,"word":"ubiquitous","meanings":["偏在している", "至る所にある"]},
+  {"no":2232,"word":"pervasive","meanings":["広く行き渡った"]},
+  {"no":2233,"word":"exponential","meanings":["指数関数的な", "急激な"]},
+  {"no":2234,"word":"perpetual","meanings":["絶え間ない", "永続する"]},
+  {"no":2235,"word":"future-oriented","meanings":["未来志向の"]},
+  {"no":2236,"word":"intact","meanings":["無傷の"]},
+  {"no":2237,"word":"maternal","meanings":["母の", "母親らしい"]},
+  {"no":2238,"word":"masculine","meanings":["男性的な"]},
+  {"no":2239,"word":"juvenile","meanings":["青少年の"]},
+  {"no":2240,"word":"intelligible","meanings":["理解できる"]},
+  {"no":2241,"word":"dairy","meanings":["酪農の"]},
+  {"no":2242,"word":"stray","meanings":["家のない", "道に迷った"]},
+  {"no":2243,"word":"dormant","meanings":["休止状態の", "眠っている"]},
+  {"no":2244,"word":"comprehensive","meanings":["包括的な"]},
+  {"no":2245,"word":"edible","meanings":["食用の"]},
+  {"no":2246,"word":"perishable","meanings":["腐りやすい"]},
+  {"no":2247,"word":"naive","meanings":["世間知らずの", "愚直な"]},
+  {"no":2248,"word":"zealous","meanings":["熱心な"]},
+  {"no":2249,"word":"timid","meanings":["臆病な"]},
+  {"no":2250,"word":"delinquent","meanings":["非行の"]},
+  {"no":2251,"word":"sober","meanings":["酔っていない", "真面目な"]},
+  {"no":2252,"word":"obstinate","meanings":["頑固な", "強情な"]},
+  {"no":2253,"word":"solitary","meanings":["孤高の", "ただひとつの"]},
+  {"no":2254,"word":"vulgar","meanings":["品がない", "卑わいな"]},
+  {"no":2255,"word":"skeptical","meanings":["懐疑的な"]},
+  {"no":2256,"word":"accustomed","meanings":["慣れている"]},
+  {"no":2257,"word":"obsessed","meanings":["取りつかれて", "頭が一杯で"]},
+  {"no":2258,"word":"preoccupied","meanings":["夢中になった", "頭がいっぱいで"]},
+  {"no":2259,"word":"prone","meanings":["しがちである"]},
+  {"no":2260,"word":"apt","meanings":["する傾向がある"]},
+  {"no":2261,"word":"empirical","meanings":["経験［実験］による"]},
+  {"no":2262,"word":"susceptible","meanings":["影響を受けやすい"]},
+  {"no":2263,"word":"pivotal","meanings":["極めて重要な"]},
+  {"no":2264,"word":"fabulous","meanings":["ても素敵な", "莫大な"]},
+  {"no":2265,"word":"splendid","meanings":["素晴らしい"]},
+  {"no":2266,"word":"intriguing","meanings":["興味深い"]},
+  {"no":2267,"word":"ingenious","meanings":["独創的な"]},
+  {"no":2268,"word":"affluent","meanings":["裕福な"]},
+  {"no":2269,"word":"renowned","meanings":["有名な"]},
+  {"no":2270,"word":"eminent","meanings":["著名な", "地位が高い"]},
+  {"no":2271,"word":"conspicuous","meanings":["目立つ"]},
+  {"no":2272,"word":"adept","meanings":["熟練した"]},
+  {"no":2273,"word":"proficient","meanings":["熟達した"]},
+  {"no":2274,"word":"immense","meanings":["莫大な", "膨大な"]},
+  {"no":2275,"word":"unanimous","meanings":["満場一致の"]},
+  {"no":2276,"word":"reckless","meanings":["無謀な"]},
+  {"no":2277,"word":"futile","meanings":["無駄な"]},
+  {"no":2278,"word":"brutal","meanings":["残忍な"]},
+  {"no":2279,"word":"ominous","meanings":["不吉な"]},
+  {"no":2280,"word":"detrimental","meanings":["有害な"]},
+  {"no":2281,"word":"wicked","meanings":["邪悪な"]},
+  {"no":2282,"word":"cynical","meanings":["冷笑的な"]},
+  {"no":2283,"word":"savage","meanings":["容赦ない", "どう猛な"]},
+  {"no":2284,"word":"arbitrary","meanings":["独断的な", "勝手な"]},
+  {"no":2285,"word":"monotonous","meanings":["単調な"]},
+  {"no":2286,"word":"crude","meanings":["粗末な", "粗野な", "加工されていない"]},
+  {"no":2287,"word":"extravagant","meanings":["法外な", "金遣いが荒い"]},
+  {"no":2288,"word":"obsolete","meanings":["廃れた"]},
+  {"no":2289,"word":"devoid","meanings":["欠いている"]},
+  {"no":2290,"word":"scarce","meanings":["乏しい"]},
+  {"no":2291,"word":"solemn","meanings":["厳粛な", "荘厳な", "真面目な"]},
+  {"no":2292,"word":"rigid","meanings":["硬い", "厳格な"]},
+  {"no":2293,"word":"robust","meanings":["がっしりした", "活発な"]},
+  {"no":2294,"word":"tangible","meanings":["触れられる", "明確な"]},
+  {"no":2295,"word":"superficial","meanings":["表面的な"]},
+  {"no":2296,"word":"spatial","meanings":["空間の"]},
+  {"no":2297,"word":"hollow","meanings":["空洞の", "くぼんだ", "うわべだけの"]},
+  {"no":2298,"word":"homogeneous","meanings":["均質の", "同種の"]},
+  {"no":2299,"word":"feasible","meanings":["実現［実行］可能な"]},
+  {"no":2300,"word":"viable","meanings":["実行可能な"]}
+];
+
+// ── STATE ──
+let state = {
+  section: 'study',
+  // Study
+  studyStart: 1, studyEnd: 50, studyIdx: 0,
+  // Test
+  testStart: 1, testEnd: 50,
+  testMode: 'en2jp', // en2jp | jp2en
+  testQueue: [], testQIdx: 0, testAnswered: false,
+  testScore: 0, testWrong: [],
+  // Typing
+  typingStart: 1, typingEnd: 50,
+  typingQueue: [], typingQIdx: 0, typingAnswered: false,
+  typingScore: 0, typingWrong: [],
+  // Review
+  reviewMode: 'test', // test | typing
+  reviewQueue: [], reviewQIdx: 0, reviewAnswered: false,
+  // List
+  listFilter: 'all', listSearch: '',
+};
+
+// ── STORAGE ──
+let wrongSet = new Set(); // word indices (no)
+let history = {}; // no -> {correct, total}
+
+function loadStorage() {
+  try {
+    const w = localStorage.getItem('leap_wrong');
+    if (w) wrongSet = new Set(JSON.parse(w));
+    const h = localStorage.getItem('leap_history');
+    if (h) history = JSON.parse(h);
+  } catch(e) {}
+}
+function saveStorage() {
+  try {
+    localStorage.setItem('leap_wrong', JSON.stringify([...wrongSet]));
+    localStorage.setItem('leap_history', JSON.stringify(history));
+  } catch(e) {}
+}
+function markWrong(no) {
+  wrongSet.add(no);
+  if (!history[no]) history[no] = {correct:0,total:0};
+  history[no].total++;
+  saveStorage();
+}
+function markCorrect(no) {
+  wrongSet.delete(no);
+  if (!history[no]) history[no] = {correct:0,total:0};
+  history[no].correct++;
+  history[no].total++;
+  saveStorage();
+}
+
+// ── HELPERS ──
+function getRange(start, end) {
+  return WORDS.filter(w => w.no >= start && w.no <= end);
+}
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length-1; i > 0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+function randMeaning(w) {
+  return w.meanings[Math.floor(Math.random()*w.meanings.length)];
+}
+function getChoices(correct, pool, isEn) {
+  // 3 wrong choices
+  const others = pool.filter(w => w.no !== correct.no);
+  const shuffled = shuffle(others).slice(0, 3);
+  const choices = shuffle([correct, ...shuffled]);
+  return choices;
+}
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── SECTION ROUTER ──
+function showSection(name) {
+  state.section = name;
+  document.querySelectorAll('.section').forEach(el => el.style.display = 'none');
+  document.querySelectorAll('.nav-btn').forEach((btn, i) => {
+    const names = ['study','test','typing','review','wordlist','settings'];
+    btn.classList.toggle('active', names[i] === name);
+  });
+  const sec = document.getElementById('section-' + name);
+  sec.style.display = 'block';
+  renderSection(name);
+}
+
+function renderSection(name) {
+  switch(name) {
+    case 'study': renderStudy(); break;
+    case 'test': renderTestSetup(); break;
+    case 'typing': renderTypingSetup(); break;
+    case 'review': renderReview(); break;
+    case 'wordlist': renderWordList(); break;
+    case 'settings': renderSettings(); break;
+  }
+  document.getElementById('topbar-sub').textContent = `全${WORDS.length}語 | 間違い ${wrongSet.size}語`;
+}
+
+// ── RANGE WIDGET ──
+function rangeWidget(id, start, end, onApply) {
+  const presets = [[1,50],[51,100],[101,200],[201,300],[301,500],[501,1000],[1001,1500],[1501,2000],[2001,2296],[1,2296]];
+  const presetLabels = ['1-50','51-100','101-200','201-300','301-500','501-1000','1001-1500','1501-2000','2001-2296','全て'];
+  let html = `<div class="range-bar" id="rbar-${id}">
+    <span><label>No.</label>&nbsp;
+    <input type="number" id="r-start-${id}" value="${start}" min="1" max="${WORDS.length}" style="width:70px">
+    &nbsp;〜&nbsp;
+    <input type="number" id="r-end-${id}" value="${end}" min="1" max="${WORDS.length}" style="width:70px">
+    &nbsp;<button class="btn-secondary btn-sm" onclick="applyRange('${id}')">適用</button></span>
+    <div class="range-presets">`;
+  presets.forEach((p,i) => {
+    const active = (p[0]===start && p[1]===end) ? 'active' : '';
+    html += `<button class="range-preset ${active}" onclick="applyRangePreset('${id}',${p[0]},${p[1]})">${presetLabels[i]}</button>`;
+  });
+  html += '</div></div>';
+  return html;
+}
+window._rangeCallbacks = {};
+function applyRange(id) {
+  const s = parseInt(document.getElementById('r-start-'+id).value)||1;
+  const e = parseInt(document.getElementById('r-end-'+id).value)||50;
+  if (window._rangeCallbacks[id]) window._rangeCallbacks[id](s, e);
+}
+function applyRangePreset(id, s, e) {
+  document.getElementById('r-start-'+id).value = s;
+  document.getElementById('r-end-'+id).value = e;
+  if (window._rangeCallbacks[id]) window._rangeCallbacks[id](s, e);
+}
+
+// ═══════════════════════════════════════
+// 📖 STUDY MODE
+// ═══════════════════════════════════════
+const EXAMPLES = {
+  "agree": {en:"I agree with your opinion.", jp:"あなたの意見に賛成します。"},
+  "oppose": {en:"She opposes the plan.", jp:"彼女はその計画に反対している。"},
+  "suggest": {en:"I suggest we take a break.", jp:"休憩を取ることを提案します。"},
+  "explain": {en:"Can you explain this rule?", jp:"この規則を説明してもらえますか？"},
+  "develop": {en:"They developed a new app.", jp:"彼らは新しいアプリを開発した。"},
+  "improve": {en:"She improved her skills.", jp:"彼女は技術を磨いた。"},
+  "achieve": {en:"He achieved his goal.", jp:"彼は目標を達成した。"},
+  "consider": {en:"Please consider my request.", jp:"私の要求を考慮してください。"},
+  "discover": {en:"Scientists discovered a new planet.", jp:"科学者たちは新しい惑星を発見した。"},
+  "create": {en:"She creates beautiful art.", jp:"彼女は美しい芸術を創造する。"},
+};
+function getExample(word) {
+  if (EXAMPLES[word]) return EXAMPLES[word];
+  return null;
+}
+
+function renderStudy() {
+  const sec = document.getElementById('section-study');
+  state.studyStart = state.studyStart || 1;
+  state.studyEnd = state.studyEnd || 50;
+  window._rangeCallbacks['study'] = (s,e) => {
+    state.studyStart = s; state.studyEnd = e; state.studyIdx = 0;
+    renderStudy();
+  };
+  const words = getRange(state.studyStart, state.studyEnd);
+  if (!words.length) { sec.innerHTML = '<div class="empty">この範囲に単語がありません</div>'; return; }
+  if (state.studyIdx >= words.length) state.studyIdx = 0;
+  const cur = words[state.studyIdx];
+
+  let listItems = words.map((w, i) => {
+    const sel = i === state.studyIdx ? 'selected' : '';
+    const wrongDot = wrongSet.has(w.no) ? '<span class="wrong-dot"></span>' : '';
+    return `<div class="word-list-item ${sel}" onclick="studySelect(${i})">
+      <span class="num">${w.no}</span>
+      <span class="w">${escHtml(w.word)}</span>
+      <span class="m">${escHtml(w.meanings[0])}</span>
+      ${wrongDot}
+    </div>`;
+  }).join('');
+
+  const ex = getExample(cur.word);
+  let exHtml = ex ? `<div class="example"><div class="ex-en">${escHtml(ex.en)}</div><div class="ex-jp">${escHtml(ex.jp)}</div></div>` : '';
+
+  sec.innerHTML = rangeWidget('study', state.studyStart, state.studyEnd) +
+  `<div class="study-layout">
+    <div class="study-list-panel">${listItems}</div>
+    <div class="study-detail">
+      <div class="word-en">${escHtml(cur.word)}</div>
+      <div class="word-num">No.${cur.no}</div>
+      <ul class="meanings-list">${cur.meanings.map(m=>`<li>${escHtml(m)}</li>`).join('')}</ul>
+      ${exHtml}
+      <div class="study-nav-row">
+        <button class="btn-secondary" onclick="studyPrev()">← 前へ</button>
+        <button class="next-btn" style="flex:1" onclick="studyNext()">次へ →</button>
+      </div>
+    </div>
+  </div>`;
+
+  // scroll selected into view
+  setTimeout(() => {
+    const sel = document.querySelector('.word-list-item.selected');
+    if (sel) sel.scrollIntoView({block:'nearest'});
+  }, 50);
+}
+window.studySelect = function(i) { state.studyIdx = i; renderStudy(); };
+window.studyNext = function() {
+  const words = getRange(state.studyStart, state.studyEnd);
+  state.studyIdx = Math.min(state.studyIdx + 1, words.length - 1);
+  renderStudy();
+};
+window.studyPrev = function() {
+  state.studyIdx = Math.max(state.studyIdx - 1, 0);
+  renderStudy();
+};
+
+// ═══════════════════════════════════════
+// 📝 TEST MODE
+// ═══════════════════════════════════════
+function renderTestSetup() {
+  const sec = document.getElementById('section-test');
+  state.testStart = state.testStart || 1;
+  state.testEnd = state.testEnd || 50;
+  window._rangeCallbacks['test'] = (s,e) => { state.testStart=s; state.testEnd=e; renderTestSetup(); };
+  const modeButtons = ['en2jp','jp2en'].map(m => {
+    const labels = {en2jp:'英語 → 日本語', jp2en:'日本語 → 英語'};
+    const active = state.testMode === m ? 'active' : '';
+    return `<button class="mode-option ${active}" onclick="setTestMode('${m}')"><span class="mode-icon">${m==='en2jp'?'🇺🇸→🇯🇵':'🇯🇵→🇺🇸'}</span>${labels[m]}</button>`;
+  }).join('');
+  sec.innerHTML = `<h2 style="font-size:18px;font-weight:800;margin-bottom:14px;">📝 テストモード</h2>
+    ${rangeWidget('test', state.testStart, state.testEnd)}
+    <div style="margin-bottom:16px;">
+      <div style="font-size:13px;font-weight:600;color:var(--muted);margin-bottom:8px;">出題形式</div>
+      <div class="mode-grid">${modeButtons}</div>
+    </div>
+    <button class="btn-primary" onclick="startTest()">テスト開始</button>`;
+}
+window.setTestMode = function(m) { state.testMode = m; renderTestSetup(); };
+
+window.startTest = function() {
+  const pool = getRange(state.testStart, state.testEnd);
+  if (pool.length < 4) { alert('範囲内の単語が4語以上必要です'); return; }
+  state.testQueue = shuffle(pool);
+  state.testQIdx = 0; state.testAnswered = false;
+  state.testScore = 0; state.testWrong = [];
+  renderTestQuestion();
+};
+
+function renderTestQuestion() {
+  const sec = document.getElementById('section-test');
+  const pool = getRange(state.testStart, state.testEnd);
+  if (state.testQIdx >= state.testQueue.length) {
+    renderTestScore();
+    return;
+  }
+  const cur = state.testQueue[state.testQIdx];
+  const choices = getChoices(cur, pool, state.testMode === 'en2jp');
+  const total = state.testQueue.length;
+  const pct = Math.round(state.testQIdx / total * 100);
+
+  let questionText, choiceContent;
+  if (state.testMode === 'en2jp') {
+    questionText = escHtml(cur.word);
+    choiceContent = choices.map(c => {
+      const m = randMeaning(c);
+      return `<button class="choice-btn" onclick="answerTest(${c.no},${cur.no})" data-no="${c.no}">${escHtml(m)}</button>`;
+    }).join('');
+  } else {
+    const qMeaning = randMeaning(cur);
+    questionText = escHtml(qMeaning);
+    choiceContent = choices.map(c => `<button class="choice-btn" onclick="answerTest(${c.no},${cur.no})" data-no="${c.no}">${escHtml(c.word)}</button>`).join('');
+  }
+
+  sec.innerHTML = `<div class="quiz-card">
+    <div class="quiz-progress">${state.testQIdx+1} / ${total}</div>
+    <div class="quiz-progress-bar"><div class="quiz-progress-bar-fill" style="width:${pct}%"></div></div>
+    <div class="quiz-type-label">${state.testMode==='en2jp'?'英語 → 日本語':'日本語 → 英語'}</div>
+    <div class="quiz-question">${questionText}</div>
+    <div class="choices" id="choices">${choiceContent}</div>
+    <div id="result-area"></div>
+  </div>`;
+}
+
+window.answerTest = function(selectedNo, correctNo) {
+  if (state.testAnswered) return;
+  state.testAnswered = true;
+  const isCorrect = selectedNo === correctNo;
+  const cur = WORDS.find(w => w.no === correctNo);
+
+  // Highlight
+  document.querySelectorAll('.choice-btn').forEach(btn => {
+    btn.disabled = true;
+    const no = parseInt(btn.dataset.no);
+    if (no === correctNo) btn.classList.add('correct');
+    else if (no === selectedNo && !isCorrect) btn.classList.add('wrong');
+  });
+
+  if (isCorrect) { state.testScore++; markCorrect(correctNo); }
+  else { state.testWrong.push(cur); markWrong(correctNo); }
+
+  const allMeanings = cur.meanings.map(m => `<span>${escHtml(m)}</span>`).join(' / ');
+  const resClass = isCorrect ? 'ok' : 'ng';
+  const icon = isCorrect ? '⭕' : '❌';
+  document.getElementById('result-area').innerHTML = `
+    <div class="result-box ${resClass}">
+      <div class="result-icon">${icon}</div>
+      <div class="result-word">${escHtml(cur.word)}</div>
+      <div class="result-meanings">${allMeanings}</div>
+    </div>
+    <button class="next-btn" onclick="nextTest()">次へ →</button>`;
+};
+
+window.nextTest = function() {
+  state.testQIdx++;
+  state.testAnswered = false;
+  renderTestQuestion();
+};
+
+function renderTestScore() {
+  const sec = document.getElementById('section-test');
+  const total = state.testQueue.length;
+  const pct = Math.round(state.testScore / total * 100);
+  let wrongList = state.testWrong.length ?
+    state.testWrong.map(w => `<div style="padding:6px 0;border-bottom:1px solid #f0f5f2;font-size:14px;"><b>${escHtml(w.word)}</b> — ${w.meanings.map(m=>escHtml(m)).join(' / ')}</div>`).join('') :
+    '<div style="color:var(--green);font-weight:700;padding:12px 0;">全問正解！🎉</div>';
+
+  sec.innerHTML = `<div class="score-card">
+    <div class="big-score">${pct}%</div>
+    <div class="score-label">${state.testScore} / ${total} 正解</div>
+    <div class="btn-row" style="justify-content:center">
+      <button class="btn-secondary" onclick="startTest()">もう一度</button>
+      <button class="btn-secondary" onclick="renderTestSetup()">設定に戻る</button>
+    </div>
+    ${state.testWrong.length ? `<div style="margin-top:20px;text-align:left"><div style="font-size:13px;font-weight:700;color:var(--red);margin-bottom:8px;">間違えた単語 (${state.testWrong.length}語)</div>${wrongList}</div>` : ''}
+  </div>`;
+}
+
+// ═══════════════════════════════════════
+// ⌨ TYPING MODE
+// ═══════════════════════════════════════
+function renderTypingSetup() {
+  const sec = document.getElementById('section-typing');
+  state.typingStart = state.typingStart || 1;
+  state.typingEnd = state.typingEnd || 50;
+  window._rangeCallbacks['typing'] = (s,e) => { state.typingStart=s; state.typingEnd=e; renderTypingSetup(); };
+  sec.innerHTML = `<h2 style="font-size:18px;font-weight:800;margin-bottom:14px;">⌨ タイピングモード</h2>
+    ${rangeWidget('typing', state.typingStart, state.typingEnd)}
+    <p style="font-size:14px;color:var(--muted);margin-bottom:14px;">日本語の意味を見て英単語を入力してください。大文字・小文字は無視します。</p>
+    <button class="btn-primary" onclick="startTyping()">スタート</button>`;
+}
+
+window.startTyping = function() {
+  const pool = getRange(state.typingStart, state.typingEnd);
+  if (!pool.length) { alert('範囲内の単語がありません'); return; }
+  state.typingQueue = shuffle(pool);
+  state.typingQIdx = 0; state.typingAnswered = false;
+  state.typingScore = 0; state.typingWrong = [];
+  renderTypingQuestion();
+};
+
+function renderTypingQuestion() {
+  const sec = document.getElementById('section-typing');
+  if (state.typingQIdx >= state.typingQueue.length) {
+    renderTypingScore();
+    return;
+  }
+  const cur = state.typingQueue[state.typingQIdx];
+  const total = state.typingQueue.length;
+  const pct = Math.round(state.typingQIdx / total * 100);
+  const qMeaning = randMeaning(cur);
+
+  sec.innerHTML = `<div class="quiz-card">
+    <div class="quiz-progress">${state.typingQIdx+1} / ${total}</div>
+    <div class="quiz-progress-bar"><div class="quiz-progress-bar-fill" style="width:${pct}%"></div></div>
+    <div class="quiz-type-label">日本語 → 英語タイピング</div>
+    <div class="quiz-question">${escHtml(qMeaning)}</div>
+    <div class="typing-input-row">
+      <input type="text" id="typing-input" placeholder="英単語を入力..." autocomplete="off" autocorrect="off" spellcheck="false" onkeydown="if(event.key==='Enter')submitTyping()">
+      <button class="submit-btn" onclick="submitTyping()">確認</button>
+    </div>
+    <div id="typing-result"></div>
+    <button class="btn-secondary" style="width:100%;margin-top:8px" onclick="skipTyping()">スキップ</button>
+  </div>`;
+  setTimeout(() => { const inp = document.getElementById('typing-input'); if(inp) inp.focus(); }, 100);
+}
+
+window.submitTyping = function() {
+  if (state.typingAnswered) return;
+  const cur = state.typingQueue[state.typingQIdx];
+  const inp = document.getElementById('typing-input');
+  if (!inp) return;
+  const val = inp.value.trim().toLowerCase();
+  if (!val) return;
+  state.typingAnswered = true;
+  inp.disabled = true;
+  const isCorrect = val === cur.word.toLowerCase();
+  if (isCorrect) { state.typingScore++; markCorrect(cur.no); }
+  else { state.typingWrong.push(cur); markWrong(cur.no); }
+  const allMeanings = cur.meanings.map(m=>escHtml(m)).join(' / ');
+  const resClass = isCorrect ? 'ok' : 'ng';
+  const icon = isCorrect ? '⭕' : '❌';
+  document.getElementById('typing-result').innerHTML = `
+    <div class="result-box ${resClass}">
+      <div class="result-icon">${icon}</div>
+      <div class="result-word">${escHtml(cur.word)}</div>
+      <div class="result-meanings">${allMeanings}</div>
+    </div>
+    <button class="next-btn" onclick="nextTyping()">次へ →</button>`;
+};
+
+window.skipTyping = function() {
+  if (state.typingAnswered) return;
+  const cur = state.typingQueue[state.typingQIdx];
+  state.typingAnswered = true;
+  markWrong(cur.no);
+  state.typingWrong.push(cur);
+  const allMeanings = cur.meanings.map(m=>escHtml(m)).join(' / ');
+  document.getElementById('typing-result').innerHTML = `
+    <div class="result-box ng">
+      <div class="result-icon">⏭</div>
+      <div class="result-word">${escHtml(cur.word)}</div>
+      <div class="result-meanings">${allMeanings}</div>
+    </div>
+    <button class="next-btn" onclick="nextTyping()">次へ →</button>`;
+  const inp = document.getElementById('typing-input');
+  if(inp) { inp.value = cur.word; inp.disabled = true; }
+};
+
+window.nextTyping = function() {
+  state.typingQIdx++; state.typingAnswered = false;
+  renderTypingQuestion();
+};
+
+function renderTypingScore() {
+  const sec = document.getElementById('section-typing');
+  const total = state.typingQueue.length;
+  const pct = Math.round(state.typingScore / total * 100);
+  let wrongList = state.typingWrong.length ?
+    state.typingWrong.map(w=>`<div style="padding:6px 0;border-bottom:1px solid #f0f5f2;font-size:14px;"><b>${escHtml(w.word)}</b> — ${w.meanings.map(m=>escHtml(m)).join(' / ')}</div>`).join('') :
+    '<div style="color:var(--green);font-weight:700;padding:12px 0;">全問正解！🎉</div>';
+  sec.innerHTML = `<div class="score-card">
+    <div class="big-score">${pct}%</div>
+    <div class="score-label">${state.typingScore} / ${total} 正解</div>
+    <div class="btn-row" style="justify-content:center">
+      <button class="btn-secondary" onclick="startTyping()">もう一度</button>
+      <button class="btn-secondary" onclick="renderTypingSetup()">設定に戻る</button>
+    </div>
+    ${state.typingWrong.length ? `<div style="margin-top:20px;text-align:left"><div style="font-size:13px;font-weight:700;color:var(--red);margin-bottom:8px;">間違えた単語 (${state.typingWrong.length}語)</div>${wrongList}</div>` : ''}
+  </div>`;
+}
+
+// ═══════════════════════════════════════
+// 🔁 REVIEW MODE
+// ═══════════════════════════════════════
+function renderReview() {
+  const sec = document.getElementById('section-review');
+  const wrongWords = WORDS.filter(w => wrongSet.has(w.no));
+  if (!wrongWords.length) {
+    sec.innerHTML = `<div class="empty">
+      <div style="font-size:48px;margin-bottom:16px;">🎉</div>
+      <div style="font-size:18px;font-weight:800;margin-bottom:8px;">間違えた単語はありません！</div>
+      <div>テストやタイピングで間違えた単語がここに表示されます。</div>
+    </div>`;
+    return;
+  }
+  const modeButtons = ['test','typing'].map(m => {
+    const labels = {test:'4択テスト', typing:'タイピング'};
+    const icons = {test:'📝', typing:'⌨'};
+    const active = state.reviewMode === m ? 'active' : '';
+    return `<button class="mode-option ${active}" onclick="setReviewMode('${m}')"><span class="mode-icon">${icons[m]}</span>${labels[m]}</button>`;
+  }).join('');
+  sec.innerHTML = `<h2 style="font-size:18px;font-weight:800;margin-bottom:14px;">🔁 復習モード</h2>
+    <div class="data-section" style="margin-bottom:16px">
+      <div class="stat-row">
+        <div class="stat-chip">📚 間違い単語: ${wrongWords.length}語</div>
+      </div>
+    </div>
+    <div style="margin-bottom:16px;">
+      <div style="font-size:13px;font-weight:600;color:var(--muted);margin-bottom:8px;">出題形式</div>
+      <div class="mode-grid">${modeButtons}</div>
+    </div>
+    <button class="btn-primary" onclick="startReview()">復習開始</button>`;
+}
+window.setReviewMode = function(m) { state.reviewMode = m; renderReview(); };
+
+window.startReview = function() {
+  const wrongWords = WORDS.filter(w => wrongSet.has(w.no));
+  if (wrongWords.length < (state.reviewMode==='test' ? 4 : 1)) {
+    alert(state.reviewMode==='test' ? '復習する単語が4語以上必要です' : '復習する単語がありません');
+    return;
+  }
+  state.reviewQueue = shuffle(wrongWords);
+  state.reviewQIdx = 0; state.reviewAnswered = false;
+  if (state.reviewMode === 'test') renderReviewTestQ();
+  else renderReviewTypingQ();
+};
+
+function renderReviewTestQ() {
+  const sec = document.getElementById('section-review');
+  const wrongWords = WORDS.filter(w => wrongSet.has(w.no));
+  if (state.reviewQIdx >= state.reviewQueue.length) {
+    const remaining = WORDS.filter(w => wrongSet.has(w.no));
+    sec.innerHTML = `<div class="score-card">
+      <div style="font-size:48px;margin-bottom:12px;">✅</div>
+      <div class="big-score" style="font-size:36px;">セッション終了</div>
+      <div class="score-label">残り間違い単語: ${remaining.length}語</div>
+      <div class="btn-row" style="justify-content:center">
+        <button class="btn-secondary" onclick="startReview()">続ける</button>
+        <button class="btn-secondary" onclick="renderReview()">戻る</button>
+      </div>
+    </div>`;
+    return;
+  }
+  const cur = state.reviewQueue[state.reviewQIdx];
+  const pool = WORDS.filter(w => wrongSet.has(w.no));
+  const safePool = pool.length >= 4 ? pool : [...pool, ...WORDS.filter(w=>!wrongSet.has(w.no))].slice(0,20);
+  const choices = getChoices(cur, safePool, true);
+  const total = state.reviewQueue.length;
+  const pct = Math.round(state.reviewQIdx / total * 100);
+
+  const choiceContent = choices.map(c => {
+    const m = randMeaning(c);
+    return `<button class="choice-btn" onclick="answerReviewTest(${c.no},${cur.no})" data-no="${c.no}">${escHtml(m)}</button>`;
+  }).join('');
+
+  sec.innerHTML = `<div class="quiz-card">
+    <div class="quiz-progress">${state.reviewQIdx+1} / ${total} &nbsp;|&nbsp; 残り間違い: ${wrongWords.length}語</div>
+    <div class="quiz-progress-bar"><div class="quiz-progress-bar-fill" style="width:${pct}%"></div></div>
+    <div class="quiz-type-label">🔁 復習 — 英語 → 日本語</div>
+    <div class="quiz-question">${escHtml(cur.word)}</div>
+    <div class="choices">${choiceContent}</div>
+    <div id="review-result"></div>
+  </div>`;
+}
+
+window.answerReviewTest = function(selectedNo, correctNo) {
+  if (state.reviewAnswered) return;
+  state.reviewAnswered = true;
+  const isCorrect = selectedNo === correctNo;
+  const cur = WORDS.find(w => w.no === correctNo);
+  document.querySelectorAll('.choice-btn').forEach(btn => {
+    btn.disabled = true;
+    const no = parseInt(btn.dataset.no);
+    if (no === correctNo) btn.classList.add('correct');
+    else if (no === selectedNo && !isCorrect) btn.classList.add('wrong');
+  });
+  if (isCorrect) markCorrect(correctNo);
+  else markWrong(correctNo);
+  const allMeanings = cur.meanings.map(m=>escHtml(m)).join(' / ');
+  const resClass = isCorrect ? 'ok' : 'ng';
+  const icon = isCorrect ? '⭕' : '❌';
+  const msg = isCorrect ? '正解！間違いリストから削除されました' : 'まだ間違いリストに残ります';
+  document.getElementById('review-result').innerHTML = `
+    <div class="result-box ${resClass}">
+      <div class="result-icon">${icon}</div>
+      <div class="result-word">${escHtml(cur.word)}</div>
+      <div class="result-meanings">${allMeanings}</div>
+      <div style="font-size:12px;margin-top:6px;font-weight:600">${msg}</div>
+    </div>
+    <button class="next-btn" onclick="nextReviewTest()">次へ →</button>`;
+};
+
+window.nextReviewTest = function() {
+  state.reviewQIdx++; state.reviewAnswered = false;
+  renderReviewTestQ();
+};
+
+function renderReviewTypingQ() {
+  const sec = document.getElementById('section-review');
+  const wrongWords = WORDS.filter(w => wrongSet.has(w.no));
+  if (state.reviewQIdx >= state.reviewQueue.length) {
+    const remaining = WORDS.filter(w => wrongSet.has(w.no));
+    sec.innerHTML = `<div class="score-card">
+      <div style="font-size:48px;margin-bottom:12px;">✅</div>
+      <div class="big-score" style="font-size:36px;">セッション終了</div>
+      <div class="score-label">残り間違い単語: ${remaining.length}語</div>
+      <div class="btn-row" style="justify-content:center">
+        <button class="btn-secondary" onclick="startReview()">続ける</button>
+        <button class="btn-secondary" onclick="renderReview()">戻る</button>
+      </div>
+    </div>`;
+    return;
+  }
+  const cur = state.reviewQueue[state.reviewQIdx];
+  const total = state.reviewQueue.length;
+  const pct = Math.round(state.reviewQIdx / total * 100);
+  const qMeaning = randMeaning(cur);
+  sec.innerHTML = `<div class="quiz-card">
+    <div class="quiz-progress">${state.reviewQIdx+1} / ${total} &nbsp;|&nbsp; 残り間違い: ${wrongWords.length}語</div>
+    <div class="quiz-progress-bar"><div class="quiz-progress-bar-fill" style="width:${pct}%"></div></div>
+    <div class="quiz-type-label">🔁 復習 — タイピング</div>
+    <div class="quiz-question">${escHtml(qMeaning)}</div>
+    <div class="typing-input-row">
+      <input type="text" id="review-typing-input" placeholder="英単語を入力..." autocomplete="off" autocorrect="off" spellcheck="false" onkeydown="if(event.key==='Enter')submitReviewTyping()">
+      <button class="submit-btn" onclick="submitReviewTyping()">確認</button>
+    </div>
+    <div id="review-typing-result"></div>
+  </div>`;
+  setTimeout(() => { const inp = document.getElementById('review-typing-input'); if(inp) inp.focus(); }, 100);
+}
+
+window.submitReviewTyping = function() {
+  if (state.reviewAnswered) return;
+  const cur = state.reviewQueue[state.reviewQIdx];
+  const inp = document.getElementById('review-typing-input');
+  if (!inp) return;
+  const val = inp.value.trim().toLowerCase();
+  if (!val) return;
+  state.reviewAnswered = true;
+  inp.disabled = true;
+  const isCorrect = val === cur.word.toLowerCase();
+  if (isCorrect) markCorrect(cur.no);
+  else markWrong(cur.no);
+  const allMeanings = cur.meanings.map(m=>escHtml(m)).join(' / ');
+  const resClass = isCorrect ? 'ok' : 'ng';
+  const icon = isCorrect ? '⭕' : '❌';
+  const msg = isCorrect ? '正解！間違いリストから削除されました' : 'まだ間違いリストに残ります';
+  document.getElementById('review-typing-result').innerHTML = `
+    <div class="result-box ${resClass}">
+      <div class="result-icon">${icon}</div>
+      <div class="result-word">${escHtml(cur.word)}</div>
+      <div class="result-meanings">${allMeanings}</div>
+      <div style="font-size:12px;margin-top:6px;font-weight:600">${msg}</div>
+    </div>
+    <button class="next-btn" onclick="nextReviewTyping()">次へ →</button>`;
+};
+
+window.nextReviewTyping = function() {
+  state.reviewQIdx++; state.reviewAnswered = false;
+  renderReviewTypingQ();
+};
+
+// ═══════════════════════════════════════
+// 📋 WORD LIST
+// ═══════════════════════════════════════
+function renderWordList() {
+  const sec = document.getElementById('section-wordlist');
+  let listFilter = state.listFilter || 'all';
+  let searchVal = state.listSearch || '';
+
+  const filterBtns = [
+    {k:'all', label:'すべて'},
+    {k:'wrong', label:'間違えた単語'},
+  ].map(f => `<button class="filter-btn ${listFilter===f.k?'active':''}" onclick="setListFilter('${f.k}')">${f.label}</button>`).join('');
+
+  let words = WORDS;
+  if (listFilter === 'wrong') words = WORDS.filter(w => wrongSet.has(w.no));
+  if (searchVal) {
+    const q = searchVal.toLowerCase();
+    words = words.filter(w => w.word.toLowerCase().includes(q) || w.meanings.some(m => m.includes(q)));
+  }
+
+  const rows = words.map(w => {
+    const wrongBadge = wrongSet.has(w.no) ? '<span class="wrong-badge">間違い</span>' : '';
+    return `<tr>
+      <td class="td-no">${w.no}</td>
+      <td class="td-word">${escHtml(w.word)}${wrongBadge}</td>
+      <td class="td-meaning">${w.meanings.map(m=>escHtml(m)).join(' / ')}</td>
+    </tr>`;
+  }).join('');
+
+  sec.innerHTML = `<h2 style="font-size:18px;font-weight:800;margin-bottom:14px;">📋 単語一覧</h2>
+    <div class="list-filters">${filterBtns}</div>
+    <input type="text" placeholder="単語・意味で検索..." value="${escHtml(searchVal)}" oninput="listSearch(this.value)" style="margin-bottom:12px">
+    <div style="font-size:13px;color:var(--muted);margin-bottom:8px;">${words.length}語表示</div>
+    <div class="scroll-list">
+      <table class="word-table">
+        <thead><tr><th>No.</th><th>単語</th><th>意味</th></tr></thead>
+        <tbody>${rows || '<tr><td colspan="3" style="text-align:center;padding:24px;color:var(--muted)">該当する単語がありません</td></tr>'}</tbody>
+      </table>
+    </div>`;
+}
+window.setListFilter = function(f) { state.listFilter = f; renderWordList(); };
+window.listSearch = function(v) { state.listSearch = v; renderWordList(); };
+
+// ═══════════════════════════════════════
+// ⚙ SETTINGS
+// ═══════════════════════════════════════
+function renderSettings() {
+  const sec = document.getElementById('section-settings');
+  const wrongCount = wrongSet.size;
+  sec.innerHTML = `<h2 style="font-size:18px;font-weight:800;margin-bottom:16px;">⚙ 設定・データ管理</h2>
+
+    <div class="data-section">
+      <h3>📊 学習状況</h3>
+      <div class="stat-row">
+        <div class="stat-chip">📚 総単語数: ${WORDS.length}語</div>
+        <div class="stat-chip">❌ 間違い: ${wrongCount}語</div>
+        <div class="stat-chip">✅ 習得済み: ${WORDS.length - wrongCount}語</div>
+      </div>
+    </div>
+
+    <div class="data-section">
+      <h3>💾 データのエクスポート / インポート</h3>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">間違えた単語リストと学習履歴をJSONファイルで保存・復元できます。</p>
+      <div class="btn-row">
+        <button class="btn-secondary" onclick="exportData()">📥 JSONエクスポート</button>
+        <button class="btn-secondary" onclick="document.getElementById('import-file').click()">📤 JSONインポート</button>
+        <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(this)">
+      </div>
+    </div>
+
+    <div class="data-section">
+      <h3>🗑 データのリセット</h3>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">間違えた単語リストをクリアします。この操作は取り消せません。</p>
+      <div class="btn-row">
+        <button class="btn-secondary btn-danger" onclick="resetWrong()">間違いリストをクリア</button>
+        <button class="btn-secondary btn-danger" onclick="resetAll()">全データをリセット</button>
+      </div>
+    </div>`;
+}
+
+window.exportData = function() {
+  const data = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    wrongList: [...wrongSet],
+    history: history,
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'leap_data_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click(); URL.revokeObjectURL(url);
+};
+
+window.importData = function(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data.wrongList) wrongSet = new Set(data.wrongList);
+      if (data.history) history = data.history;
+      saveStorage();
+      alert('インポート完了！ 間違い単語: ' + wrongSet.size + '語');
+      renderSettings();
+    } catch(err) {
+      alert('インポートに失敗しました: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  input.value = '';
+};
+
+window.resetWrong = function() {
+  if (!confirm('間違いリストをクリアしますか？')) return;
+  wrongSet.clear(); saveStorage();
+  alert('間違いリストをクリアしました');
+  renderSettings();
+};
+
+window.resetAll = function() {
+  if (!confirm('全データをリセットしますか？この操作は取り消せません。')) return;
+  wrongSet.clear(); history = {}; saveStorage();
+  alert('全データをリセットしました');
+  renderSettings();
+};
+
+// ── INIT ──
+loadStorage();
+showSection('study');
+</script>
+</body>
+</html>
