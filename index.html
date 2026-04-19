@@ -233,6 +233,213 @@ input:focus { border-color: var(--primary); }
 
 /* Scrollable content area */
 .scroll-list { max-height: 70vh; overflow-y: auto; border-radius: var(--radius); }
+
+/* ══════════════════════════════════════════
+   📱 MOBILE ONLY  (max-width: 640px)
+   ══════════════════════════════════════════ */
+@media (max-width: 640px) {
+
+  /* ── Bottom Navigation ── */
+  #nav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px));
+    justify-content: space-around;
+    border-top: 1px solid var(--border);
+    border-bottom: none;
+    box-shadow: 0 -2px 16px rgba(0,0,0,0.10);
+    z-index: 200;
+    background: #fff;
+    gap: 0;
+  }
+  .nav-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 6px 2px;
+    border-radius: 10px;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    background: transparent;
+    color: var(--muted);
+    border: none;
+    min-width: 0;
+  }
+  .nav-btn .nav-icon { font-size: 20px; line-height: 1; }
+  .nav-btn.active {
+    background: var(--primary-light);
+    color: var(--primary-dark);
+    border: none;
+  }
+
+  /* ── Top Bar ── */
+  #topbar { padding: 10px 14px; }
+  #topbar h1 { font-size: 16px; }
+  #topbar .sub { font-size: 11px; }
+  #topbar-settings-btn { display: none; } /* settings accessible from bottom nav */
+
+  /* ── Content area: leave room for bottom nav ── */
+  #content {
+    padding: 12px 12px calc(72px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* ── Range picker ── */
+  .range-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 12px;
+  }
+  .range-bar > span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .range-bar input[type=number] { width: 64px; padding: 8px; font-size: 14px; }
+  .range-presets { gap: 6px; }
+  .range-preset { padding: 7px 12px; font-size: 12px; }
+
+  /* ── Study mode ── */
+  .study-layout { grid-template-columns: 1fr; gap: 0; }
+
+  /* Tab switcher for study on mobile */
+  .study-tabs {
+    display: flex;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius) var(--radius) 0 0;
+    overflow: hidden;
+    border-bottom: none;
+  }
+  .study-tab-btn {
+    flex: 1; padding: 11px 8px;
+    font-size: 13px; font-weight: 700;
+    background: #fff; color: var(--muted);
+    border: none; border-radius: 0;
+    border-bottom: 2px solid transparent;
+  }
+  .study-tab-btn.active { color: var(--primary-dark); border-bottom-color: var(--primary); background: var(--primary-light); }
+
+  .study-list-panel {
+    max-height: calc(100dvh - 260px);
+    border-radius: 0 0 var(--radius) var(--radius);
+    border-top: none;
+  }
+  .word-list-item { padding: 12px 14px; }
+  .word-list-item .w { font-size: 15px; }
+
+  .study-detail { border-radius: 0 0 var(--radius) var(--radius); padding: 18px 16px; }
+  .study-detail .word-en { font-size: 30px; }
+  .study-detail .meanings-list li { font-size: 15px; padding: 8px 0; }
+
+  /* Sticky next button on mobile study */
+  .study-nav-row {
+    position: sticky;
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    background: #fff;
+    margin: 16px -16px -18px;
+    padding: 12px 16px;
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.06);
+    gap: 10px;
+  }
+  .study-nav-row button { padding: 14px; font-size: 15px; }
+
+  /* ── Quiz / Test ── */
+  .quiz-card {
+    padding: 16px 14px;
+    border-radius: var(--radius);
+    box-shadow: none;
+    border: 1px solid var(--border);
+  }
+  .quiz-question { font-size: 20px; margin-bottom: 20px; }
+  .quiz-progress { font-size: 12px; margin-bottom: 12px; }
+
+  .choices { gap: 8px; }
+  .choice-btn {
+    padding: 15px 14px;
+    font-size: 15px;
+    min-height: 52px;
+    line-height: 1.3;
+  }
+
+  .result-box { margin-top: 14px; padding: 14px; }
+  .result-box .result-word { font-size: 20px; }
+  .result-box .result-meanings { font-size: 13px; }
+
+  /* Sticky next btn in quiz */
+  .next-btn {
+    position: sticky;
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    font-size: 16px;
+    padding: 15px;
+    margin-top: 12px;
+    box-shadow: 0 -2px 12px rgba(0,0,0,0.10);
+  }
+
+  /* ── Typing ── */
+  .typing-input-row { gap: 8px; }
+  .typing-input-row input { font-size: 17px; padding: 13px 14px; }
+  .submit-btn { padding: 13px 18px; font-size: 15px; }
+
+  /* ── Mode selector ── */
+  .mode-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .mode-option { padding: 14px 10px; font-size: 13px; }
+  .mode-option .mode-icon { font-size: 24px; margin-bottom: 4px; }
+
+  /* ── Score card ── */
+  .score-card { padding: 28px 18px; }
+  .score-card .big-score { font-size: 48px; }
+  .btn-row { gap: 8px; }
+  .btn-row .btn-secondary { flex: 1; text-align: center; }
+
+  /* ── Word list (table → card style) ── */
+  .word-table thead { display: none; }
+  .word-table, .word-table tbody, .word-table tr, .word-table td {
+    display: block; width: 100%;
+  }
+  .word-table tr {
+    padding: 10px 14px;
+    border-bottom: 1px solid #f0f5f2;
+    background: #fff;
+  }
+  .word-table tr:hover td { background: transparent; }
+  .word-table tr:hover { background: var(--primary-light); }
+  .word-table td { padding: 0; border: none; }
+  .word-table .td-no {
+    font-size: 10px; color: var(--muted);
+    margin-bottom: 2px; display: block;
+  }
+  .word-table .td-word {
+    font-size: 16px; font-weight: 800;
+    color: var(--text); display: block;
+    margin-bottom: 3px;
+  }
+  .word-table .td-meaning {
+    font-size: 13px; color: var(--muted);
+    display: block; line-height: 1.5;
+  }
+  .scroll-list { max-height: calc(100dvh - 240px); }
+
+  /* ── Settings ── */
+  .stat-row { gap: 8px; }
+  .stat-chip { font-size: 12px; padding: 7px 12px; }
+  .data-section { padding: 14px; }
+
+  /* ── Headings ── */
+  h2[style*="font-size:18px"] { font-size: 16px !important; }
+
+  /* ── Buttons general ── */
+  .btn-primary { padding: 15px; font-size: 16px; }
+  .btn-secondary { padding: 12px 16px; font-size: 13px; }
+
+  /* ── Empty state ── */
+  .empty { padding: 36px 16px; }
+}
 </style>
 </head>
 <body>
@@ -248,12 +455,12 @@ input:focus { border-color: var(--primary); }
   </div>
 
   <div id="nav">
-    <button class="nav-btn" onclick="showSection('study')">📖 学習</button>
-    <button class="nav-btn" onclick="showSection('test')">📝 テスト</button>
-    <button class="nav-btn" onclick="showSection('typing')">⌨ タイピング</button>
-    <button class="nav-btn" onclick="showSection('review')">🔁 復習</button>
-    <button class="nav-btn" onclick="showSection('wordlist')">📋 一覧</button>
-    <button class="nav-btn" onclick="showSection('settings')">⚙ 設定</button>
+    <button class="nav-btn" onclick="showSection('study')"><span class="nav-icon">📖</span>学習</button>
+    <button class="nav-btn" onclick="showSection('test')"><span class="nav-icon">📝</span>テスト</button>
+    <button class="nav-btn" onclick="showSection('typing')"><span class="nav-icon">⌨</span>タイピング</button>
+    <button class="nav-btn" onclick="showSection('review')"><span class="nav-icon">🔁</span>復習</button>
+    <button class="nav-btn" onclick="showSection('wordlist')"><span class="nav-icon">📋</span>一覧</button>
+    <button class="nav-btn" onclick="showSection('settings')"><span class="nav-icon">⚙</span>設定</button>
   </div>
 
   <div id="content">
@@ -2721,10 +2928,13 @@ function getExample(word) {
   return null;
 }
 
+function isMobile() { return window.innerWidth <= 640; }
+
 function renderStudy() {
   const sec = document.getElementById('section-study');
   state.studyStart = state.studyStart || 1;
   state.studyEnd = state.studyEnd || 50;
+  state.studyTab = state.studyTab || 'list'; // 'list' | 'detail'
   window._rangeCallbacks['study'] = (s,e) => {
     state.studyStart = s; state.studyEnd = e; state.studyIdx = 0;
     renderStudy();
@@ -2748,17 +2958,27 @@ function renderStudy() {
   const ex = getExample(cur.word);
   let exHtml = ex ? `<div class="example"><div class="ex-en">${escHtml(ex.en)}</div><div class="ex-jp">${escHtml(ex.jp)}</div></div>` : '';
 
+  const mobile = isMobile();
+  const tabHtml = mobile ? `<div class="study-tabs">
+    <button class="study-tab-btn ${state.studyTab==='list'?'active':''}" onclick="studyTab('list')">📋 単語一覧</button>
+    <button class="study-tab-btn ${state.studyTab==='detail'?'active':''}" onclick="studyTab('detail')">📖 詳細</button>
+  </div>` : '';
+
+  const listStyle = mobile && state.studyTab !== 'list' ? 'display:none' : '';
+  const detailStyle = mobile && state.studyTab !== 'detail' ? 'display:none' : '';
+
   sec.innerHTML = rangeWidget('study', state.studyStart, state.studyEnd) +
+  tabHtml +
   `<div class="study-layout">
-    <div class="study-list-panel">${listItems}</div>
-    <div class="study-detail">
+    <div class="study-list-panel" style="${listStyle}">${listItems}</div>
+    <div class="study-detail" style="${detailStyle}">
       <div class="word-en">${escHtml(cur.word)}</div>
-      <div class="word-num">No.${cur.no}</div>
+      <div class="word-num">No.${cur.no} &nbsp;|&nbsp; ${state.studyIdx+1} / ${words.length}</div>
       <ul class="meanings-list">${cur.meanings.map(m=>`<li>${escHtml(m)}</li>`).join('')}</ul>
       ${exHtml}
       <div class="study-nav-row">
         <button class="btn-secondary" onclick="studyPrev()">← 前へ</button>
-        <button class="next-btn" style="flex:1" onclick="studyNext()">次へ →</button>
+        <button class="next-btn" style="flex:1;margin-top:0" onclick="studyNext()">次へ →</button>
       </div>
     </div>
   </div>`;
@@ -2769,7 +2989,12 @@ function renderStudy() {
     if (sel) sel.scrollIntoView({block:'nearest'});
   }, 50);
 }
-window.studySelect = function(i) { state.studyIdx = i; renderStudy(); };
+window.studyTab = function(tab) { state.studyTab = tab; renderStudy(); };
+window.studySelect = function(i) {
+  state.studyIdx = i;
+  if (isMobile()) state.studyTab = 'detail';
+  renderStudy();
+};
 window.studyNext = function() {
   const words = getRange(state.studyStart, state.studyEnd);
   state.studyIdx = Math.min(state.studyIdx + 1, words.length - 1);
