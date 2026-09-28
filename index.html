@@ -21,6 +21,10 @@
   --border: #d6e8dc;
   --radius: 12px;
   --shadow: 0 2px 12px rgba(0,0,0,0.08);
+  /* 下部固定ナビの高さ。JSで実測して上書きする（safe-area分は含まない）。 */
+  --nav-h: 60px;
+  /* 上部バー(sticky)の高さ。JSで実測して上書きする。 */
+  --top-h: 56px;
 }
 html, body { height: 100%; font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); }
 button { font: inherit; cursor: pointer; border: none; border-radius: var(--radius); transition: all 0.15s; }
@@ -76,6 +80,9 @@ input:focus { border-color: var(--primary); }
 }
 .range-bar label { font-size: 13px; font-weight: 600; color: var(--muted); }
 .range-bar input[type=number] { width: 72px; padding: 7px 10px; font-size: 13px; }
+/* デスクトップでは常に展開表示。折りたたみ用のサマリーはモバイルでのみ使う */
+.range-summary { display: none; }
+.range-body { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; width: 100%; }
 .range-preset {
   padding: 6px 11px; font-size: 12px; font-weight: 600;
   background: var(--primary-light); color: var(--primary-dark);
@@ -97,7 +104,7 @@ input:focus { border-color: var(--primary); }
 .study-list-panel {
   background: #fff; border-radius: var(--radius);
   border: 1px solid var(--border); overflow-y: auto;
-  max-height: 65vh; box-shadow: var(--shadow);
+  max-height: 65vh; max-height: 65dvh; box-shadow: var(--shadow);
 }
 .word-list-item {
   display: flex; align-items: center; gap: 10px;
@@ -119,7 +126,7 @@ input:focus { border-color: var(--primary); }
 }
 .study-detail .word-en { font-size: 36px; font-weight: 900; color: var(--primary-dark); margin-bottom: 8px; }
 .study-detail .word-num { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
-.study-detail .meanings-list { margin-bottom: 20px; }
+.study-detail .meanings-list { margin-bottom: 20px; padding-left: 1.2em; }
 .study-detail .meanings-list li { padding: 6px 0; font-size: 16px; border-bottom: 1px solid #f0f5f2; }
 .study-detail .example { background: var(--primary-light); border-left: 3px solid var(--primary); padding: 12px 14px; border-radius: 0 8px 8px 0; font-size: 14px; line-height: 1.6; color: var(--text); margin-top: 8px; }
 .study-detail .example .ex-en { font-weight: 600; margin-bottom: 4px; }
@@ -239,7 +246,7 @@ input:focus { border-color: var(--primary); }
 .empty { text-align: center; padding: 48px 24px; color: var(--muted); font-size: 15px; }
 
 /* Scrollable content area */
-.scroll-list { max-height: 70vh; overflow-y: auto; border-radius: var(--radius); }
+.scroll-list { max-height: 70vh; max-height: 70dvh; overflow-y: auto; border-radius: var(--radius); }
 
 /* ── Keyboard hints ── */
 .kbd-hint {
@@ -303,21 +310,49 @@ input:focus { border-color: var(--primary); }
 
   /* ── Content area: leave room for bottom nav ── */
   #content {
-    padding: 12px 12px calc(72px + env(safe-area-inset-bottom, 0px));
+    padding: 12px 12px calc(var(--nav-h) + 16px + env(safe-area-inset-bottom, 0px));
   }
 
-  /* ── Range picker ── */
+  /* ── Range picker（折りたたみ式: 閉じている間は1行だけ表示） ── */
   .range-bar {
     flex-direction: column;
     align-items: stretch;
-    gap: 10px;
-    padding: 12px;
+    gap: 0;
+    padding: 0;
+    margin-bottom: 10px;
+    overflow: hidden;
   }
-  .range-bar > span {
+  .range-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 10px 14px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--primary-dark);
+    background: #fff;
+    border: none;
+    border-radius: var(--radius);
+    min-height: 44px; /* タップしやすい最小サイズ */
+  }
+  .range-summary-chevron { transition: transform 0.15s; color: var(--muted); }
+  .range-bar.open .range-summary-chevron { transform: rotate(180deg); }
+  .range-body {
+    display: none;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 4px 12px 12px;
+    border-top: 1px solid var(--border);
+  }
+  .range-bar.open .range-body { display: flex; }
+  .range-body > span {
     display: flex;
     align-items: center;
     gap: 6px;
     flex-wrap: wrap;
+    padding-top: 10px;
   }
   .range-bar input[type=number] { width: 64px; padding: 8px; font-size: 14px; }
   .range-presets { gap: 6px; }
@@ -345,29 +380,34 @@ input:focus { border-color: var(--primary); }
   .study-tab-btn.active { color: var(--primary-dark); border-bottom-color: var(--primary); background: var(--primary-light); }
 
   .study-list-panel {
-    max-height: calc(100dvh - 260px);
+    /* 上部バー + 範囲ピッカー(閉じた状態 約44px) + タブ(約44px) + 下部ナビ + 余白 を除いた高さ */
+    max-height: calc(100dvh - var(--top-h) - var(--nav-h) - 44px - 44px - 32px - env(safe-area-inset-bottom, 0px));
     border-radius: 0 0 var(--radius) var(--radius);
     border-top: none;
   }
   .word-list-item { padding: 12px 14px; }
   .word-list-item .w { font-size: 15px; }
 
-  .study-detail { border-radius: 0 0 var(--radius) var(--radius); padding: 18px 16px; }
+  .study-detail { border-radius: 0 0 var(--radius) var(--radius); padding: 18px 16px 0; }
   .study-detail .word-en { font-size: 30px; }
+  .study-detail .word-num { margin-bottom: 10px; }
+  .study-detail .meanings-list { margin-bottom: 14px; }
   .study-detail .meanings-list li { font-size: 15px; padding: 8px 0; }
 
-  /* Sticky next button on mobile study */
+  /* 「前へ/次へ」は画面下（下部ナビの直上）に固定するが、
+     コンテンツ側に十分な下余白を入れて、例文がボタンの裏に隠れないようにする。 */
   .study-nav-row {
     position: sticky;
-    bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
     background: #fff;
-    margin: 16px -16px -18px;
-    padding: 12px 16px;
+    margin: 16px -16px 0;
+    padding: 10px 16px;
     border-top: 1px solid var(--border);
     box-shadow: 0 -2px 8px rgba(0,0,0,0.06);
     gap: 10px;
+    z-index: 5;
   }
-  .study-nav-row button { padding: 14px; font-size: 15px; }
+  .study-nav-row button { padding: 13px; font-size: 15px; }
 
   /* ── Quiz / Test ── */
   .quiz-card {
@@ -391,15 +431,18 @@ input:focus { border-color: var(--primary); }
   .result-box .result-word { font-size: 20px; }
   .result-box .result-meanings { font-size: 13px; }
 
-  /* Sticky next btn in quiz */
+  /* クイズ系の「次へ」: 以前は position:sticky で画面下に固定していたが、
+     回答後の結果ボックス(正解の意味)の上に重なって隠してしまっていた。
+     通常のフローに置いて結果ボックスの直下に出し、回答後は JS(scrollResultIntoView)で
+     ボタンまで見える位置にスクロールする。 */
   .next-btn {
-    position: sticky;
-    bottom: calc(72px + env(safe-area-inset-bottom, 0px));
     font-size: 16px;
     padding: 15px;
     margin-top: 12px;
-    box-shadow: 0 -2px 12px rgba(0,0,0,0.10);
   }
+  .study-nav-row .next-btn { margin-top: 0; }
+  .study-detail { padding-bottom: 0; }
+  .study-detail .study-nav-row { margin-bottom: 0; border-radius: 0 0 var(--radius) var(--radius); }
 
   /* ── Typing ── */
   .typing-input-row { gap: 8px; }
@@ -443,7 +486,7 @@ input:focus { border-color: var(--primary); }
     font-size: 13px; color: var(--muted);
     display: block; line-height: 1.5;
   }
-  .scroll-list { max-height: calc(100dvh - 240px); }
+  .scroll-list { max-height: calc(100dvh - var(--top-h) - var(--nav-h) - 190px - env(safe-area-inset-bottom, 0px)); }
 
   /* ── Settings ── */
   .stat-row { gap: 8px; }
@@ -2876,6 +2919,21 @@ function getChoices(correct, pool, correctMeaning) {
   const choices = shuffle([correct, ...shuffled]);
   return choices;
 }
+// 回答後に「結果ボックス＋次へ」ボタンが画面外に出てしまうのを防ぐ。
+// 下部ナビ（固定）の上に収まるよう、結果エリアの末尾までスクロールする。
+function scrollResultIntoView(containerId) {
+  setTimeout(() => {
+    const box = document.getElementById(containerId);
+    if (!box) return;
+    const target = box.querySelector('.next-btn') || box;
+    const navH = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--nav-h')) || 0;
+    const rect = target.getBoundingClientRect();
+    const safeBottom = window.innerHeight - navH - 12;
+    if (rect.bottom > safeBottom) {
+      window.scrollBy({ top: rect.bottom - safeBottom, behavior: 'smooth' });
+    }
+  }, 60);
+}
 function escHtml(s) {
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
@@ -2917,10 +2975,24 @@ function renderSection(name) {
 }
 
 // ── RANGE WIDGET ──
+// モバイルでは縦に長くなり画面の大半を占有してしまうため、現在の範囲を1行で表示し
+// タップで展開する折りたたみ式にする（デスクトップでは常に展開）。
+window._rangeOpen = window._rangeOpen || {};
+window.toggleRange = function(id) {
+  window._rangeOpen[id] = !window._rangeOpen[id];
+  const bar = document.getElementById('rbar-' + id);
+  if (bar) bar.classList.toggle('open', !!window._rangeOpen[id]);
+};
 function rangeWidget(id, start, end, onApply) {
   const presets = [[1,50],[51,100],[101,200],[201,300],[301,500],[501,1000],[1001,1500],[1501,2000],[2001,MAX_NO],[1,MAX_NO]];
   const presetLabels = ['1-50','51-100','101-200','201-300','301-500','501-1000','1001-1500','1501-2000',`2001-${MAX_NO}`,'全て'];
-  let html = `<div class="range-bar" id="rbar-${id}">
+  const isOpen = !!window._rangeOpen[id];
+  let html = `<div class="range-bar ${isOpen ? 'open' : ''}" id="rbar-${id}">
+    <button type="button" class="range-summary" onclick="toggleRange('${id}')" aria-expanded="${isOpen}">
+      <span class="range-summary-text">範囲 No.${start}〜${end}</span>
+      <span class="range-summary-chevron">▾</span>
+    </button>
+    <div class="range-body">
     <span><label>No.</label>&nbsp;
     <input type="number" id="r-start-${id}" value="${start}" min="1" max="${MAX_NO}" style="width:70px">
     &nbsp;〜&nbsp;
@@ -2931,18 +3003,20 @@ function rangeWidget(id, start, end, onApply) {
     const active = (p[0]===start && p[1]===end) ? 'active' : '';
     html += `<button class="range-preset ${active}" onclick="applyRangePreset('${id}',${p[0]},${p[1]})">${presetLabels[i]}</button>`;
   });
-  html += '</div></div>';
+  html += '</div></div></div>';
   return html;
 }
 window._rangeCallbacks = {};
 function applyRange(id) {
   const s = parseInt(document.getElementById('r-start-'+id).value)||1;
   const e = parseInt(document.getElementById('r-end-'+id).value)||50;
+  window._rangeOpen[id] = false; // 範囲を決めたら畳んでコンテンツを見せる
   if (window._rangeCallbacks[id]) window._rangeCallbacks[id](s, e);
 }
 function applyRangePreset(id, s, e) {
   document.getElementById('r-start-'+id).value = s;
   document.getElementById('r-end-'+id).value = e;
+  window._rangeOpen[id] = false;
   if (window._rangeCallbacks[id]) window._rangeCallbacks[id](s, e);
 }
 
@@ -5329,6 +5403,17 @@ function renderStudy() {
   setTimeout(() => {
     const sel = document.querySelector('.word-list-item.selected');
     if (sel) sel.scrollIntoView({block:'nearest'});
+    // モバイルの詳細表示では、範囲ピッカーやタブより下（単語名から）が見える位置に揃える。
+    // これにより、意味・例文・前へ/次へが1画面に収まりやすくなる。
+    if (mobile && state.studyTab === 'detail') {
+      const det = document.querySelector('.study-detail');
+      const topbar = document.getElementById('topbar');
+      if (det) {
+        const topbarH = topbar ? topbar.getBoundingClientRect().height : 0;
+        const y = window.scrollY + det.getBoundingClientRect().top - topbarH - 8;
+        window.scrollTo({ top: Math.max(0, y) });
+      }
+    }
   }, 50);
 }
 window.studyTab = function(tab) { state.studyTab = tab; renderStudy(); };
@@ -5446,9 +5531,11 @@ window.answerTest = function(selectedNo, correctNo) {
       <div class="result-meanings">${allMeanings}</div>
     </div>
     <button class="next-btn" onclick="nextTest()">次へ →</button>`;
+  scrollResultIntoView('result-area');
 };
 
 window.nextTest = function() {
+  window.scrollTo({ top: 0 });
   state.testQIdx++;
   state.testAnswered = false;
   renderTestQuestion();
@@ -5546,6 +5633,7 @@ window.submitTyping = function() {
       <div class="result-meanings">${allMeanings}</div>
     </div>
     <button class="next-btn" onclick="nextTyping()">次へ →</button>`;
+  scrollResultIntoView('typing-result');
 };
 
 window.skipTyping = function() {
@@ -5562,11 +5650,13 @@ window.skipTyping = function() {
       <div class="result-meanings">${allMeanings}</div>
     </div>
     <button class="next-btn" onclick="nextTyping()">次へ →</button>`;
+  scrollResultIntoView('typing-result');
   const inp = document.getElementById('typing-input');
   if(inp) { inp.value = cur.word; inp.disabled = true; inp.blur(); }
 };
 
 window.nextTyping = function() {
+  window.scrollTo({ top: 0 });
   state.typingQIdx++; state.typingAnswered = false;
   renderTypingQuestion();
 };
@@ -5700,9 +5790,11 @@ window.answerReviewTest = function(selectedNo, correctNo) {
       <div style="font-size:12px;margin-top:6px;font-weight:600">${msg}</div>
     </div>
     <button class="next-btn" onclick="nextReviewTest()">次へ →</button>`;
+  scrollResultIntoView('review-result');
 };
 
 window.nextReviewTest = function() {
+  window.scrollTo({ top: 0 });
   // 正解してwrongSetから既に外れた単語は、このセッションの残りキュー（現在位置より後ろ）
   // からも取り除く。こうしないと「間違いリストから削除されました」と表示された単語が
   // 同じセッション内で再び出題されてしまう。
@@ -5773,9 +5865,11 @@ window.submitReviewTyping = function() {
       <div style="font-size:12px;margin-top:6px;font-weight:600">${msg}</div>
     </div>
     <button class="next-btn" onclick="nextReviewTyping()">次へ →</button>`;
+  scrollResultIntoView('review-typing-result');
 };
 
 window.nextReviewTyping = function() {
+  window.scrollTo({ top: 0 });
   // テスト形式の復習と同様、正解済みの単語は残りキューから取り除く。
   const justAnswered = state.reviewQueue[state.reviewQIdx];
   if (justAnswered && !wrongSet.has(justAnswered.no)) {
@@ -5788,23 +5882,18 @@ window.nextReviewTyping = function() {
 // ═══════════════════════════════════════
 // 📋 WORD LIST
 // ═══════════════════════════════════════
-function renderWordList() {
-  const sec = document.getElementById('section-wordlist');
-  let listFilter = state.listFilter || 'all';
-  let searchVal = state.listSearch || '';
-
-  const filterBtns = [
-    {k:'all', label:'すべて'},
-    {k:'wrong', label:'間違えた単語'},
-  ].map(f => `<button class="filter-btn ${listFilter===f.k?'active':''}" onclick="setListFilter('${f.k}')">${f.label}</button>`).join('');
-
+// 一覧の絞り込み結果（件数 + テーブル本体）だけを組み立てる。
+// 検索入力のたびに全体を再描画すると入力欄が作り直されてフォーカス・キーボードが
+// 失われる（特にスマホで致命的）ため、入力欄は再生成せずこの部分だけ差し替える。
+function buildWordListBody() {
+  const listFilter = state.listFilter || 'all';
+  const searchVal = state.listSearch || '';
   let words = WORDS;
   if (listFilter === 'wrong') words = WORDS.filter(w => wrongSet.has(w.no));
   if (searchVal) {
     const q = searchVal.toLowerCase();
     words = words.filter(w => w.word.toLowerCase().includes(q) || w.meanings.some(m => m.includes(q)));
   }
-
   const rows = words.map(w => {
     const wrongBadge = wrongSet.has(w.no) ? '<span class="wrong-badge">間違い</span>' : '';
     return `<tr>
@@ -5813,11 +5902,7 @@ function renderWordList() {
       <td class="td-meaning">${w.meanings.map(m=>escHtml(m)).join(' / ')}</td>
     </tr>`;
   }).join('');
-
-  sec.innerHTML = `<h2 style="font-size:18px;font-weight:800;margin-bottom:14px;">📋 単語一覧</h2>
-    <div class="list-filters">${filterBtns}</div>
-    <input type="text" placeholder="単語・意味で検索..." value="${escHtml(searchVal)}" oninput="listSearch(this.value)" style="margin-bottom:12px">
-    <div style="font-size:13px;color:var(--muted);margin-bottom:8px;">${words.length}語表示</div>
+  return `<div class="list-count" style="font-size:13px;color:var(--muted);margin-bottom:8px;">${words.length}語表示</div>
     <div class="scroll-list">
       <table class="word-table">
         <thead><tr><th>No.</th><th>単語</th><th>意味</th></tr></thead>
@@ -5825,8 +5910,29 @@ function renderWordList() {
       </table>
     </div>`;
 }
+
+function renderWordList() {
+  const sec = document.getElementById('section-wordlist');
+  const listFilter = state.listFilter || 'all';
+  const searchVal = state.listSearch || '';
+
+  const filterBtns = [
+    {k:'all', label:'すべて'},
+    {k:'wrong', label:'間違えた単語'},
+  ].map(f => `<button class="filter-btn ${listFilter===f.k?'active':''}" onclick="setListFilter('${f.k}')">${f.label}</button>`).join('');
+
+  sec.innerHTML = `<h2 style="font-size:18px;font-weight:800;margin-bottom:14px;">📋 単語一覧</h2>
+    <div class="list-filters">${filterBtns}</div>
+    <input type="text" id="list-search-input" placeholder="単語・意味で検索..." value="${escHtml(searchVal)}" oninput="listSearch(this.value)" style="margin-bottom:12px">
+    <div id="list-body">${buildWordListBody()}</div>`;
+}
 window.setListFilter = function(f) { state.listFilter = f; renderWordList(); };
-window.listSearch = function(v) { state.listSearch = v; renderWordList(); };
+window.listSearch = function(v) {
+  state.listSearch = v;
+  const body = document.getElementById('list-body');
+  if (body) body.innerHTML = buildWordListBody();
+  else renderWordList();
+};
 
 // ═══════════════════════════════════════
 // ⚙ SETTINGS
@@ -6016,9 +6122,41 @@ document.addEventListener('keydown', function(e) {
   }
 });
 
+// ── 下部ナビの実寸を測って CSS変数 --nav-h に反映 ──
+// #nav は padding に safe-area-inset-bottom を含むため、その分を差し引いた値を入れる
+// （CSS側で bottom / padding に env(safe-area-inset-bottom) を別途加算しているため）。
+function syncNavHeight() {
+  const nav = document.getElementById('nav');
+  if (!nav) return;
+  if (getComputedStyle(nav).position !== 'fixed') {
+    // デスクトップ（ナビが上部）では不要
+    document.documentElement.style.removeProperty('--nav-h');
+    document.documentElement.style.removeProperty('--top-h');
+    return;
+  }
+  const probe = document.createElement('div');
+  probe.style.cssText = 'position:fixed;bottom:0;height:env(safe-area-inset-bottom,0px);visibility:hidden;pointer-events:none;';
+  document.body.appendChild(probe);
+  const safe = probe.getBoundingClientRect().height || 0;
+  document.body.removeChild(probe);
+  const h = Math.max(0, Math.round(nav.getBoundingClientRect().height - safe));
+  if (h > 0) document.documentElement.style.setProperty('--nav-h', h + 'px');
+  const top = document.getElementById('topbar');
+  if (top) {
+    const th = Math.round(top.getBoundingClientRect().height);
+    if (th > 0) document.documentElement.style.setProperty('--top-h', th + 'px');
+  }
+}
+window.addEventListener('resize', syncNavHeight);
+window.addEventListener('orientationchange', syncNavHeight);
+
 // ── INIT ──
 loadStorage();
 showSection('study');
+syncNavHeight();
+// フォント読み込み後などでナビの高さが変わる場合に備えて、描画確定後にもう一度測る
+window.addEventListener('load', syncNavHeight);
+setTimeout(syncNavHeight, 300);
 </script>
 </body>
 </html>
