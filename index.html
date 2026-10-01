@@ -546,7 +546,7 @@ input:focus { border-color: var(--primary); }
     <div style="display:flex;align-items:center;justify-content:space-between;">
       <div>
         <h1>📘 LEAP 英単語</h1>
-        <div class="sub" id="topbar-sub">全2296語</div>
+        <div class="sub" id="topbar-sub">全2300語</div>
       </div>
       <button class="btn-secondary btn-sm" onclick="showSection('settings')">⚙ 設定</button>
     </div>
@@ -870,6 +870,7 @@ const WORDS = [
 {"no": 294, "word": "generation", "meanings": ["世代", "生み出すこと", "発電"]},
 {"no": 295, "word": "anniversary", "meanings": ["記念日"]},
 {"no": 296, "word": "recently", "meanings": ["最近", "近ごろ"]},
+{"no": 297, "word": "used", "meanings": ["以前は～だった", "～することに慣れている"]},
 {"no": 298, "word": "early", "meanings": ["早く", "初期に", "早い", "初期の"]},
 {"no": 299, "word": "first", "meanings": ["初めて"]},
 {"no": 300, "word": "latest", "meanings": ["最新の"]},
@@ -1929,6 +1930,7 @@ const WORDS = [
 {"no": 1354, "word": "vowel", "meanings": ["母音"]},
 {"no": 1355, "word": "pronoun", "meanings": ["代名詞"]},
 {"no": 1356, "word": "accent", "meanings": ["訛", "アクセント"]},
+{"no": 1357, "word": "outline", "meanings": ["～の要点を述べる"]},
 {"no": 1358, "word": "remote", "meanings": ["辺鄙な", "遠い"]},
 {"no": 1359, "word": "ambition", "meanings": ["願望", "野望"]},
 {"no": 1360, "word": "temper", "meanings": ["気性", "平静"]},
@@ -1970,6 +1972,8 @@ const WORDS = [
 {"no": 1396, "word": "nevertheless", "meanings": ["それにもかかわらず"]},
 {"no": 1397, "word": "somehow", "meanings": ["何らかの方法で", "何らかの理由で", "どういうわけか"]},
 {"no": 1398, "word": "thus", "meanings": ["それゆえ", "このように"]},
+{"no": 1399, "word": "afterward(s)", "meanings": ["その後"]},
+{"no": 1400, "word": "on behalf of", "meanings": ["～を代表して", "～のために"]},
 {"no": 1401, "word": "assert", "meanings": ["断定する", "主張する"]},
 {"no": 1402, "word": "defy", "meanings": ["逆らう", "拒む"]},
 {"no": 1403, "word": "condemn", "meanings": ["非難する", "宣告をする", "強いる"]},
@@ -3078,6 +3082,14 @@ function escHtml(s) {
 // タイピング判定用の正規化: 前後の空白除去・小文字化に加え、
 // 全角スペースや連続する空白を単一の半角スペースに、末尾の余分なピリオドを除去する。
 // スペルの意味を変えない範囲での表記ゆれのみを吸収する（綴りの違い自体は許容しない）。
+// 正解として受け付ける綴りの一覧。語末が "(s)" の語（例: afterward(s)）は、
+// sあり・sなし・括弧つきのどれで入力しても正解にする。
+function typingAnswers(word) {
+  const base = normalizeTypingInput(word);
+  const m = base.match(/^(.*)\(s\)$/);
+  return m ? [base, m[1], m[1] + 's'] : [base];
+}
+function isTypingMatch(val, word) { return typingAnswers(word).includes(normalizeTypingInput(val)); }
 function normalizeTypingInput(s) {
   return s
     .replace(/\u3000/g, ' ')
@@ -3205,6 +3217,10 @@ function applyRangePreset(id, s, e) {
 // 📖 STUDY MODE
 // ═══════════════════════════════════════
 const EXAMPLES = {
+  "used": {en:"I used to live in Osaka, but I'm used to living in Tokyo now.", jp:"私は以前は大阪に住んでいたが、今は東京に住むことに慣れている。"},
+  "outline": {en:"She outlined the plan to the team.", jp:"彼女はチームにその計画の要点を述べた。"},
+  "afterward(s)": {en:"We had dinner and went for a walk afterward.", jp:"私たちは夕食をとり、その後散歩に出かけた。"},
+  "on behalf of": {en:"I'd like to thank you on behalf of everyone here.", jp:"ここにいる皆を代表して、お礼を申し上げます。"},
   "agree": {en:"I agree with your opinion.", jp:"あなたの意見に賛成します。"},
   "oppose": {en:"Many residents oppose the new plan.", jp:"多くの住民がその新しい計画に反対している。"},
   "advise": {en:"The doctor advised him to rest.", jp:"医者は彼に休むよう忠告した。"},
@@ -5505,6 +5521,10 @@ const EXAMPLES = {
 // ── 発音記号（アメリカ英語, IPA）──
 // 語ごとに手作業で付与したもの。表示は /…/ で囲む。
 const IPA = {
+  "used": "just",
+  "outline": "ˈaʊtlaɪn",
+  "afterward(s)": "ˈæftɚwɚd(z)",
+  "on behalf of": "ɑn bɪˈhæf əv",
   "agree": "əˈɡri",
   "oppose": "əˈpoʊz",
   "advise": "ədˈvaɪz",
@@ -7820,7 +7840,7 @@ function speak(word) {
   try {
     const synth = window.speechSynthesis;
     synth.cancel();
-    const u = new SpeechSynthesisUtterance(word);
+    const u = new SpeechSynthesisUtterance(String(word).replace(/\(s\)$/, 's'));   // afterward(s) → afterwards
     u.lang = 'en-US';
     u.rate = 0.85;
     const v = synth.getVoices().find(v => v.lang === 'en-US' || v.lang === 'en_US');
@@ -8133,7 +8153,7 @@ window.submitTyping = function() {
   state.typingAnswered = true;
   inp.disabled = true;
   inp.blur(); // フォーカスを外してEnter/Spaceで次へ進めるようにする
-  const isCorrect = val === normalizeTypingInput(cur.word);
+  const isCorrect = isTypingMatch(val, cur.word);
   if (isCorrect) { state.typingScore++; markCorrect(cur.no); }
   else { state.typingWrong.push(cur); markWrong(cur.no); }
   const allMeanings = cur.meanings.map(m=>escHtml(m)).join(' / ');
@@ -8385,7 +8405,7 @@ window.submitReviewTyping = function() {
   state.reviewAnswered = true;
   inp.disabled = true;
   inp.blur(); // フォーカスを外してEnter/Spaceで次へ進めるようにする
-  const isCorrect = val === normalizeTypingInput(cur.word);
+  const isCorrect = isTypingMatch(val, cur.word);
   if (isCorrect) markCorrect(cur.no);
   else markWrong(cur.no);
   const allMeanings = cur.meanings.map(m=>escHtml(m)).join(' / ');
