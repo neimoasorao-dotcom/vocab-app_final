@@ -3046,8 +3046,17 @@ function shuffle(arr) {
   }
   return a;
 }
+// 出題に使う意味を選ぶ。意味が複数ある単語は「1つ目 > 2つ目 > 3つ目…」の順に出やすくする。
+// 重み = 1 / (順位^2)  例) 2つ→80%/20%、3つ→73%/18%/8%、4つ→70%/18%/8%/4%
+// （以前は全部同じ確率だったため、マニアックな2つ目以降の意味が頻繁に出ていた）
+const MEANING_WEIGHT_POWER = 2;   // 大きいほど1つ目に偏る（1=緩やか、3=かなり偏る）
 function randMeaning(w) {
-  return w.meanings[Math.floor(Math.random()*w.meanings.length)];
+  const ms = w.meanings;
+  if (ms.length <= 1) return ms[0];
+  const ws = ms.map((_, i) => 1 / Math.pow(i + 1, MEANING_WEIGHT_POWER));
+  let r = Math.random() * ws.reduce((a, b) => a + b, 0);
+  for (let i = 0; i < ms.length; i++) { r -= ws[i]; if (r <= 0) return ms[i]; }
+  return ms[0];
 }
 // 誤答候補が正解と同じ意味を持つ（=どちらを選んでも正解になり得る）場合、
 // その候補は出題プールから除外する。意味が1対1で被らない語だけを誤答候補にする。
