@@ -206,6 +206,33 @@ input:focus { border-color: var(--primary); }
 .word-table .td-word { font-weight: 700; }
 .word-table .td-meaning { color: var(--muted); font-size: 13px; }
 .wrong-badge { display: inline-block; background: var(--red); color: #fff; border-radius: 999px; font-size: 10px; padding: 1px 6px; margin-left: 6px; }
+/* ── セーブデータ ── */
+#topbar-sub { cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#topbar .btn-sm { flex-shrink: 0; }
+.slot-chip { display: inline-block; max-width: 9em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; font-weight: 700; color: var(--primary-dark); }
+.slot-sub-name { font-weight: 600; color: var(--muted); font-size: 13px; }
+.slot-help { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 12px; }
+.slot-card { background: #fff; border: 1.5px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 10px; }
+.slot-card.active { border-color: var(--primary); background: var(--primary-light); }
+.slot-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.slot-name { font-weight: 800; font-size: 16px; word-break: break-all; }
+.slot-active-badge { background: var(--primary); color: #fff; font-size: 11px; font-weight: 700; border-radius: 999px; padding: 2px 9px; }
+.slot-when { margin-left: auto; font-size: 12px; color: var(--muted); }
+.slot-cover { margin-top: 10px; font-size: 14px; font-weight: 700; line-height: 1.5; }
+.slot-none { color: var(--muted); font-weight: 600; }
+.slot-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.slot-strip { display: grid; grid-template-columns: repeat(50, 1fr); gap: 1px; height: 12px; margin-top: 10px; }
+.slot-strip i { background: #dbe8df; border-radius: 1px; display: block; }
+.slot-card.active .slot-strip i:not([style]) { background: #cfe0d5; }
+.slot-axis { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); margin-top: 2px; }
+.slot-meta { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.6; }
+.slot-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+.slot-btn { padding: 9px 13px; font-size: 13px; font-weight: 700; border-radius: 10px; border: 1.5px solid var(--border); background: #fff; color: var(--primary-dark); min-height: 38px; }
+.slot-btn.main { background: var(--primary); border-color: var(--primary); color: #fff; }
+.slot-btn.danger { color: var(--red); border-color: #f0c9c9; }
+.slot-new { width: 100%; margin-top: 4px; }
+.slot-new[disabled] { opacity: 0.5; }
+
 /* 間違いの状態（要復習 / 克服中 / 克服済み）*/
 .st-badge { display: inline-flex; align-items: center; gap: 4px; border-radius: 999px; font-size: 11px; font-weight: 700; padding: 2px 8px; white-space: nowrap; }
 .st-review { background: #fdecea; color: var(--red); }
@@ -543,10 +570,10 @@ input:focus { border-color: var(--primary); }
 <body>
 <div id="app">
   <div id="topbar">
-    <div style="display:flex;align-items:center;justify-content:space-between;">
-      <div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+      <div style="min-width:0;flex:1;">
         <h1>📘 LEAP 英単語</h1>
-        <div class="sub" id="topbar-sub">全2300語</div>
+        <div class="sub" id="topbar-sub" onclick="gotoSaveSlots()" title="セーブデータの管理">全2300語</div>
       </div>
       <button class="btn-secondary btn-sm" onclick="showSection('settings')">⚙ 設定</button>
     </div>
@@ -2973,6 +3000,7 @@ function markWrong(no) {
   wrongSet.add(no);
   if (!history[no]) history[no] = {correct:0,total:0};
   history[no].total++;
+  lastAnswerAt = Date.now();
   saveStorage();
 }
 
@@ -2985,18 +3013,11 @@ function markCorrect(no) {
   if (!history[no]) history[no] = {correct:0,total:0};
   history[no].correct++;
   history[no].total++;
+  lastAnswerAt = Date.now();
   saveStorage();
 }
 
 
-function saveStorage() {
-  try {
-    localStorage.setItem('leap_wrong', JSON.stringify([...wrongSet]));
-    localStorage.setItem('leap_history', JSON.stringify(history));
-    localStorage.setItem('leap_miss', JSON.stringify(missRec));
-    localStorage.setItem('leap_mastery_n', String(masteryN));
-  } catch(e) {}
-}
 
 
 // 旧方式のデータ(wrongList + history)から missRec を作る。
@@ -3015,24 +3036,248 @@ function migrateLegacy(wrongList, hist) {
   return rec;
 }
 
-function loadStorage() {
-  try {
-    const w = localStorage.getItem('leap_wrong');
-    const h = localStorage.getItem('leap_history');
-    if (h) history = JSON.parse(h);
-    const n = parseInt(localStorage.getItem('leap_mastery_n'));
-    if (MASTERY_OPTIONS.includes(n)) masteryN = n;
-    const m = localStorage.getItem('leap_miss');
-    if (m) {
-      missRec = JSON.parse(m);
-    } else {
-      // 初回（旧バージョンからの移行）
-      missRec = migrateLegacy(w ? JSON.parse(w) : [], history);
-    }
-  } catch(e) { missRec = missRec || {}; }
+// ───────────────────────────────────────────
+// セーブデータ（複数スロット）
+//  localStorage:
+//    leap_slots_v1            : { active, order:[id…], meta:{ id:{ name, createdAt } } }
+//    leap_slot_data_<id>      : { v, history, missRec, masteryN, ranges, lastAnswerAt }
+//  ・解答履歴・間違えた記録・克服条件・前回の範囲は、セーブデータごとに別々に保存する
+//  ・旧バージョン(leap_history など)のデータは、初回起動時に「セーブデータ1」へ移行する（旧キーは消さない）
+// ───────────────────────────────────────────
+const SLOT_INDEX_KEY = 'leap_slots_v1';
+const SLOT_DATA_PREFIX = 'leap_slot_data_';
+const MAX_SLOTS = 8;
+const SLOT_NAME_MAX = 20;
+let slotIndex = { active: null, order: [], meta: {} };
+let lastAnswerAt = 0;   // 最後に解答した時刻(ms)
+
+const slotKey = id => SLOT_DATA_PREFIX + id;
+function newSlotId() { return 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5); }
+function readSlotData(id) { try { return JSON.parse(localStorage.getItem(slotKey(id))); } catch (e) { return null; } }
+function writeSlotData(id, data) { try { localStorage.setItem(slotKey(id), JSON.stringify(data)); return true; } catch (e) { return false; } }
+function writeSlotIndex() { try { localStorage.setItem(SLOT_INDEX_KEY, JSON.stringify(slotIndex)); return true; } catch (e) { return false; } }
+
+// 範囲は「ユーザーが実際に指定したページ」だけ保存する（初期値のままのページは保存しない）
+function currentRanges() {
+  const o = {};
+  RANGE_PAGES.forEach(p => { if (window._rangeTouched[p.id]) o[p.id] = p.get(); });
+  return o;
+}
+function currentSlotData() {
+  return { v: 1, history, missRec, masteryN, ranges: currentRanges(), lastAnswerAt };
+}
+function saveStorage() {
+  if (slotIndex.active) writeSlotData(slotIndex.active, currentSlotData());
+}
+// セーブデータの中身を、実際に使う変数(history など)と画面の状態に反映する
+function applySlotData(d) {
+  d = d || {};
+  history = (d.history && typeof d.history === 'object') ? d.history : {};
+  missRec = (d.missRec && typeof d.missRec === 'object') ? d.missRec : {};
+  masteryN = MASTERY_OPTIONS.includes(d.masteryN) ? d.masteryN : 3;
+  lastAnswerAt = d.lastAnswerAt || 0;
   recomputeWrongSet();
+  RANGE_PAGES.forEach(p => {
+    const r = d.ranges && d.ranges[p.id];
+    const ok = Array.isArray(r) && r.length === 2 && r[0] >= 1 && r[1] <= MAX_NO && r[0] <= r[1];
+    p.set(ok ? r[0] : 1, ok ? r[1] : 50);
+    window._rangeTouched[p.id] = !!ok;
+    window._rangeOpen[p.id] = false;
+  });
+  state.studyIdx = 0;
+}
+
+function loadStorage() {
+  let idx = null;
+  try { idx = JSON.parse(localStorage.getItem(SLOT_INDEX_KEY)); } catch (e) {}
+  let ok = !!(idx && Array.isArray(idx.order) && idx.meta && typeof idx.meta === 'object');
+  if (ok) {
+    idx.order = idx.order.filter(id => idx.meta[id] && readSlotData(id));   // 実体のあるセーブデータだけ残す
+    ok = idx.order.length > 0;
+  }
+  if (ok) {
+    if (!idx.order.includes(idx.active)) idx.active = idx.order[0];
+    slotIndex = idx;
+    applySlotData(readSlotData(slotIndex.active));
+    writeSlotIndex();
+  } else {
+    // 初回起動、または旧バージョンからの移行: 旧形式のデータから最初のセーブデータを作る
+    let w = null, h = null, m = null, n = NaN;
+    try {
+      w = localStorage.getItem('leap_wrong'); h = localStorage.getItem('leap_history');
+      m = localStorage.getItem('leap_miss'); n = parseInt(localStorage.getItem('leap_mastery_n'));
+    } catch (e) {}
+    let hist = {}, miss = null;
+    try { if (h) hist = JSON.parse(h) || {}; } catch (e) {}
+    try { if (m) miss = JSON.parse(m); } catch (e) {}
+    if (!miss) { let wl = []; try { wl = w ? JSON.parse(w) : []; } catch (e) {} miss = migrateLegacy(wl, hist); }
+    const id = newSlotId();
+    slotIndex = { active: id, order: [id], meta: {} };
+    slotIndex.meta[id] = { name: 'セーブデータ1', createdAt: Date.now() };
+    const lastWrong = Math.max(0, ...Object.values(miss).map(r => (r && r.t) || 0));   // 旧データには解答時刻が無いので、最後に間違えた時刻で代用
+    applySlotData({ history: hist, missRec: miss, masteryN: MASTERY_OPTIONS.includes(n) ? n : 3, ranges: null, lastAnswerAt: lastWrong });
+    writeSlotIndex();
+  }
   saveStorage();
 }
+
+// ── セーブデータの一覧表示用: 中身から進度を集計する ──
+function slotSummary(d) {
+  const hist = d.history || {}, miss = d.missRec || {};
+  const N = MASTERY_OPTIONS.includes(d.masteryN) ? d.masteryN : 3;
+  const nos = []; let answers = 0, correct = 0;
+  for (const k in hist) {
+    const h = hist[k];
+    if (h && h.total > 0) { nos.push(Number(k)); answers += h.total; correct += (h.correct || 0); }
+  }
+  nos.sort((a, b) => a - b);
+  const ranges = [];                                  // 解答済みの連続した番号を区間にまとめる
+  for (const n of nos) {
+    const L = ranges[ranges.length - 1];
+    if (L && n === L[1] + 1) L[1] = n; else ranges.push([n, n]);
+  }
+  const st = { review: 0, recovering: 0, mastered: 0, ever: 0 };
+  for (const k in miss) {
+    const r = miss[k];
+    if (r && r.n > 0) { st.ever++; if (r.s >= N) st.mastered++; else if (r.s === 0) st.review++; else st.recovering++; }
+  }
+  const SEG = 50, per = MAX_NO / SEG, bucket = new Array(SEG).fill(0);   // 全体を50区間に分け、各区間の解答済み割合を出す
+  nos.forEach(n => { bucket[Math.min(SEG - 1, Math.floor((n - 1) / per))]++; });
+  return { count: nos.length, answers, correct, ranges, st, bucket, per, last: d.lastAnswerAt || 0, rng: d.ranges || {} };
+}
+const fmtRange = (a, b) => a === b ? `No.${a}` : `No.${a}〜${b}`;
+// 解答済みの区間の文章。長い区間を最大3つ（番号順）、残りは「ほかN区間」
+function fmtCoverage(ranges) {
+  if (!ranges.length) return '';
+  const top = [...ranges].sort((x, y) => (y[1] - y[0]) - (x[1] - x[0]) || x[0] - y[0]).slice(0, 3).sort((x, y) => x[0] - y[0]);
+  const rest = ranges.length - top.length;
+  return top.map(r => fmtRange(r[0], r[1])).join('、') + (rest > 0 ? ` ほか${rest}区間` : '');
+}
+function fmtWhen(ms) {
+  if (!ms) return '';
+  const d = new Date(ms), now = new Date();
+  const hm = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  const day0 = x => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const diff = Math.round((day0(now) - day0(d)) / 86400000);
+  if (diff === 0) return `今日 ${hm}`;
+  if (diff === 1) return `昨日 ${hm}`;
+  return `${d.getMonth() + 1}/${d.getDate()} ${hm}`;
+}
+
+function slotCardHtml(id) {
+  const meta = slotIndex.meta[id], isActive = id === slotIndex.active;
+  const d = isActive ? currentSlotData() : (readSlotData(id) || {});
+  const s = slotSummary(d);
+  const total = WORDS.length;
+  const pct = Math.round(s.count / total * 100);
+  const segSize = MAX_NO / 50;
+  const cells = s.bucket.map(n => {
+    const f = Math.min(1, n / segSize);
+    return f > 0 ? `<i style="background:var(--primary);opacity:${(0.25 + 0.75 * f).toFixed(2)}"></i>` : '<i></i>';
+  }).join('');
+  const when = s.last ? `最終解答 ${fmtWhen(s.last)}` : '';
+  const cover = s.count
+    ? `<div class="slot-cover">解答済み: ${fmtCoverage(s.ranges)}</div>
+       <div class="slot-sub">計${s.count}語 / ${total}語（${pct}%）</div>`
+    : `<div class="slot-cover slot-none">まだ解答していません</div>`;
+  const acc = s.answers ? `正答率 ${Math.round(s.correct / s.answers * 100)}%（延べ${s.answers}回）` : '';
+  const stat = s.st.ever ? `🔴${s.st.review} 🟡${s.st.recovering} 🟢${s.st.mastered}` : (s.answers ? '間違えた単語なし' : '');
+  const metaLine = [acc, stat].filter(Boolean).join('　');
+  const rngParts = RANGE_PAGES.filter(p => s.rng[p.id]).map(p => `${p.label} ${fmtRange(s.rng[p.id][0], s.rng[p.id][1]).replace(/^No\./, '')}`);
+  const rngLine = rngParts.length ? `前回の範囲: ${rngParts.join(' ／ ')}` : '';
+  const only = slotIndex.order.length <= 1;
+  return `<div class="slot-card ${isActive ? 'active' : ''}" data-slot="${id}">
+    <div class="slot-head">
+      <span class="slot-name">${escHtml(meta.name)}</span>
+      ${isActive ? '<span class="slot-active-badge">使用中</span>' : ''}
+      <span class="slot-when">${when}</span>
+    </div>
+    ${cover}
+    <div class="slot-strip" aria-hidden="true">${cells}</div>
+    <div class="slot-axis"><span>1</span><span>${Math.round(MAX_NO / 2)}</span><span>${MAX_NO}</span></div>
+    ${metaLine ? `<div class="slot-meta">${metaLine}</div>` : ''}
+    ${rngLine ? `<div class="slot-meta">${rngLine}</div>` : ''}
+    <div class="slot-actions">
+      ${isActive ? '' : `<button type="button" class="slot-btn main" onclick="switchSlotTo('${id}')">このセーブデータに切り替え</button>`}
+      <button type="button" class="slot-btn" onclick="renameSlot('${id}')">名前変更</button>
+      <button type="button" class="slot-btn" onclick="duplicateSlot('${id}')">複製</button>
+      ${only ? '' : `<button type="button" class="slot-btn danger" onclick="deleteSlot('${id}')">削除</button>`}
+    </div>
+  </div>`;
+}
+function slotsSectionHtml() {
+  const full = slotIndex.order.length >= MAX_SLOTS;
+  return `<div class="data-section" id="save-slots">
+    <h3>💾 セーブデータ</h3>
+    <p class="slot-help">解答履歴・間違えた単語・前回の範囲は、セーブデータごとに別々に保存されます。人ごとや、やり直し用に使い分けられます。</p>
+    ${slotIndex.order.map(slotCardHtml).join('')}
+    <button type="button" class="btn-secondary slot-new" onclick="newSlot()" ${full ? 'disabled' : ''}>＋ 新しいセーブデータを作る${full ? `（上限${MAX_SLOTS}個）` : ''}</button>
+  </div>`;
+}
+
+function activeSlotName() { const m = slotIndex.meta[slotIndex.active]; return m ? m.name : ''; }
+function nextDefaultSlotName() {
+  const names = new Set(Object.values(slotIndex.meta).map(m => m.name));
+  let i = slotIndex.order.length + 1;
+  while (names.has('セーブデータ' + i)) i++;
+  return 'セーブデータ' + i;
+}
+function askSlotName(label, def) {
+  const v = prompt(label, def);
+  if (v === null) return null;
+  return v.trim().slice(0, SLOT_NAME_MAX) || def;
+}
+function createSlot(name, data) {
+  const id = newSlotId();
+  if (!writeSlotData(id, data)) { alert('保存できませんでした。ブラウザの保存領域がいっぱい、または使えない設定の可能性があります。'); return null; }
+  slotIndex.order.push(id); slotIndex.meta[id] = { name, createdAt: Date.now() };
+  writeSlotIndex();
+  return id;
+}
+function switchSlot(id) {
+  if (!slotIndex.meta[id]) return;
+  saveStorage();                           // 切り替え前に、今のセーブデータを保存する
+  const d = readSlotData(id);
+  if (!d) { alert('このセーブデータを読み込めませんでした。'); return; }
+  slotIndex.active = id; writeSlotIndex();
+  applySlotData(d);
+  renderSection(state.section);
+}
+window.switchSlotTo = function(id) { switchSlot(id); };
+window.newSlot = function() {
+  if (slotIndex.order.length >= MAX_SLOTS) { alert(`セーブデータは最大${MAX_SLOTS}個までです。不要なものを削除してください。`); return; }
+  const name = askSlotName(`新しいセーブデータの名前（最大${SLOT_NAME_MAX}文字）`, nextDefaultSlotName());
+  if (name === null) return;
+  const id = createSlot(name, { v: 1, history: {}, missRec: {}, masteryN, ranges: null, lastAnswerAt: 0 });
+  if (id) switchSlot(id);                  // 作ったらそのセーブデータに切り替える
+};
+window.renameSlot = function(id) {
+  const m = slotIndex.meta[id]; if (!m) return;
+  const name = askSlotName(`セーブデータの名前（最大${SLOT_NAME_MAX}文字）`, m.name);
+  if (name === null) return;
+  m.name = name; writeSlotIndex();
+  renderSection(state.section);
+};
+window.duplicateSlot = function(id) {
+  if (slotIndex.order.length >= MAX_SLOTS) { alert(`セーブデータは最大${MAX_SLOTS}個までです。不要なものを削除してください。`); return; }
+  const src = id === slotIndex.active ? currentSlotData() : readSlotData(id);
+  if (!src || !slotIndex.meta[id]) return;
+  const name = (slotIndex.meta[id].name + 'のコピー').slice(0, SLOT_NAME_MAX);
+  if (createSlot(name, JSON.parse(JSON.stringify(src)))) renderSection(state.section);
+};
+window.deleteSlot = function(id) {
+  const m = slotIndex.meta[id];
+  if (!m || slotIndex.order.length <= 1) { alert('最後のセーブデータは削除できません。'); return; }
+  const wasActive = id === slotIndex.active;
+  if (!confirm(`セーブデータ「${m.name}」を削除しますか？\n（解答履歴・間違えた単語の記録も消え、取り消せません）` + (wasActive ? '\n※使用中のため、別のセーブデータに切り替わります' : ''))) return;
+  try { localStorage.removeItem(slotKey(id)); } catch (e) {}
+  delete slotIndex.meta[id];
+  slotIndex.order = slotIndex.order.filter(x => x !== id);
+  if (wasActive) { slotIndex.active = slotIndex.order[0]; applySlotData(readSlotData(slotIndex.active)); }
+  writeSlotIndex();
+  renderSection(state.section);
+};
+window.gotoSaveSlots = function() { showSection('settings'); window.scrollTo(0, 0); };
 
 // ── HELPERS ──
 function getRange(start, end) {
@@ -3131,9 +3376,9 @@ function renderSection(name) {
     case 'settings': renderSettings(); break;
   }
   const _sc = statusCounts();
-  document.getElementById('topbar-sub').textContent = _sc.ever
-    ? `全${WORDS.length}語 | 🔴${_sc.review} 🟡${_sc.recovering} 🟢${_sc.mastered}`
-    : `全${WORDS.length}語`;
+  document.getElementById('topbar-sub').innerHTML = `<span class="slot-chip">💾 ${escHtml(activeSlotName())}</span> ` + (_sc.ever
+    ? `🔴${_sc.review} 🟡${_sc.recovering} 🟢${_sc.mastered}`
+    : `全${WORDS.length}語`);
 }
 
 // ── RANGE WIDGET ──
@@ -3143,9 +3388,9 @@ window._rangeOpen = window._rangeOpen || {};
 // ユーザーが実際に範囲を指定したページ（初期値のままのページは引き継ぎ候補に出さない）
 window._rangeTouched = window._rangeTouched || {};
 const RANGE_PAGES = [
-  { id: 'study',  label: '学習',       get: () => [state.studyStart,  state.studyEnd]  },
-  { id: 'test',   label: 'テスト',     get: () => [state.testStart,   state.testEnd]   },
-  { id: 'typing', label: 'タイピング', get: () => [state.typingStart, state.typingEnd] },
+  { id: 'study',  label: '学習',       get: () => [state.studyStart,  state.studyEnd],  set: (s, e) => { state.studyStart = s;  state.studyEnd = e; } },
+  { id: 'test',   label: 'テスト',     get: () => [state.testStart,   state.testEnd],   set: (s, e) => { state.testStart = s;   state.testEnd = e; } },
+  { id: 'typing', label: 'タイピング', get: () => [state.typingStart, state.typingEnd], set: (s, e) => { state.typingStart = s; state.typingEnd = e; } },
 ];
 // 他ページで指定済みの範囲を、ワンタップで適用できるボタン群を返す。
 // 現在の範囲と同じもの・未指定のページは出さない。同じ範囲は1つにまとめる。
@@ -3212,6 +3457,7 @@ function applyRange(id) {
   window._rangeOpen[id] = false; // 範囲を決めたら畳んでコンテンツを見せる
   window._rangeTouched[id] = true;
   if (window._rangeCallbacks[id]) window._rangeCallbacks[id](s, e);
+  saveStorage();   // 指定した範囲もセーブデータに保存する
 }
 function applyRangePreset(id, s, e) {
   const el1 = document.getElementById('r-start-'+id), el2 = document.getElementById('r-end-'+id);
@@ -3220,6 +3466,7 @@ function applyRangePreset(id, s, e) {
   window._rangeOpen[id] = false;
   window._rangeTouched[id] = true;
   if (window._rangeCallbacks[id]) window._rangeCallbacks[id](s, e);
+  saveStorage();
 }
 
 // ═══════════════════════════════════════
@@ -8543,8 +8790,10 @@ function renderSettings() {
     : `<div class="stat-chip">🎯 正答率: まだ記録がありません</div>`;
   sec.innerHTML = `<h2 style="font-size:18px;font-weight:800;margin-bottom:16px;">⚙ 設定・データ管理</h2>
 
+    ${slotsSectionHtml()}
+
     <div class="data-section">
-      <h3>📊 学習状況</h3>
+      <h3>📊 学習状況 <span class="slot-sub-name">— ${escHtml(activeSlotName())}</span></h3>
       <div class="stat-row">
         <div class="stat-chip">📚 総単語数: ${WORDS.length}語</div>
         <div class="stat-chip">📝 解答した単語: ${attemptedWords}語</div>
@@ -8564,7 +8813,7 @@ function renderSettings() {
 
     <div class="data-section">
       <h3>💾 データのエクスポート / インポート</h3>
-      <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">間違えた履歴（回数・状態）と学習履歴をJSONファイルで保存・復元できます。</p>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">使用中のセーブデータをJSONファイルに保存できます。取り込むと、新しいセーブデータとして追加されます（今のデータは上書きされません）。</p>
       <div class="btn-row">
         <button class="btn-secondary" onclick="exportData()">📥 JSONエクスポート</button>
         <button class="btn-secondary" onclick="document.getElementById('import-file').click()">📤 JSONインポート</button>
@@ -8573,24 +8822,27 @@ function renderSettings() {
     </div>
 
     <div class="data-section">
-      <h3>🗑 データのリセット</h3>
-      <p style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.6;">「復習リストを空にする」は、要復習・克服中の単語を克服済み扱いにします（間違えた履歴✕は残ります）。「間違えた履歴を消す」は✕の回数や状態をすべて消します。どちらも取り消せません。</p>
+      <h3>🗑 データのリセット <span class="slot-sub-name">— ${escHtml(activeSlotName())}</span></h3>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.6;">「復習リストを空にする」は、要復習・克服中の単語を克服済み扱いにします（間違えた履歴✕は残ります）。「間違えた履歴を消す」は✕の回数や状態をすべて消します。どちらも取り消せません。対象は使用中のセーブデータだけです。</p>
       <div class="btn-row">
         <button class="btn-secondary btn-danger" onclick="clearReviewQueue()">復習リストを空にする</button>
         <button class="btn-secondary btn-danger" onclick="resetMissHistory()">間違えた履歴を消す</button>
-        <button class="btn-secondary btn-danger" onclick="resetAll()">全データをリセット</button>
+        <button class="btn-secondary btn-danger" onclick="resetAll()">このセーブデータを全消去</button>
       </div>
     </div>`;
 }
 
 window.exportData = function() {
   const data = {
-    version: 2,
+    version: 3,
+    slotName: activeSlotName(),
     exportedAt: new Date().toISOString(),
     wrongList: [...wrongSet],     // 旧バージョンとの互換用（復習キュー）
     history: history,
     missRecords: missRec,         // 間違えた回数・連続正解数・最後に間違えた時刻
     masteryN: masteryN,
+    ranges: currentRanges(),
+    lastAnswerAt: lastAnswerAt,
   };
   const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
   const url = URL.createObjectURL(blob);
@@ -8599,6 +8851,7 @@ window.exportData = function() {
   a.click(); URL.revokeObjectURL(url);
 };
 
+// インポートは「新しいセーブデータとして追加」する（今のセーブデータは上書きしない）
 window.importData = function(input) {
   const file = input.files[0];
   if (!file) return;
@@ -8606,15 +8859,18 @@ window.importData = function(input) {
   reader.onload = function(e) {
     try {
       const data = JSON.parse(e.target.result);
-      if (data.history) history = data.history;
-      if (MASTERY_OPTIONS.includes(data.masteryN)) masteryN = data.masteryN;
+      if (slotIndex.order.length >= MAX_SLOTS) throw new Error(`セーブデータが上限(${MAX_SLOTS}個)です。先に不要なものを削除してください`);
+      const hist = (data.history && typeof data.history === 'object') ? data.history : {};
       // 新形式(missRecords)があればそのまま、旧形式(wrongList+history)なら移行して取り込む
-      missRec = data.missRecords ? data.missRecords : migrateLegacy(data.wrongList, history);
-      recomputeWrongSet();
-      saveStorage();
+      const miss = data.missRecords ? data.missRecords : migrateLegacy(data.wrongList, hist);
+      const d = { v: 1, history: hist, missRec: miss, masteryN: MASTERY_OPTIONS.includes(data.masteryN) ? data.masteryN : 3,
+                  ranges: data.ranges || null, lastAnswerAt: data.lastAnswerAt || 0 };
+      const name = String(data.slotName || ('インポート ' + new Date().toISOString().slice(0, 10))).slice(0, SLOT_NAME_MAX);
+      const id = createSlot(name, d);
+      if (!id) return;
+      switchSlot(id);
       const sc = statusCounts();
-      alert(`インポート完了！ 要復習 ${sc.review}語 / 克服中 ${sc.recovering}語 / 克服済み ${sc.mastered}語`);
-      renderSection('settings');
+      alert(`インポート完了！「${name}」として追加しました。\n要復習 ${sc.review}語 / 克服中 ${sc.recovering}語 / 克服済み ${sc.mastered}語`);
     } catch(err) {
       alert('インポートに失敗しました: ' + err.message);
     }
@@ -8648,9 +8904,9 @@ window.resetMissHistory = function() {
 };
 
 window.resetAll = function() {
-  if (!confirm('全データをリセットしますか？この操作は取り消せません。')) return;
+  if (!confirm(`セーブデータ「${activeSlotName()}」の記録（解答履歴・間違えた履歴）をすべて消しますか？\nこの操作は取り消せません。`)) return;
   missRec = {}; history = {}; recomputeWrongSet(); saveStorage();
-  alert('全データをリセットしました');
+  alert('このセーブデータの記録をすべて消しました');
   renderSection('settings');
 };
 
