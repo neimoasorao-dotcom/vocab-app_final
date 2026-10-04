@@ -24,7 +24,7 @@
   /* 下部固定ナビの高さ。JSで実測して上書きする（safe-area分は含まない）。 */
   --nav-h: 60px;
   /* 上部バー(sticky)の高さ。JSで実測して上書きする。 */
-  --top-h: 56px;
+  --top-h: 0px;
 }
 html, body { height: 100%; font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); }
 button { font: inherit; cursor: pointer; border: none; border-radius: var(--radius); transition: all 0.15s; }
@@ -34,17 +34,6 @@ input:focus { border-color: var(--primary); }
 
 /* ── Layout ── */
 #app { display: flex; flex-direction: column; min-height: 100%; }
-
-/* ── Top Bar ── */
-#topbar {
-  background: #fff;
-  border-bottom: 1px solid var(--border);
-  padding: 12px 16px;
-  position: sticky; top: 0; z-index: 100;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-}
-#topbar h1 { font-size: 18px; font-weight: 800; color: var(--primary-dark); letter-spacing: 0.02em; }
-#topbar .sub { font-size: 12px; color: var(--muted); margin-top: 1px; }
 
 /* ── Nav ── */
 #nav {
@@ -200,8 +189,6 @@ input:focus { border-color: var(--primary); }
 .word-table .td-meaning { color: var(--muted); font-size: 13px; }
 .wrong-badge { display: inline-block; background: var(--red); color: #fff; border-radius: 999px; font-size: 10px; padding: 1px 6px; margin-left: 6px; }
 /* ── セーブデータ ── */
-#topbar-sub { cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-#topbar .btn-sm { flex-shrink: 0; }
 .slot-chip { display: inline-block; max-width: 9em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; font-weight: 700; color: var(--primary-dark); }
 .slot-sub-name { font-weight: 600; color: var(--muted); font-size: 13px; }
 .slot-help { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 12px; }
@@ -298,18 +285,6 @@ input:focus { border-color: var(--primary); }
 /* Scrollable content area */
 .scroll-list { max-height: 70vh; max-height: 70dvh; overflow-y: auto; border-radius: var(--radius); }
 
-/* ── Keyboard hints ── */
-.kbd-hint {
-  text-align: center; font-size: 12px; color: var(--muted);
-  margin-top: 10px; display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;
-}
-.kbd { display: inline-block; background: #f0f4f1; border: 1px solid #c8d9cd;
-  border-bottom: 2px solid #b0c8b8; border-radius: 5px;
-  padding: 2px 7px; font-size: 11px; font-weight: 700; color: var(--muted);
-  font-family: monospace; line-height: 1.6;
-}
-/* Hide hints on mobile (touch devices don't need them) */
-@media (max-width: 640px) { .kbd-hint { display: none; } }
 
 /* ══════════════════════════════════════════
    📱 MOBILE ONLY  (max-width: 640px)
@@ -353,9 +328,6 @@ input:focus { border-color: var(--primary); }
   }
 
   /* ── Top Bar ── */
-  #topbar { padding: 10px 14px; }
-  #topbar h1 { font-size: 16px; }
-  #topbar .sub { font-size: 11px; }
 
   /* ── Content area: leave room for bottom nav ── */
   #content {
@@ -617,94 +589,98 @@ input:focus { border-color: var(--primary); }
 .st-counts > span { display: inline-flex; align-items: center; }
 .st-counts .sdot { margin-right: 4px; }
 
-/* ── 上部ヘッダー ── */
-#topbar { background: linear-gradient(180deg, #256b45, #1d5a39); border-bottom: none; padding: 14px 20px; box-shadow: 0 2px 10px rgba(20,50,35,0.25); }
-.tb-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-#topbar .tb-logo { color: #fff; font-size: 21px; font-weight: 800; letter-spacing: 0.18em; white-space: nowrap; }
-#topbar .tb-logo small { font-size: 11px; font-weight: 500; letter-spacing: 0.08em; opacity: 0.75; margin-left: 10px; }
-#topbar-sub { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; min-width: 0; margin: 0; }
-.tb-slot { display: inline-flex; align-items: center; gap: 7px; max-width: 100%; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.22); border-radius: 999px; padding: 5px 12px; font-size: 12px; font-weight: 600; color: #fff; }
-.tb-slot .slot-chip { color: #fff; max-width: 10em; }
-.tb-slot .ico { width: 13px; height: 13px; }
-.tb-cnt { display: inline-flex; font-size: 12px; font-weight: 700; color: #fff; }
-.tb-cnt .sdot-review { background: #ff8a80; }
-.tb-cnt .sdot-recovering { background: #ffd36b; }
-.tb-cnt .sdot-mastered { background: #7be0a4; }
-.tb-all { font-size: 12px; font-weight: 600; opacity: 0.8; }
+
+/* ── 学習：PC・スマホとも、ページをスクロールせず画面内に収める ── */
+.study-layout.fit { grid-template-rows: minmax(0, 1fr); }
+.study-layout.fit .study-list-panel { max-height: none; height: 100%; min-height: 0; }
+.study-layout.fit .study-detail { min-height: 0; height: 100%; }
+.study-body { flex: 1; min-height: 0; overflow-y: auto; }
+.study-nav-row { padding-top: 14px; }
+/* 内容が枠に収まらない単語は、段階的に文字や余白を詰める（JSが data-density を切り替える） */
+.study-detail[data-density="1"] .word-en { font-size: 28px; margin-bottom: 4px; }
+.study-detail[data-density="1"] .speak-btn { width: 34px; height: 34px; }
+.study-detail[data-density="1"] .meanings-list { margin-bottom: 10px; }
+.study-detail[data-density="1"] .meanings-list li { padding: 5px 0; font-size: 14.5px; }
+.study-detail[data-density="1"] .example { padding: 8px 12px; font-size: 13px; }
+.study-detail[data-density="1"] .word-meta-row { margin-bottom: 8px; }
+.study-detail[data-density="2"] .word-en { font-size: 24px; margin-bottom: 2px; }
+.study-detail[data-density="2"] .speak-btn { width: 30px; height: 30px; }
+.study-detail[data-density="2"] .pron-row { margin-bottom: 4px; }
+.study-detail[data-density="2"] .meanings-list { margin-bottom: 8px; }
+.study-detail[data-density="2"] .meanings-list li { padding: 3px 0; font-size: 14px; }
+.study-detail[data-density="2"] .example { padding: 6px 10px; font-size: 12.5px; line-height: 1.45; margin-top: 4px; }
+.study-detail[data-density="2"] .word-meta-row { margin-bottom: 6px; }
+.study-detail[data-density="2"] .reveal-area { min-height: 40px; }
+.study-detail[data-density="3"] .word-en { font-size: 22px; margin-bottom: 0; }
+.study-detail[data-density="3"] .speak-btn { width: 26px; height: 26px; }
+.study-detail[data-density="3"] .speak-btn .ico { width: 16px; height: 16px; }
+.study-detail[data-density="3"] .pron-row { margin-bottom: 2px; }
+.study-detail[data-density="3"] .meanings-list { margin-bottom: 6px; }
+.study-detail[data-density="3"] .meanings-list li { padding: 2px 0; font-size: 13px; }
+.study-detail[data-density="3"] .example { padding: 5px 9px; font-size: 12px; line-height: 1.4; margin-top: 2px; }
+.study-detail[data-density="3"] .example .ex-jp { font-size: 11.5px; }
+.study-detail[data-density="3"] .word-meta-row { margin-bottom: 4px; }
+.study-detail[data-density="3"] .st-row { margin: -2px 0 4px; }
+.study-detail[data-density="3"] .reveal-area { min-height: 34px; margin-bottom: 8px; }
+.study-detail[data-density="3"] .reveal-sheet { font-size: 13px; }
+.study-detail[data-density="4"] { padding-top: 10px; }
+.study-detail[data-density="4"] .word-en { font-size: 20px; }
+.study-detail[data-density="4"] .speak-btn { width: 24px; height: 24px; }
+.study-detail[data-density="4"] .meanings-list li { padding: 1px 0; font-size: 12.5px; }
+.study-detail[data-density="4"] .example { padding: 4px 8px; font-size: 11.5px; line-height: 1.35; }
+.study-detail[data-density="4"] .example .ex-jp { font-size: 11px; }
+.study-detail[data-density="4"] .word-meta-row { margin-bottom: 2px; }
+.study-detail[data-density="4"] .reveal-area { min-height: 30px; margin-bottom: 6px; }
 @media (max-width: 640px) {
-  #topbar { padding: 9px 14px; }
-  #topbar .tb-logo { font-size: 18px; }
-  #topbar .tb-logo small { display: none; }
-  #topbar-sub { flex-direction: row; align-items: center; gap: 10px; }
+  .study-detail { padding-bottom: 14px; }
+  .study-detail .study-body { padding-bottom: 2px; }
 }
 
-/* ── 一覧：復習状況を右の独立した列に ── */
-.word-table .th-status { text-align: right; }
-.word-table .td-status { text-align: right; white-space: nowrap; width: 150px; }
-.word-table .td-word { padding-right: 12px; }
-@media (max-width: 640px) {
-  .word-table tr { display: grid; grid-template-columns: 1fr auto; column-gap: 12px; align-items: center; }
-  .word-table .td-no { grid-column: 1 / -1; }
-  .word-table .td-word { grid-column: 1; grid-row: 2; margin-bottom: 0; padding-right: 0; }
-  .word-table .td-status { grid-column: 2; grid-row: 2; width: auto; }
-  .word-table .td-status:empty { display: none; }
-  .word-table .td-meaning { grid-column: 1 / -1; grid-row: 3; margin-top: 4px; }
-}
-
-/* ── 設定ページ ── */
-.set-card { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 18px; margin-bottom: 14px; box-shadow: 0 1px 6px rgba(20,50,35,0.05); }
-.set-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
-.set-head h3 { font-size: 15px; font-weight: 800; margin: 0; }
-.set-head .slot-sub-name { margin-left: auto; font-size: 12px; max-width: 45%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.set-ico { width: 30px; height: 30px; flex: none; border-radius: 9px; background: var(--primary-light); color: var(--primary-dark); display: grid; place-items: center; }
-.set-ico .ico { width: 17px; height: 17px; }
-.set-help { font-size: 13px; line-height: 1.7; color: var(--muted); margin-bottom: 14px; }
-.stat-tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 10px; }
-.stat-tiles.three { grid-template-columns: repeat(3, 1fr); margin-bottom: 0; }
-.stat-tile { background: #f7faf8; border: 1px solid #e6efe9; border-radius: 12px; padding: 12px 12px 11px; min-width: 0; }
-.stat-tile .v { font-size: 22px; font-weight: 800; color: var(--primary-dark); line-height: 1.2; font-variant-numeric: tabular-nums; }
-.stat-tile .v small { font-size: 12px; font-weight: 700; color: var(--muted); margin-left: 2px; }
-.stat-tile .l { font-size: 11.5px; font-weight: 600; color: var(--muted); margin-top: 3px; display: flex; align-items: center; }
-.stat-tile .sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
-.stat-tile.st .v { color: var(--text); }
-.seg { display: flex; background: #eef4f0; border-radius: 12px; padding: 4px; gap: 4px; }
-.seg button { flex: 1; padding: 10px 6px; font-size: 14px; font-weight: 700; background: transparent; color: var(--muted); border-radius: 9px; }
-.seg button.active { background: #fff; color: var(--primary-dark); box-shadow: 0 1px 4px rgba(20,50,35,0.15); }
-.act-row { display: flex; gap: 10px; }
-.act-btn { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 10px; font-size: 14px; font-weight: 700; background: #fff; color: var(--primary-dark); border: 1.5px solid var(--border); border-radius: 12px; }
-.act-btn .ico { width: 17px; height: 17px; }
-.act-btn:hover { background: var(--primary-light); }
-.set-card.danger { border-color: #efd3d1; }
-.set-card.danger .set-ico { background: #fdecea; color: #b8403a; }
-.dz-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 12px 0; border-top: 1px solid #f3e6e5; }
-.set-head + .dz-row { border-top: none; padding-top: 0; }
-.dz-text { min-width: 0; }
-.dz-text b { display: block; font-size: 14px; font-weight: 700; margin-bottom: 2px; }
-.dz-text span { display: block; font-size: 12px; line-height: 1.6; color: var(--muted); }
-.dz-btn { flex: none; padding: 9px 16px; font-size: 13px; font-weight: 700; background: #fff; color: #b8403a; border: 1.5px solid #e6bcb9; border-radius: 10px; }
-.dz-btn:hover { background: #fdf3f2; }
-.dz-btn.strong { background: #b8403a; color: #fff; border-color: #b8403a; }
-.dz-btn.strong:hover { background: #a23631; }
-@media (max-width: 640px) {
-  .set-card { padding: 16px 14px; }
-  .stat-tiles { grid-template-columns: 1fr 1fr; }
-  .stat-tiles.three { grid-template-columns: repeat(3, 1fr); }
-  .stat-tiles.three .stat-tile { padding: 10px 10px 9px; }
-  .stat-tile .v { font-size: 20px; }
-  .dz-row { gap: 10px; }
-  .dz-btn { padding: 9px 12px; }
-}
+/* ── テスト・タイピング・復習：画面内に収めるための段階的な詰め ── */
+#content[data-dense="1"] .quiz-card { padding: 16px 18px; }
+#content[data-dense="1"] .quiz-progress { margin-bottom: 8px; }
+#content[data-dense="1"] .quiz-progress-bar { margin-bottom: 12px; }
+#content[data-dense="1"] .quiz-question { font-size: 20px; margin-bottom: 16px; }
+#content[data-dense="1"] .choices { gap: 8px; }
+#content[data-dense="1"] .choice-btn { padding: 11px 16px; }
+#content[data-dense="1"] .result-box { margin-top: 12px; padding: 12px; }
+#content[data-dense="1"] .result-box .result-icon { font-size: 22px; margin-bottom: 4px; }
+#content[data-dense="1"] .result-box .result-word { font-size: 20px; margin-bottom: 4px; }
+#content[data-dense="1"] .next-btn { padding: 11px; margin-top: 10px; }
+#content[data-dense="2"] .quiz-card { padding: 12px 14px; }
+#content[data-dense="2"] .quiz-progress { margin-bottom: 6px; font-size: 12px; }
+#content[data-dense="2"] .quiz-progress-bar { margin-bottom: 8px; }
+#content[data-dense="2"] .quiz-type-label { margin-bottom: 4px; }
+#content[data-dense="2"] .quiz-question { font-size: 18px; margin-bottom: 10px; }
+#content[data-dense="2"] .choices { gap: 6px; }
+#content[data-dense="2"] .choice-btn { padding: 9px 14px; font-size: 14px; }
+#content[data-dense="2"] .result-box { margin-top: 8px; padding: 8px 10px; }
+#content[data-dense="2"] .result-box .result-icon { font-size: 18px; margin-bottom: 2px; }
+#content[data-dense="2"] .result-box .result-word { font-size: 18px; margin-bottom: 2px; }
+#content[data-dense="2"] .result-box .result-meanings { font-size: 13px; }
+#content[data-dense="2"] .next-btn { padding: 9px; margin-top: 8px; font-size: 15px; }
+#content[data-dense="3"] .quiz-card { padding: 10px 12px; }
+#content[data-dense="3"] .quiz-progress { margin-bottom: 4px; }
+#content[data-dense="3"] .quiz-progress-bar { margin-bottom: 6px; }
+#content[data-dense="3"] .quiz-question { font-size: 17px; margin-bottom: 8px; }
+#content[data-dense="3"] .choices { gap: 4px; }
+#content[data-dense="3"] .choice-btn { padding: 7px 12px; font-size: 13.5px; }
+#content[data-dense="3"] .result-box { margin-top: 6px; padding: 6px 8px; }
+#content[data-dense="3"] .result-box .result-icon { display: none; }
+#content[data-dense="3"] .result-box .result-word { font-size: 16px; margin-bottom: 0; }
+#content[data-dense="3"] .result-box .result-meanings { font-size: 12.5px; }
+#content[data-dense="3"] .next-btn { padding: 8px; margin-top: 6px; font-size: 14px; }
+#content[data-dense="4"] .quiz-card { padding: 8px 10px; }
+#content[data-dense="4"] .quiz-progress-bar { margin-bottom: 4px; }
+#content[data-dense="4"] .quiz-type-label { display: none; }
+#content[data-dense="4"] .quiz-question { font-size: 16px; margin-bottom: 6px; }
+#content[data-dense="4"] .choice-btn { padding: 6px 10px; font-size: 13px; }
+#content[data-dense="4"] .result-box .pron-row { display: none; }
+#content[data-dense="4"] .next-btn { padding: 7px; margin-top: 4px; font-size: 13.5px; }
 </style>
 </head>
 <body>
 <div id="app">
-  <div id="topbar">
-    <div class="tb-row">
-      <h1 class="tb-logo">LEAP<small>英単語学習</small></h1>
-      <div id="topbar-sub" onclick="gotoSaveSlots()" title="セーブデータの管理" style="cursor:pointer">全2300語</div>
-    </div>
-  </div>
-
   <div id="nav">
     <button class="nav-btn" onclick="showSection('study')"><span class="nav-icon" data-icon="study"></span>学習</button>
     <button class="nav-btn" onclick="showSection('test')"><span class="nav-icon" data-icon="test"></span>テスト</button>
@@ -3535,10 +3511,6 @@ function renderSection(name) {
     case 'wordlist': renderWordList(); break;
     case 'settings': renderSettings(); break;
   }
-  const _sc = statusCounts();
-  document.getElementById('topbar-sub').innerHTML =
-    `<span class="tb-slot">${icon('save')}<span class="slot-chip">${escHtml(activeSlotName())}</span></span>` +
-    (_sc.ever ? `<span class="tb-cnt">${stCountsHtml(_sc)}</span>` : `<span class="tb-all">全${WORDS.length}語</span>`);
 }
 
 // ── RANGE WIDGET ──
@@ -3574,6 +3546,7 @@ window.toggleRange = function(id) {
   window._rangeOpen[id] = !window._rangeOpen[id];
   const bar = document.getElementById('rbar-' + id);
   if (bar) bar.classList.toggle('open', !!window._rangeOpen[id]);
+  if (state.section === 'study') fitStudyLayout();
 };
 function rangeWidget(id, start, end, onApply) {
   const isOpen = !!window._rangeOpen[id];
@@ -8323,6 +8296,7 @@ function renderStudy() {
   `<div class="study-layout">
     <div class="study-list-panel" style="${listStyle}">${listItems}</div>
     <div class="study-detail${covered ? ' covered' : ''}" style="${detailStyle}">
+      <div class="study-body">
       <div class="word-en">${escHtml(cur.word)}</div>
       ${pronHtml(cur.word)}
       <div class="word-meta-row">
@@ -8335,34 +8309,69 @@ function renderStudy() {
         <div class="reveal-sheet" role="button" tabindex="0" aria-label="タップして意味を表示" onclick="studyReveal()">${icon('eye')}タップして意味を表示</div>
       </div>
       ${exHtml}
+      </div>
       <div class="study-nav-row">
         <button class="btn-secondary" onclick="studyPrev()">← 前へ</button>
         <button id="study-main-btn" class="next-btn" style="flex:1;margin-top:0" onclick="studyAdvance()">${covered ? '意味を見る' : '次へ →'}</button>
       </div>
-      <div class="kbd-hint">
-        <span><span class="kbd">←</span> 前へ</span>
-        <span><span class="kbd">→</span> / <span class="kbd">Space</span> / <span class="kbd">Enter</span> ${state.studyHide ? '意味を見る → 次へ' : '次へ'}</span>
-      </div>
     </div>
   </div>`;
 
+  fitStudyLayout();
   // scroll selected into view
   setTimeout(() => {
     const sel = document.querySelector('.word-list-item.selected');
     if (sel) sel.scrollIntoView({block:'nearest'});
-    // モバイルの詳細表示では、範囲ピッカーやタブより下（単語名から）が見える位置に揃える。
-    // これにより、意味・例文・前へ/次へが1画面に収まりやすくなる。
-    if (mobile && state.studyTab === 'detail') {
-      const det = document.querySelector('.study-detail');
-      const topbar = document.getElementById('topbar');
-      if (det) {
-        const topbarH = topbar ? topbar.getBoundingClientRect().height : 0;
-        const y = window.scrollY + det.getBoundingClientRect().top - topbarH - 8;
-        window.scrollTo({ top: Math.max(0, y) });
-      }
-    }
   }, 50);
 }
+// 学習画面を、ページ全体をスクロールせずに画面内へ収める（PC・スマホ共通）。
+// 一覧・詳細パネルの高さを画面の残り高さに合わせ、詳細に収まらない内容は文字を段階的に詰める。
+function fitStudyLayout() {
+  const lay = document.querySelector('.study-layout');
+  if (!lay) return;
+  window.scrollTo(0, 0);
+  const topV = lay.getBoundingClientRect().top;
+  let h;
+  if (isMobile()) {
+    const nav = document.getElementById('nav');
+    const navTop = nav ? nav.getBoundingClientRect().top : window.innerHeight;
+    const row = lay.querySelector('.study-nav-row');
+    const rowH = (state.studyTab === 'detail' && row) ? row.offsetHeight : 0;   // 前へ/次へは下部ナビの上に固定表示
+    const padB = parseFloat(getComputedStyle(document.getElementById('content')).paddingBottom) || 0;
+    h = Math.min(navTop - rowH - 8, window.innerHeight - padB) - topV;   // ページ全体が画面より高くならないように
+  } else {
+    h = Math.min(window.innerHeight - topV - 24, 680);
+  }
+  lay.classList.add('fit');
+  lay.style.height = Math.max(200, Math.floor(h)) + 'px';
+  fitStudyContent();
+}
+function fitQuizPage() {
+  const root = document.getElementById('content');
+  if (!root || !document.querySelector('#content .quiz-card')) { if (root) delete root.dataset.dense; return; }
+  for (let lv = 0; lv <= 4; lv++) {
+    root.dataset.dense = lv;
+    if (document.documentElement.scrollHeight <= window.innerHeight + 1) break;
+  }
+}
+(function () {
+  const root = document.getElementById('content');
+  if (!root) return;
+  let queued = false;
+  const run = () => { queued = false; fitQuizPage(); };
+  new MutationObserver(() => { if (!queued) { queued = true; requestAnimationFrame(run); } }).observe(root, { childList: true, subtree: true });
+  window.addEventListener('resize', fitQuizPage);
+})();
+function fitStudyContent() {
+  const det = document.querySelector('.study-detail');
+  const body = det && det.querySelector('.study-body');
+  if (!body || det.offsetParent === null) return;
+  for (let lv = 0; lv <= 4; lv++) {
+    det.dataset.density = lv;
+    if (body.scrollHeight <= body.clientHeight + 1) break;
+  }
+}
+window.addEventListener('resize', () => { if (state && state.section === 'study') fitStudyLayout(); });
 window.studyTab = function(tab) { state.studyTab = tab; renderStudy(); };
 window.studySelect = function(i) {
   if (i !== state.studyIdx) state.studyRevealed = false;
@@ -8474,7 +8483,6 @@ function renderTestQuestion() {
     <div class="quiz-question">${questionText}</div>
     <div class="choices" id="choices">${choiceContent}</div>
     <div id="result-area"></div>
-    <div class="kbd-hint"><span><span class="kbd">1</span><span class="kbd">2</span><span class="kbd">3</span><span class="kbd">4</span> 選択 &nbsp;|&nbsp; 回答後: <span class="kbd">Enter</span> / <span class="kbd">Space</span> 次へ</span></div>
   </div>`;
 }
 
@@ -8581,7 +8589,6 @@ function renderTypingQuestion() {
     </div>
     <div id="typing-result"></div>
     <button class="btn-secondary" style="width:100%;margin-top:8px" onclick="skipTyping()">スキップ</button>
-    <div class="kbd-hint"><span><span class="kbd">Enter</span> 確認 &nbsp;|&nbsp; 回答後: <span class="kbd">Enter</span> / <span class="kbd">Space</span> 次へ</span></div>
   </div>`;
   setTimeout(() => { const inp = document.getElementById('typing-input'); if(inp) inp.focus(); }, 100);
 }
@@ -8759,7 +8766,6 @@ function renderReviewTestQ() {
     <div class="quiz-question">${escHtml(cur.word)}</div>
     <div class="choices">${choiceContent}</div>
     <div id="review-result"></div>
-    <div class="kbd-hint"><span><span class="kbd">1</span><span class="kbd">2</span><span class="kbd">3</span><span class="kbd">4</span> 選択 &nbsp;|&nbsp; 回答後: <span class="kbd">Enter</span> / <span class="kbd">Space</span> 次へ</span></div>
   </div>`;
 }
 
@@ -8917,10 +8923,11 @@ function fitScrollList() {
   const el = document.querySelector('#list-body .scroll-list');
   if (!el) return;
   const nav = document.getElementById('nav');
-  if (!isMobile() || !nav || getComputedStyle(nav).position !== 'fixed') { el.style.maxHeight = ''; return; }
   const topDoc = el.getBoundingClientRect().top + window.scrollY;
-  const avail = nav.getBoundingClientRect().top - topDoc - 16;   // 16 = ページ下余白。これでページ全体が余分にスクロールしない
-  el.style.maxHeight = Math.max(200, Math.floor(avail)) + 'px';
+  const fixedNav = isMobile() && nav && getComputedStyle(nav).position === 'fixed';
+  const bottomLimit = fixedNav ? nav.getBoundingClientRect().top : window.innerHeight;
+  const avail = bottomLimit - topDoc - 24;   // 24 = ページ下余白。これでページ全体が余分にスクロールしない
+  el.style.maxHeight = Math.max(160, Math.floor(avail)) + 'px';
 }
 window.addEventListener('resize', () => { if (state && state.section === 'wordlist') fitScrollList(); });
 function renderWordList() {
