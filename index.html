@@ -3166,6 +3166,8 @@ const MASTERY_OPTIONS = [2, 3, 5];
 const LEGACY_STREAK = 5;   // 旧方式で「間違いリストから外れていた」単語の移行値（設定値が2〜5のどれでも克服済みになる）
 let masteryN = 3;          // 克服に必要な連続正解回数
 let missRec = {};
+let studyPos = { no: 0, start: 0, end: 0, at: 0 };   // 学習ページで最後に見ていた単語と、そのときの範囲・時刻。セーブデータの studyPos に保存
+let studyNavigated = false;                           // このセッションで、自分で単語を動かしたか（同期で位置を上書きしてよいかの判断用）
 let updRec = {};           // 単語ごとの最終更新時刻(ms)。同期で「新しい方」を残すために使う。セーブデータの upd に保存
 let masteryAt = 0;         // 克服条件を最後に変えた時刻(ms)。同期用
 let markRec = {};          // 自分でつけたマーク: markRec[no] = マークした時刻(ms)。セーブデータの marks に保存
@@ -3189,6 +3191,32 @@ function sanitizeMarks(o) {
   return r;
 }
 function sanitizeUpd(o) { return sanitizeMarks(o); }
+function sanitizeStudyPos(o) {
+  if (!o || typeof o !== 'object') return { no: 0, start: 0, end: 0, at: 0 };
+  const no = Number(o.no), at = Number(o.at) || 0;
+  if (!Number.isInteger(no) || no < 1 || no > MAX_NO) return { no: 0, start: 0, end: 0, at };   // 位置なし（消去した時刻は残す）
+  let s = Number(o.start), e = Number(o.end);
+  if (!(Number.isInteger(s) && Number.isInteger(e) && s >= 1 && e <= MAX_NO && s <= no && no <= e)) { s = 0; e = 0; }
+  return { no, start: s, end: e, at };
+}
+// 今見ている単語を「最後に学習した位置」として記録する（単語を動かしたとき・範囲を変えたときに呼ぶ）
+function recordStudyPos() {
+  const w = getRange(state.studyStart, state.studyEnd)[state.studyIdx];
+  if (!w) return;
+  studyNavigated = true;
+  const sp = studyPos;
+  if (sp.no === w.no && sp.start === state.studyStart && sp.end === state.studyEnd) return;
+  studyPos = { no: w.no, start: state.studyStart, end: state.studyEnd, at: Date.now() };
+  saveStorage();
+}
+// 記録された位置に、学習ページの範囲と単語を合わせる
+function restoreStudyPos() {
+  const sp = studyPos;
+  if (!sp.no) return;
+  if (sp.start && sp.end) { RANGE_PAGES[0].set(sp.start, sp.end); window._rangeTouched.study = true; }
+  const i = getRange(state.studyStart || 1, state.studyEnd || 50).findIndex(w => w.no === sp.no);
+  if (i >= 0) { state.studyIdx = i; state.studyRevealed = false; }
+}
 function touch(no) { updRec[no] = Date.now(); }
 // 復習の対象 ＝ 要復習＋克服中（wrongSet）＋ 自分でマークした単語
 function inReviewPool(no) { return wrongSet.has(no) || !!markRec[no]; }
@@ -3358,7 +3386,7 @@ function currentRanges() {
   return o;
 }
 function currentSlotData() {
-  return { v: 1, history, missRec, marks: markRec, upd: updRec, masteryN, masteryAt, ranges: currentRanges(), lastAnswerAt };
+  return { v: 1, history, missRec, marks: markRec, upd: updRec, studyPos, masteryN, masteryAt, ranges: currentRanges(), lastAnswerAt };
 }
 function saveStorage() {
   if (slotIndex.active) writeSlotData(slotIndex.active, currentSlotData());
@@ -3382,8 +3410,11 @@ function applySlotData(d) {
     window._rangeTouched[p.id] = !!ok;
     window._rangeOpen[p.id] = false;
   });
+  studyPos = sanitizeStudyPos(d.studyPos);
+  studyNavigated = false;
   state.studyIdx = 0;
   state.studyRevealed = false;
+  restoreStudyPos();     // 前回の続きから始める
 }
 
 function loadStorage() {
@@ -8426,6 +8457,7 @@ function renderStudy() {
   state.studyTab = state.studyTab || 'list'; // 'list' | 'detail'
   window._rangeCallbacks['study'] = (s,e) => {
     state.studyStart = s; state.studyEnd = e; state.studyIdx = 0; state.studyRevealed = false;
+    recordStudyPos();      // 範囲を変えたら、新しい範囲の先頭が「今の位置」になる
     renderStudy();
   };
   const words = getRange(state.studyStart, state.studyEnd);
@@ -8543,6 +8575,7 @@ window.studyTab = function(tab) { state.studyTab = tab; renderStudy(); };
 window.studySelect = function(i) {
   if (i !== state.studyIdx) state.studyRevealed = false;
   state.studyIdx = i;
+  recordStudyPos();
   if (isMobile()) state.studyTab = 'detail';
   renderStudy();
 };
@@ -8551,12 +8584,14 @@ window.studyNext = function() {
   const ni = Math.min(state.studyIdx + 1, words.length - 1);
   if (ni !== state.studyIdx) state.studyRevealed = false;
   state.studyIdx = ni;
+  recordStudyPos();
   renderStudy();
 };
 window.studyPrev = function() {
   const pi = Math.max(state.studyIdx - 1, 0);
   if (pi !== state.studyIdx) state.studyRevealed = false;
   state.studyIdx = pi;
+  recordStudyPos();
   renderStudy();
 };
 // 意味を表示する（再描画せずシートだけ外すので、画面位置は動かない）
@@ -9227,6 +9262,7 @@ window.exportData = function() {
     history: history,
     missRecords: missRec,         // 間違えた回数・連続正解数・最後に間違えた時刻
     marks: markRec,               // 自分でつけたマーク（番号 → マークした時刻）
+    studyPos: studyPos,           // 学習ページで最後に見ていた単語と範囲
     masteryN: masteryN,
     ranges: currentRanges(),
     lastAnswerAt: lastAnswerAt,
@@ -9250,7 +9286,7 @@ window.importData = function(input) {
       const hist = (data.history && typeof data.history === 'object') ? data.history : {};
       // 新形式(missRecords)があればそのまま、旧形式(wrongList+history)なら移行して取り込む
       const miss = data.missRecords ? data.missRecords : migrateLegacy(data.wrongList, hist);
-      const d = { v: 1, history: hist, missRec: miss, marks: sanitizeMarks(data.marks), masteryN: MASTERY_OPTIONS.includes(data.masteryN) ? data.masteryN : 3,
+      const d = { v: 1, history: hist, missRec: miss, marks: sanitizeMarks(data.marks), studyPos: sanitizeStudyPos(data.studyPos), masteryN: MASTERY_OPTIONS.includes(data.masteryN) ? data.masteryN : 3,
                   ranges: data.ranges || null, lastAnswerAt: data.lastAnswerAt || 0 };
       const name = String(data.slotName || ('インポート ' + new Date().toISOString().slice(0, 10))).slice(0, SLOT_NAME_MAX);
       const id = createSlot(name, d);
@@ -9301,8 +9337,9 @@ window.clearMarks = function() {
 };
 
 window.resetAll = function() {
-  if (!confirm(`セーブデータ「${activeSlotName()}」の記録（解答履歴・間違えた履歴・マーク）をすべて消しますか？\nこの操作は取り消せません。`)) return;
+  if (!confirm(`セーブデータ「${activeSlotName()}」の記録（解答履歴・間違えた履歴・マーク・学習位置）をすべて消しますか？\nこの操作は取り消せません。`)) return;
   [history, missRec, markRec].forEach(o => { for (const k in o) touch(k); });
+  studyPos = { no: 0, start: 0, end: 0, at: Date.now() };
   missRec = {}; history = {}; markRec = {}; recomputeWrongSet(); saveStorage();
   alert('このセーブデータの記録をすべて消しました');
   renderSection('settings');
@@ -9380,7 +9417,7 @@ function normSync(d) {
     missRec: (d.missRec && typeof d.missRec === 'object') ? d.missRec : {},
     marks: sanitizeMarks(d.marks), upd: {},
     masteryN: MASTERY_OPTIONS.includes(d.masteryN) ? d.masteryN : 3,
-    masteryAt: d.masteryAt || 0, lastAnswerAt: d.lastAnswerAt || 0,
+    masteryAt: d.masteryAt || 0, lastAnswerAt: d.lastAnswerAt || 0, studyPos: sanitizeStudyPos(d.studyPos),
   };
   const u = sanitizeUpd(d.upd);
   const nos = new Set([...Object.keys(o.history), ...Object.keys(o.missRec), ...Object.keys(o.marks), ...Object.keys(u)]);
@@ -9411,11 +9448,14 @@ function mergeSync(a, b) {      // a: この端末  b: リモート
   // 克服の条件（連続正解数）は、変更した時刻が新しい方
   if (b.masteryAt > a.masteryAt) { m.masteryN = b.masteryN; m.masteryAt = b.masteryAt; if (a.masteryN !== b.masteryN) m.pull++; }
   else { m.masteryN = a.masteryN; m.masteryAt = a.masteryAt; if (a.masteryAt > b.masteryAt && a.masteryN !== b.masteryN) m.push++; }
+  // 学習位置は、記録した時刻が新しい方
+  if (b.studyPos.at > a.studyPos.at) { m.studyPos = b.studyPos; m.pull++; }
+  else { m.studyPos = a.studyPos; if (a.studyPos.at > b.studyPos.at) m.push++; }
   m.lastAnswerAt = Math.max(a.lastAnswerAt, b.lastAnswerAt);
   return m;
 }
 function syncPayload(m) {
-  return { v: 1, history: m.history, missRec: m.missRec, marks: m.marks, upd: m.upd, masteryN: m.masteryN, masteryAt: m.masteryAt, lastAnswerAt: m.lastAnswerAt, savedAt: Date.now() };
+  return { v: 1, history: m.history, missRec: m.missRec, marks: m.marks, upd: m.upd, studyPos: m.studyPos, masteryN: m.masteryN, masteryAt: m.masteryAt, lastAnswerAt: m.lastAnswerAt, savedAt: Date.now() };
 }
 function isFreshSlot(id) {
   const d = id === slotIndex.active ? currentSlotData() : (readSlotData(id) || {});
@@ -9430,12 +9470,16 @@ function applyMerged(id, m, run) {
   if (id === slotIndex.active) {
     history = m.history; missRec = m.missRec; markRec = m.marks; updRec = m.upd;
     masteryN = m.masteryN; masteryAt = m.masteryAt; lastAnswerAt = m.lastAnswerAt;
+    const prevPosAt = studyPos.at;
+    studyPos = m.studyPos;
+    // 他の端末の方が新しい位置で、この端末でまだ単語を動かしていなければ、その位置に合わせる
+    if (m.studyPos.at > prevPosAt && !studyNavigated && m.studyPos.no) restoreStudyPos();
     recomputeWrongSet();
-    writeSlotData(id, currentSlotData());       // 範囲(ranges)はこの端末のまま残る
+    writeSlotData(id, currentSlotData());
     run.pulledActive = true;
   } else {
     const cur = readSlotData(id) || {};
-    writeSlotData(id, Object.assign({}, cur, { v: 1, history: m.history, missRec: m.missRec, marks: m.marks, upd: m.upd,
+    writeSlotData(id, Object.assign({}, cur, { v: 1, history: m.history, missRec: m.missRec, marks: m.marks, upd: m.upd, studyPos: m.studyPos,
       masteryN: m.masteryN, masteryAt: m.masteryAt, lastAnswerAt: m.lastAnswerAt }));
   }
   run.pulledAny = true;
