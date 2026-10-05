@@ -736,7 +736,7 @@ input:focus { border-color: var(--primary); }
 #content[data-dense="4"] .next-btn { padding: 7px; margin-top: 4px; font-size: 13.5px; }
 
 /* ── ★マーク ── */
-.result-box .result-word { padding: 0 38px; }   /* 右上の★と長い単語が重ならないように */
+.result-box .result-word { padding: 0 30px; }   /* 右上の★と長い単語が重ならないように */
 .mark-btn { width: 40px; height: 40px; flex: none; border-radius: 50%; display: inline-grid; place-items: center; padding: 0;
   background: #fff; color: #b7c4bb; border: 1.5px solid var(--border); transition: background .15s, color .15s, border-color .15s; }
 .mark-btn .ico { width: 20px; height: 20px; }
@@ -748,8 +748,11 @@ input:focus { border-color: var(--primary); }
 .word-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .word-head .mark-btn { margin-top: 2px; }
 .result-box { position: relative; }
-.result-box > .mark-btn { position: absolute; top: 10px; right: 10px; width: 34px; height: 34px; z-index: 1; }
-.result-box > .mark-btn .ico { width: 17px; height: 17px; }
+.result-box > .mark-btn { position: absolute; top: 6px; right: 6px; width: 28px; height: 28px; z-index: 1; border: none; background: transparent; color: rgba(26,46,34,0.28); }
+.result-box > .mark-btn::after { content: ''; position: absolute; inset: -8px; }   /* 見た目は小さく、タップできる範囲は広く */
+.result-box > .mark-btn .ico { width: 16px; height: 16px; }
+.result-box > .mark-btn:hover { background: transparent; color: #d9a21b; }
+.result-box > .mark-btn.on { background: transparent; color: #d9a21b; }
 .li-star { display: inline-flex; color: #d9a21b; flex: none; margin-left: 6px; vertical-align: middle; }
 .li-star .ico { width: 13px; height: 13px; fill: currentColor; }
 .filter-btn .ico { width: 13px; height: 13px; color: #d9a21b; fill: currentColor; margin-right: 4px; vertical-align: -1px; }
@@ -769,6 +772,24 @@ input:focus { border-color: var(--primary); }
   .stat-tiles.four .stat-tile .v { font-size: 18px; }
   .stat-tiles.four .stat-tile .l { font-size: 10.5px; white-space: nowrap; }
 }
+
+/* ── 同期 ── */
+.sync-label { display: block; font-size: 12px; font-weight: 700; color: var(--muted); margin: 12px 0 4px; }
+.sync-input { width: 100%; padding: 11px 12px; font-size: 16px; border: 1.5px solid var(--border); border-radius: 10px; background: #fff; color: var(--text); }
+.sync-steps { margin: 0 0 4px; font-size: 13px; color: var(--muted); line-height: 1.7; }
+.sync-steps summary { cursor: pointer; font-weight: 700; color: var(--primary-dark); }
+.sync-steps ol { padding-left: 20px; margin: 8px 0 4px; }
+.sync-msg { font-size: 12.5px; color: #b8403a; margin-top: 8px; min-height: 1em; line-height: 1.6; }
+.sync-status { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; margin-bottom: 6px; line-height: 1.5; }
+.sync-status small { font-weight: 600; color: var(--muted); }
+.sync-dot { width: 9px; height: 9px; border-radius: 50%; background: #b7c4bb; flex: none; display: inline-block; }
+.sync-dot.ok { background: #2f8f58; }
+.sync-dot.err { background: #c8453f; }
+.sync-dot.busy { background: #c58a12; animation: syncpulse 1s infinite; }
+@keyframes syncpulse { 50% { opacity: 0.35; } }
+.sync-meta { font-size: 12px; color: var(--muted); line-height: 1.7; margin-bottom: 12px; word-break: break-all; }
+.sync-link { background: none; color: var(--muted); font-size: 12px; text-decoration: underline; padding: 8px 0 0; }
+.act-btn:disabled { opacity: 0.55; }
 </style>
 </head>
 <body>
@@ -3145,6 +3166,8 @@ const MASTERY_OPTIONS = [2, 3, 5];
 const LEGACY_STREAK = 5;   // 旧方式で「間違いリストから外れていた」単語の移行値（設定値が2〜5のどれでも克服済みになる）
 let masteryN = 3;          // 克服に必要な連続正解回数
 let missRec = {};
+let updRec = {};           // 単語ごとの最終更新時刻(ms)。同期で「新しい方」を残すために使う。セーブデータの upd に保存
+let masteryAt = 0;         // 克服条件を最後に変えた時刻(ms)。同期用
 let markRec = {};          // 自分でつけたマーク: markRec[no] = マークした時刻(ms)。セーブデータの marks に保存
 
 function recomputeWrongSet() {
@@ -3165,6 +3188,8 @@ function sanitizeMarks(o) {
   }
   return r;
 }
+function sanitizeUpd(o) { return sanitizeMarks(o); }
+function touch(no) { updRec[no] = Date.now(); }
 // 復習の対象 ＝ 要復習＋克服中（wrongSet）＋ 自分でマークした単語
 function inReviewPool(no) { return wrongSet.has(no) || !!markRec[no]; }
 function reviewPoolWords() { return WORDS.filter(w => inReviewPool(w.no)); }
@@ -3186,6 +3211,7 @@ const ICON_PATHS = {
   eye:      '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>',
   eyeoff:   '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/><path d="M4 20 20 4"/>',
   speaker:  '<path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/>',
+  cloud:    '<path d="M17.5 19a4.5 4.5 0 1 0-1-8.9A6 6 0 0 0 4.7 12.3 3.5 3.5 0 0 0 6 19z"/>',
   star:     '<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17.1l-5.4 2.8 1-6.1L3.2 9.5l6.1-.9z"/>',
   download: '<path d="M12 3v12"/><path d="m7 11 5 5 5-5"/><path d="M5 21h14"/>',
   upload:   '<path d="M12 21V9"/><path d="m7 13 5-5 5 5"/><path d="M5 3h14"/>',
@@ -3205,6 +3231,7 @@ function markBtnHtml(no, cls) {
 window.toggleMark = function(no) {
   no = Number(no);
   if (markRec[no]) delete markRec[no]; else markRec[no] = Date.now();
+  touch(no);
   saveStorage();
   const on = !!markRec[no];
   document.querySelectorAll(`[data-mark-no="${no}"]`).forEach(b => { b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
@@ -3262,7 +3289,7 @@ function statusLineHtml(no, isCorrect) {
 
 function markWrong(no) {
   const r = missRec[no] || (missRec[no] = { n: 0, s: 0, t: 0 });
-  r.n++; r.s = 0; r.t = Date.now();
+  r.n++; r.s = 0; r.t = Date.now(); touch(no);
   wrongSet.add(no);
   if (!history[no]) history[no] = {correct:0,total:0};
   history[no].total++;
@@ -3279,6 +3306,7 @@ function markCorrect(no) {
   if (!history[no]) history[no] = {correct:0,total:0};
   history[no].correct++;
   history[no].total++;
+  touch(no);
   lastAnswerAt = Date.now();
   saveStorage();
 }
@@ -3330,10 +3358,11 @@ function currentRanges() {
   return o;
 }
 function currentSlotData() {
-  return { v: 1, history, missRec, marks: markRec, masteryN, ranges: currentRanges(), lastAnswerAt };
+  return { v: 1, history, missRec, marks: markRec, upd: updRec, masteryN, masteryAt, ranges: currentRanges(), lastAnswerAt };
 }
 function saveStorage() {
   if (slotIndex.active) writeSlotData(slotIndex.active, currentSlotData());
+  scheduleSync('active');
 }
 // セーブデータの中身を、実際に使う変数(history など)と画面の状態に反映する
 function applySlotData(d) {
@@ -3341,6 +3370,8 @@ function applySlotData(d) {
   history = (d.history && typeof d.history === 'object') ? d.history : {};
   missRec = (d.missRec && typeof d.missRec === 'object') ? d.missRec : {};
   markRec = sanitizeMarks(d.marks);   // 古いセーブデータには marks が無い → マークなし
+  updRec = sanitizeUpd(d.upd);
+  masteryAt = d.masteryAt || 0;
   masteryN = MASTERY_OPTIONS.includes(d.masteryN) ? d.masteryN : 3;
   lastAnswerAt = d.lastAnswerAt || 0;
   recomputeWrongSet();
@@ -3498,8 +3529,9 @@ function askSlotName(label, def) {
 function createSlot(name, data) {
   const id = newSlotId();
   if (!writeSlotData(id, data)) { alert('保存できませんでした。ブラウザの保存領域がいっぱい、または使えない設定の可能性があります。'); return null; }
-  slotIndex.order.push(id); slotIndex.meta[id] = { name, createdAt: Date.now() };
+  slotIndex.order.push(id); slotIndex.meta[id] = { name, createdAt: Date.now(), nameAt: Date.now() };
   writeSlotIndex();
+  scheduleSync('all');
   return id;
 }
 function switchSlot(id) {
@@ -3523,7 +3555,8 @@ window.renameSlot = function(id) {
   const m = slotIndex.meta[id]; if (!m) return;
   const name = askSlotName(`セーブデータの名前（最大${SLOT_NAME_MAX}文字）`, m.name);
   if (name === null) return;
-  m.name = name; writeSlotIndex();
+  m.name = name; m.nameAt = Date.now(); writeSlotIndex();
+  scheduleSync('all');
   renderSection(state.section);
 };
 window.duplicateSlot = function(id) {
@@ -3540,7 +3573,9 @@ window.deleteSlot = function(id) {
   if (!confirm(`セーブデータ「${m.name}」を削除しますか？\n（解答履歴・間違えた単語の記録も消え、取り消せません）` + (wasActive ? '\n※使用中のため、別のセーブデータに切り替わります' : ''))) return;
   try { localStorage.removeItem(slotKey(id)); } catch (e) {}
   delete slotIndex.meta[id];
+  slotIndex.deleted = slotIndex.deleted || {}; slotIndex.deleted[id] = Date.now();   // 他の端末にも削除を伝える
   slotIndex.order = slotIndex.order.filter(x => x !== id);
+  scheduleSync('all');
   if (wasActive) { slotIndex.active = slotIndex.order[0]; applySlotData(readSlotData(slotIndex.active)); }
   writeSlotIndex();
   renderSection(state.section);
@@ -8640,6 +8675,7 @@ window.answerTest = function(selectedNo, correctNo) {
   const icon = isCorrect ? '⭕' : '❌';
   document.getElementById('result-area').innerHTML = `
     <div class="result-box ${resClass}">
+      ${markBtnHtml(cur.no)}
       <div class="result-icon">${icon}</div>
       <div class="result-word">${escHtml(cur.word)}</div>
       ${pronHtml(cur.word)}
@@ -8743,6 +8779,7 @@ window.submitTyping = function() {
   const icon = isCorrect ? '⭕' : '❌';
   document.getElementById('typing-result').innerHTML = `
     <div class="result-box ${resClass}">
+      ${markBtnHtml(cur.no)}
       <div class="result-icon">${icon}</div>
       <div class="result-word">${escHtml(cur.word)}</div>
       ${pronHtml(cur.word)}
@@ -8762,6 +8799,7 @@ window.skipTyping = function() {
   const allMeanings = cur.meanings.map(m=>escHtml(m)).join(' / ');
   document.getElementById('typing-result').innerHTML = `
     <div class="result-box ng">
+      ${markBtnHtml(cur.no)}
       <div class="result-icon">⏭</div>
       <div class="result-word">${escHtml(cur.word)}</div>
       ${pronHtml(cur.word)}
@@ -9124,6 +9162,8 @@ function renderSettings() {
 
     ${slotsSectionHtml()}
 
+    ${syncCardHtml()}
+
     <div class="set-card">
       <div class="set-head"><span class="set-ico">${icon('chart')}</span><h3>学習状況</h3><span class="slot-sub-name">${nm}</span></div>
       <div class="stat-tiles">
@@ -9228,7 +9268,7 @@ window.importData = function(input) {
 
 window.setMasteryN = function(n) {
   if (!MASTERY_OPTIONS.includes(n)) return;
-  masteryN = n;
+  masteryN = n; masteryAt = Date.now();
   recomputeWrongSet();   // 条件が変わると復習キューの中身も変わる
   saveStorage();
   renderSection('settings');   // 設定画面と上部バーの両方を更新
@@ -9237,7 +9277,7 @@ window.setMasteryN = function(n) {
 // 復習リストを空にする: 要復習・克服中を克服済み扱いにする（✕の履歴は残す）
 window.clearReviewQueue = function() {
   if (!confirm('復習リストを空にしますか？\n（要復習・克服中の単語は克服済み扱いになります。間違えた履歴✕は残ります）')) return;
-  for (const k in missRec) { if (missRec[k].n > 0 && missRec[k].s < masteryN) missRec[k].s = LEGACY_STREAK; }
+  for (const k in missRec) { if (missRec[k].n > 0 && missRec[k].s < masteryN) { missRec[k].s = LEGACY_STREAK; touch(k); } }
   recomputeWrongSet(); saveStorage();
   alert('復習リストを空にしました');
   renderSection('settings');
@@ -9245,6 +9285,7 @@ window.clearReviewQueue = function() {
 
 window.resetMissHistory = function() {
   if (!confirm('間違えた履歴（✕の回数・状態）をすべて消しますか？この操作は取り消せません。')) return;
+  for (const k in missRec) touch(k);
   missRec = {}; recomputeWrongSet(); saveStorage();
   alert('間違えた履歴を消しました');
   renderSection('settings');
@@ -9253,6 +9294,7 @@ window.resetMissHistory = function() {
 window.clearMarks = function() {
   if (!Object.keys(markRec).length) { alert('マークはありません'); return; }
   if (!confirm('マークをすべて外しますか？この操作は取り消せません。')) return;
+  for (const k in markRec) touch(k);
   markRec = {}; saveStorage();
   alert('マークをすべて解除しました');
   renderSection('settings');
@@ -9260,10 +9302,361 @@ window.clearMarks = function() {
 
 window.resetAll = function() {
   if (!confirm(`セーブデータ「${activeSlotName()}」の記録（解答履歴・間違えた履歴・マーク）をすべて消しますか？\nこの操作は取り消せません。`)) return;
+  [history, missRec, markRec].forEach(o => { for (const k in o) touch(k); });
   missRec = {}; history = {}; markRec = {}; recomputeWrongSet(); saveStorage();
   alert('このセーブデータの記録をすべて消しました');
   renderSection('settings');
 };
+
+// ───────────────────────────────────────────
+// デバイス間の同期（GitHubの非公開リポジトリ）
+//  ・リポジトリの leap-sync/ に JSON を保存する: index.json（セーブデータの一覧）と slot-<id>.json（各セーブデータ）
+//  ・単語ごとに「更新時刻 upd が新しい方」を残して合わせる（記録が上書きで消えない）
+//  ・リポジトリ名とトークンは、この端末のブラウザ(localStorage)にだけ保存する。HTMLには埋め込まない
+// ───────────────────────────────────────────
+const SYNC_CFG_KEY = 'leap_sync_cfg';
+const SYNC_BACKUP_KEY = 'leap_sync_backup';
+const SYNC_DIR = 'leap-sync';
+let syncCfg = null;
+try { const c = JSON.parse(localStorage.getItem(SYNC_CFG_KEY)); if (c && c.repo && c.token) syncCfg = c; } catch (e) {}
+let syncState = { status: syncCfg ? 'idle' : 'off', last: 0, msg: '' };
+let syncRunning = false, syncQueuedMode = null, syncTimer = null, syncDirty = false, syncWantAll = false;
+
+function saveSyncCfg(c) {
+  try { if (c) localStorage.setItem(SYNC_CFG_KEY, JSON.stringify(c)); else localStorage.removeItem(SYNC_CFG_KEY); } catch (e) {}
+  syncCfg = c;
+}
+function b64enc(str) {
+  const bytes = new TextEncoder().encode(str);
+  let bin = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  return btoa(bin);
+}
+function b64dec(b64) {
+  const bin = atob(b64.replace(/\s/g, ''));
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new TextDecoder().decode(bytes);
+}
+function syncErr(status, msg) { const e = new Error(msg || ('HTTP ' + status)); e.status = status; return e; }
+function syncErrText(e) {
+  if (e && e.status === 401) return 'トークンが無効か、期限切れです（連携を解除して設定し直してください）';
+  if (e && e.status === 403) return '権限がない、またはAPIの利用制限です';
+  if (e && e.status === 404) return 'リポジトリが見つかりません（名前とトークンの権限を確認してください）';
+  if (e instanceof TypeError) return '通信できませんでした。つながったら自動で再試行します';
+  return '同期に失敗しました（' + ((e && e.message) || e) + '）';
+}
+async function ghFetch(path, opt) {
+  const o = Object.assign({}, opt);
+  o.cache = 'no-store';
+  o.headers = Object.assign({
+    'Authorization': 'Bearer ' + syncCfg.token,
+    'Accept': 'application/vnd.github+json',
+    'X-GitHub-Api-Version': '2022-11-28',
+  }, o.headers || {});
+  return fetch('https://api.github.com/repos/' + syncCfg.repo + path, o);
+}
+async function ghGetJson(path) {
+  const r = await ghFetch('/contents/' + path);
+  if (r.status === 404) return null;
+  if (!r.ok) throw syncErr(r.status);
+  const j = await r.json();
+  if (!j.content) throw syncErr(0, 'ファイルが大きすぎて読み込めません');
+  return { sha: j.sha, data: JSON.parse(b64dec(j.content)) };
+}
+async function ghPutJson(path, obj, sha) {
+  const body = { message: 'sync ' + new Date().toISOString(), content: b64enc(JSON.stringify(obj)) };
+  if (sha) body.sha = sha;
+  const r = await ghFetch('/contents/' + path, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  if (r.status === 409 || r.status === 422) { const e = syncErr(r.status, '他の端末と同時に更新されました'); e.conflict = true; throw e; }
+  if (!r.ok) throw syncErr(r.status);
+}
+
+// ---- 記録の統合（単語ごとに、更新時刻が新しい方を残す） ----
+function normSync(d) {
+  d = d || {};
+  const o = {
+    history: (d.history && typeof d.history === 'object') ? d.history : {},
+    missRec: (d.missRec && typeof d.missRec === 'object') ? d.missRec : {},
+    marks: sanitizeMarks(d.marks), upd: {},
+    masteryN: MASTERY_OPTIONS.includes(d.masteryN) ? d.masteryN : 3,
+    masteryAt: d.masteryAt || 0, lastAnswerAt: d.lastAnswerAt || 0,
+  };
+  const u = sanitizeUpd(d.upd);
+  const nos = new Set([...Object.keys(o.history), ...Object.keys(o.missRec), ...Object.keys(o.marks), ...Object.keys(u)]);
+  // upd が無い古い記録は、最後に間違えた時刻やマークの時刻で代用する（最低でも1。無記録の0より新しい扱い）
+  nos.forEach(k => { o.upd[k] = u[k] > 0 ? u[k] : Math.max((o.missRec[k] && o.missRec[k].t) || 0, o.marks[k] || 0, 1); });
+  return o;
+}
+function mergeSync(a, b) {      // a: この端末  b: リモート
+  const m = { history: {}, missRec: {}, marks: {}, upd: {}, pull: 0, push: 0 };
+  const rec = (d, k) => JSON.stringify([d.history[k] || null, d.missRec[k] || null, d.marks[k] || null]);
+  const tie = k => {
+    const th = x => (x.history[k] && x.history[k].total) || 0, tn = x => (x.missRec[k] && x.missRec[k].n) || 0;
+    if (th(a) !== th(b)) return th(a) > th(b) ? 'a' : 'b';
+    if (tn(a) !== tn(b)) return tn(a) > tn(b) ? 'a' : 'b';
+    return 'a';
+  };
+  new Set([...Object.keys(a.upd), ...Object.keys(b.upd)]).forEach(k => {
+    const ta = a.upd[k] || 0, tb = b.upd[k] || 0, same = rec(a, k) === rec(b, k);
+    let src = 'a';
+    if (tb > ta) src = 'b'; else if (ta === tb && !same) src = tie(k);
+    if (!same) { if (src === 'b') m.pull++; else m.push++; }
+    const s = src === 'b' ? b : a;
+    if (s.history[k]) m.history[k] = s.history[k];
+    if (s.missRec[k]) m.missRec[k] = s.missRec[k];
+    if (s.marks[k]) m.marks[k] = s.marks[k];
+    m.upd[k] = Math.max(ta, tb);
+  });
+  // 克服の条件（連続正解数）は、変更した時刻が新しい方
+  if (b.masteryAt > a.masteryAt) { m.masteryN = b.masteryN; m.masteryAt = b.masteryAt; if (a.masteryN !== b.masteryN) m.pull++; }
+  else { m.masteryN = a.masteryN; m.masteryAt = a.masteryAt; if (a.masteryAt > b.masteryAt && a.masteryN !== b.masteryN) m.push++; }
+  m.lastAnswerAt = Math.max(a.lastAnswerAt, b.lastAnswerAt);
+  return m;
+}
+function syncPayload(m) {
+  return { v: 1, history: m.history, missRec: m.missRec, marks: m.marks, upd: m.upd, masteryN: m.masteryN, masteryAt: m.masteryAt, lastAnswerAt: m.lastAnswerAt, savedAt: Date.now() };
+}
+function isFreshSlot(id) {
+  const d = id === slotIndex.active ? currentSlotData() : (readSlotData(id) || {});
+  return !Object.keys(d.history || {}).length && !Object.keys(d.missRec || {}).length &&
+         !Object.keys(sanitizeMarks(d.marks)).length && !Object.keys(d.upd || {}).length && !(d.lastAnswerAt > 0);
+}
+function syncBackupSlot(run, id, raw) {
+  if (!run.backup) run.backup = { at: Date.now(), slots: {} };
+  if (!run.backup.slots[id]) run.backup.slots[id] = JSON.parse(JSON.stringify(raw || {}));
+}
+function applyMerged(id, m, run) {
+  if (id === slotIndex.active) {
+    history = m.history; missRec = m.missRec; markRec = m.marks; updRec = m.upd;
+    masteryN = m.masteryN; masteryAt = m.masteryAt; lastAnswerAt = m.lastAnswerAt;
+    recomputeWrongSet();
+    writeSlotData(id, currentSlotData());       // 範囲(ranges)はこの端末のまま残る
+    run.pulledActive = true;
+  } else {
+    const cur = readSlotData(id) || {};
+    writeSlotData(id, Object.assign({}, cur, { v: 1, history: m.history, missRec: m.missRec, marks: m.marks, upd: m.upd,
+      masteryN: m.masteryN, masteryAt: m.masteryAt, lastAnswerAt: m.lastAnswerAt }));
+  }
+  run.pulledAny = true;
+}
+async function syncSlot(id, run) {
+  const path = SYNC_DIR + '/slot-' + id + '.json';
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const remote = await ghGetJson(path);
+    // ↓ 取得してから反映までは await を挟まない（待っている間の操作を取りこぼさないため）
+    const raw = id === slotIndex.active ? currentSlotData() : readSlotData(id);
+    if (!raw) return;
+    const m = mergeSync(normSync(raw), normSync(remote ? remote.data : null));
+    if (m.pull > 0 || !raw.upd) { syncBackupSlot(run, id, raw); applyMerged(id, m, run); }
+    // ↑ ここまで
+    if (!remote || m.push > 0) {
+      try { await ghPutJson(path, syncPayload(m), remote ? remote.sha : undefined); }
+      catch (e) { if (e.conflict && attempt < 2) continue; throw e; }
+    }
+    return;
+  }
+}
+
+// ---- セーブデータの一覧（名前・削除）の統合 ----
+function removeLocalSlot(id, run) {
+  try { localStorage.removeItem(slotKey(id)); } catch (e) {}
+  delete slotIndex.meta[id];
+  slotIndex.order = slotIndex.order.filter(x => x !== id);
+  run.structural = true;
+}
+function mergeIndex(remoteIdx, run) {
+  const L = slotIndex;
+  const R = remoteIdx || { order: [], slots: {}, deleted: {} };
+  const rsl = R.slots || {}, rdel = R.deleted || {};
+  const del = Object.assign({}, rdel);
+  for (const k in (L.deleted || {})) del[k] = Math.max(del[k] || 0, L.deleted[k]);
+  L.deleted = del;
+  let push = !remoteIdx;
+  // 初回起動の空のセーブデータは、リモートにある記録に置き換える（空のデータが増えないように）
+  const liveRemote = Object.keys(rsl).filter(id => !del[id]);
+  if (L.order.length === 1 && liveRemote.length && !rsl[L.order[0]] && isFreshSlot(L.order[0])) {
+    const fid = L.order[0];
+    try { localStorage.removeItem(slotKey(fid)); } catch (e) {}
+    delete L.meta[fid]; L.order = []; run.structural = true;
+  }
+  const slots = {};
+  new Set([...Object.keys(L.meta), ...Object.keys(rsl)]).forEach(id => {
+    if (del[id]) { if (L.meta[id]) removeLocalSlot(id, run); return; }
+    const lm = L.meta[id], rm = rsl[id];
+    if (lm && rm) {
+      const lt = lm.nameAt || lm.createdAt || 0, rt = rm.nameAt || rm.createdAt || 0;
+      if (rt > lt) { lm.name = rm.name; lm.nameAt = rt; run.structural = true; } else if (lt > rt) push = true;
+    } else if (lm) {
+      push = true;
+    } else {
+      L.meta[id] = { name: rm.name, createdAt: rm.createdAt || Date.now(), nameAt: rm.nameAt || 0 };
+      L.order.push(id);
+      writeSlotData(id, { v: 1, history: {}, missRec: {}, marks: {}, upd: {}, masteryN: 3, masteryAt: 0, ranges: null, lastAnswerAt: 0 });
+      run.structural = true;
+    }
+    const m = L.meta[id];
+    slots[id] = { name: m.name, nameAt: m.nameAt || m.createdAt || 0, createdAt: m.createdAt || 0 };
+  });
+  if (!L.order.length) {
+    const id = newSlotId();
+    L.order = [id]; L.meta[id] = { name: 'セーブデータ1', createdAt: Date.now() };
+    writeSlotData(id, { v: 1, history: {}, missRec: {}, marks: {}, upd: {}, masteryN: 3, masteryAt: 0, ranges: null, lastAnswerAt: 0 });
+    slots[id] = { name: 'セーブデータ1', nameAt: 0, createdAt: L.meta[id].createdAt }; push = true; run.structural = true;
+  }
+  if (!L.meta[L.active]) { L.active = L.order[0]; applySlotData(readSlotData(L.active)); run.structural = true; }
+  for (const k in del) if (rdel[k] !== del[k]) push = true;
+  const out = { v: 1, order: L.order.slice(), slots, deleted: del };
+  if (JSON.stringify(R.order || []) !== JSON.stringify(out.order)) push = true;
+  writeSlotIndex();
+  return { out, push };
+}
+async function indexRound(run) {
+  const remote = await ghGetJson(SYNC_DIR + '/index.json');
+  const res = mergeIndex(remote ? remote.data : null, run);
+  return { sha: remote ? remote.sha : undefined, exists: !!remote, out: res.out, push: res.push };
+}
+async function syncAllSlots(run) {
+  let idx = await indexRound(run);
+  for (const id of slotIndex.order.slice()) { if (slotIndex.meta[id]) await syncSlot(id, run); }
+  for (let attempt = 0; attempt < 3 && (!idx.exists || idx.push); attempt++) {
+    try { await ghPutJson(SYNC_DIR + '/index.json', idx.out, idx.sha); return; }
+    catch (e) { if (!e.conflict || attempt === 2) throw e; idx = await indexRound(run); }
+  }
+}
+
+// ---- 実行・自動同期 ----
+async function syncNow(mode) {
+  if (!syncCfg) return;
+  if (syncRunning) { syncQueuedMode = (syncQueuedMode === 'all' || mode === 'all') ? 'all' : mode; return; }
+  if (navigator.onLine === false) { setSyncState('error', 'オフラインです。つながったら自動で同期します'); syncDirty = true; return; }
+  syncRunning = true; syncDirty = false; syncWantAll = false; clearTimeout(syncTimer);
+  setSyncState('syncing');
+  const run = { backup: null, pulledActive: false, pulledAny: false, structural: false };
+  let failed = null;
+  try {
+    if (mode === 'all') await syncAllSlots(run); else await syncSlot(slotIndex.active, run);
+    syncState.last = Date.now();
+    setSyncState('ok');
+  } catch (e) {
+    failed = e; syncDirty = true;
+    setSyncState('error', syncErrText(e));
+  } finally {
+    syncRunning = false;
+    if (run.backup) { try { localStorage.setItem(SYNC_BACKUP_KEY, JSON.stringify(run.backup)); } catch (e) {} }
+    if (run.pulledAny || run.structural) afterSyncRefresh(run);
+    if (syncQueuedMode) { const m = syncQueuedMode; syncQueuedMode = null; setTimeout(() => syncNow(m), 300); }
+    else if (failed && failed.status !== 401 && failed.status !== 404) { syncTimer = setTimeout(() => syncNow('active'), 60000); }
+  }
+}
+function afterSyncRefresh(run) {
+  recomputeWrongSet();
+  const sec = state.section;
+  if (sec === 'settings' || sec === 'wordlist' || (sec === 'study' && (run.pulledActive || run.structural))) renderSection(sec);
+}
+function scheduleSync(mode) {
+  if (!syncCfg || syncRunning) { if (syncCfg) syncDirty = true; return; }
+  syncDirty = true;
+  if (mode === 'all') syncWantAll = true;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(() => { if (syncDirty) syncNow(syncWantAll ? 'all' : 'active'); }, 8000);
+}
+function setSyncState(status, msg) { syncState.status = status; syncState.msg = msg || ''; renderSyncStatus(); }
+function syncStatusHtml() {
+  const t = syncState.last ? new Date(syncState.last).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }) : '';
+  if (syncState.status === 'syncing') return '<i class="sync-dot busy"></i>同期中…';
+  if (syncState.status === 'ok') return `<i class="sync-dot ok"></i>同期済み${t ? ` <small>最終 ${t}</small>` : ''}`;
+  if (syncState.status === 'error') return `<i class="sync-dot err"></i><span>${escHtml(syncState.msg)}</span>`;
+  return `<i class="sync-dot"></i>${syncDirty ? '未同期の変更があります' : '待機中'}`;
+}
+function renderSyncStatus() {
+  const el = document.getElementById('sync-status');
+  if (el) el.innerHTML = syncStatusHtml();
+  const b = document.getElementById('sync-now-btn');
+  if (b) b.disabled = syncState.status === 'syncing';
+}
+function syncCardHtml() {
+  let body;
+  if (syncCfg) {
+    let hasBackup = false;
+    try { hasBackup = !!localStorage.getItem(SYNC_BACKUP_KEY); } catch (e) {}
+    body = `<div id="sync-status" class="sync-status">${syncStatusHtml()}</div>
+      <div class="sync-meta">リポジトリ: ${escHtml(syncCfg.repo)}<br>起動時と、解答・マークのあとに自動で同期します。</div>
+      <div class="act-row">
+        <button type="button" id="sync-now-btn" class="act-btn" onclick="syncNow('all')" ${syncState.status === 'syncing' ? 'disabled' : ''}>${icon('review')}今すぐ同期</button>
+        <button type="button" class="act-btn" onclick="syncDisconnect()">連携を解除</button>
+      </div>
+      ${hasBackup ? '<button type="button" class="sync-link" onclick="syncRestore()">直近の同期の直前の記録に戻す</button>' : ''}`;
+  } else {
+    body = `<p class="set-help">GitHubの非公開リポジトリに記録を保存して、iPhoneとPCで同じ記録を使えるようにします。記録は各端末にも残るので、通信できなくても使えます。</p>
+      <details class="sync-steps"><summary>設定手順を見る</summary><ol>
+        <li>GitHubで新しいリポジトリを作る。<b>Private</b>を選び、「Add a README file」にチェックを入れる。</li>
+        <li>GitHub右上のアイコン → Settings → 左下の Developer settings → Personal access tokens → Fine-grained tokens → Generate new token。</li>
+        <li>Repository access は「Only select repositories」にして、作ったリポジトリだけを選ぶ。Repository permissions の <b>Contents</b> を「Read and write」にして作成する。</li>
+        <li>表示されたトークン（github_pat_…）をコピーして、下に貼り付ける。</li>
+        <li>もう1台の端末でも、同じリポジトリ名とトークンを入力すれば同期されます。</li>
+      </ol></details>
+      <label class="sync-label" for="sync-repo">リポジトリ（ユーザー名/リポジトリ名）</label>
+      <input id="sync-repo" class="sync-input" type="text" placeholder="yourname/leap-data" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <label class="sync-label" for="sync-token">トークン</label>
+      <input id="sync-token" class="sync-input" type="password" placeholder="github_pat_…" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <div class="act-row" style="margin-top:12px"><button type="button" class="act-btn" onclick="syncConnect()">${icon('upload')}接続して同期</button></div>
+      <div id="sync-msg" class="sync-msg"></div>`;
+  }
+  return `<div class="set-card" id="sync-card"><div class="set-head"><span class="set-ico">${icon('cloud')}</span><h3>デバイス間の同期</h3></div>${body}</div>`;
+}
+window.syncNow = syncNow;
+window.syncConnect = async function() {
+  const repo = (document.getElementById('sync-repo').value || '').trim().replace(/^https?:\/\/github\.com\//, '').replace(/\.git$/, '').replace(/\/+$/, '');
+  const token = (document.getElementById('sync-token').value || '').trim();
+  const msg = document.getElementById('sync-msg');
+  if (!/^[\w.-]+\/[\w.-]+$/.test(repo) || token.length < 20) { msg.textContent = 'リポジトリは「ユーザー名/リポジトリ名」の形で、トークンとあわせて入力してください'; return; }
+  msg.style.color = 'var(--muted)'; msg.textContent = '接続を確認中…';
+  try {
+    const r = await fetch('https://api.github.com/repos/' + repo, { cache: 'no-store', headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' } });
+    if (!r.ok) throw syncErr(r.status);
+    const j = await r.json();
+    if (j.permissions && j.permissions.push === false) { msg.style.color = ''; msg.textContent = 'このトークンには書き込み権限がありません（Contents を Read and write に）'; return; }
+    if (j.private === false && !confirm('このリポジトリは公開(Public)です。学習記録が誰でも見られる状態になります。続けますか？')) { msg.textContent = ''; return; }
+  } catch (e) { msg.style.color = ''; msg.textContent = syncErrText(e); return; }
+  saveSyncCfg({ repo, token });
+  syncState = { status: 'idle', last: 0, msg: '' };
+  renderSection('settings');
+  syncNow('all');
+};
+window.syncDisconnect = function() {
+  if (!confirm('同期の連携を解除しますか？\nこの端末の記録は残ります（GitHub上のデータも消えません）。')) return;
+  clearTimeout(syncTimer); saveSyncCfg(null); syncState = { status: 'off', last: 0, msg: '' };
+  renderSection('settings');
+};
+window.syncRestore = function() {
+  let b = null;
+  try { b = JSON.parse(localStorage.getItem(SYNC_BACKUP_KEY)); } catch (e) {}
+  if (!b || !b.slots) return;
+  const at = b.at ? new Date(b.at).toLocaleString('ja-JP') : '';
+  if (!confirm(`${at} の同期の直前の記録に戻しますか？\n（その後の変更は、この端末と同期先から戻した内容で置き換わります）`)) return;
+  const now = Date.now();
+  for (const id in b.slots) {
+    if (!slotIndex.meta[id]) continue;
+    const d = b.slots[id], u = {};
+    [d.history, d.missRec, d.marks, d.upd].forEach(o => { for (const k in (o || {})) u[k] = now; });
+    d.upd = u; d.masteryAt = now;     // 戻した内容が、次の同期で新しい記録として扱われるようにする
+    writeSlotData(id, d);
+  }
+  if (b.slots[slotIndex.active]) applySlotData(readSlotData(slotIndex.active));
+  try { localStorage.removeItem(SYNC_BACKUP_KEY); } catch (e) {}
+  renderSection('settings');
+  syncNow('all');
+};
+function initSync() {
+  document.addEventListener('visibilitychange', () => {
+    if (!syncCfg) return;
+    if (document.visibilityState === 'visible') { if (Date.now() - syncState.last > 20000) syncNow('all'); }
+    else if (syncDirty) syncNow('active');
+  });
+  window.addEventListener('online', () => { if (syncCfg) syncNow('all'); });
+  if (syncCfg) setTimeout(() => syncNow('all'), 600);
+}
 
 // ── KEYBOARD SHORTCUTS ──
 /*
@@ -9389,6 +9782,7 @@ window.addEventListener('orientationchange', syncNavHeight);
 // ── INIT ──
 document.querySelectorAll('[data-icon]').forEach(el => { el.innerHTML = icon(el.dataset.icon); });
 loadStorage();
+initSync();
 showSection('study');
 syncNavHeight();
 // フォント読み込み後などでナビの高さが変わる場合に備えて、描画確定後にもう一度測る
