@@ -694,46 +694,59 @@ input:focus { border-color: var(--primary); }
 }
 
 /* ── テスト・タイピング・復習：画面内に収めるための段階的な詰め ── */
+/* 段階1：余白だけを詰める（文字の大きさは変えない） */
 #content[data-dense="1"] .quiz-card { padding: 16px 18px; }
-#content[data-dense="1"] .quiz-progress { margin-bottom: 8px; }
-#content[data-dense="1"] .quiz-progress-bar { margin-bottom: 12px; }
-#content[data-dense="1"] .quiz-question { font-size: 20px; margin-bottom: 16px; }
+#content[data-dense="1"] .quiz-progress { margin-bottom: 10px; }
+#content[data-dense="1"] .quiz-progress-bar { margin-bottom: 14px; }
+#content[data-dense="1"] .quiz-type-label { margin-bottom: 6px; }
+#content[data-dense="1"] .quiz-question { margin-bottom: 16px; }
 #content[data-dense="1"] .choices { gap: 8px; }
-#content[data-dense="1"] .choice-btn { padding: 11px 16px; }
+#content[data-dense="1"] .choice-btn { padding: 11px 16px; min-height: 46px; }
 #content[data-dense="1"] .result-box { margin-top: 12px; padding: 12px; }
-#content[data-dense="1"] .result-box .result-icon { font-size: 22px; margin-bottom: 4px; }
-#content[data-dense="1"] .result-box .result-word { font-size: 20px; margin-bottom: 4px; }
-#content[data-dense="1"] .next-btn { padding: 11px; margin-top: 10px; }
-#content[data-dense="2"] .quiz-card { padding: 12px 14px; }
-#content[data-dense="2"] .quiz-progress { margin-bottom: 6px; font-size: 12px; }
-#content[data-dense="2"] .quiz-progress-bar { margin-bottom: 8px; }
-#content[data-dense="2"] .quiz-type-label { margin-bottom: 4px; }
-#content[data-dense="2"] .quiz-question { font-size: 18px; margin-bottom: 10px; }
-#content[data-dense="2"] .choices { gap: 6px; }
-#content[data-dense="2"] .choice-btn { padding: 9px 14px; font-size: 14px; }
-#content[data-dense="2"] .result-box { margin-top: 8px; padding: 8px 10px; }
-#content[data-dense="2"] .result-box .result-icon { font-size: 18px; margin-bottom: 2px; }
-#content[data-dense="2"] .result-box .result-word { font-size: 18px; margin-bottom: 2px; }
-#content[data-dense="2"] .result-box .result-meanings { font-size: 13px; }
-#content[data-dense="2"] .next-btn { padding: 9px; margin-top: 8px; font-size: 15px; }
-#content[data-dense="3"] .quiz-card { padding: 10px 12px; }
-#content[data-dense="3"] .quiz-progress { margin-bottom: 4px; }
-#content[data-dense="3"] .quiz-progress-bar { margin-bottom: 6px; }
-#content[data-dense="3"] .quiz-question { font-size: 17px; margin-bottom: 8px; }
-#content[data-dense="3"] .choices { gap: 4px; }
-#content[data-dense="3"] .choice-btn { padding: 7px 12px; font-size: 13.5px; }
-#content[data-dense="3"] .result-box { margin-top: 6px; padding: 6px 8px; }
-#content[data-dense="3"] .result-box .result-icon { display: none; }
-#content[data-dense="3"] .result-box .result-word { font-size: 16px; margin-bottom: 0; }
-#content[data-dense="3"] .result-box .result-meanings { font-size: 12.5px; }
-#content[data-dense="3"] .next-btn { padding: 8px; margin-top: 6px; font-size: 14px; }
-#content[data-dense="4"] .quiz-card { padding: 8px 10px; }
-#content[data-dense="4"] .quiz-progress-bar { margin-bottom: 4px; }
-#content[data-dense="4"] .quiz-type-label { display: none; }
-#content[data-dense="4"] .quiz-question { font-size: 16px; margin-bottom: 6px; }
-#content[data-dense="4"] .choice-btn { padding: 6px 10px; font-size: 13px; }
-#content[data-dense="4"] .result-box .pron-row { display: none; }
-#content[data-dense="4"] .next-btn { padding: 7px; margin-top: 4px; font-size: 13.5px; }
+#content[data-dense="1"] .result-box .result-icon { margin-bottom: 2px; }
+#content[data-dense="1"] .result-box .result-word { margin-bottom: 3px; }
+#content[data-dense="1"] .next-btn { padding: 12px; margin-top: 10px; }
+#content[data-dense="1"] .quiz-quit { top: 5px; right: 9px; }
+#content[data-dense="2"] .quiz-card { padding: 16px 18px; }
+#content[data-dense="2"] .quiz-progress { margin-bottom: 8px; }
+#content[data-dense="2"] .quiz-progress-bar { margin-bottom: 12px; }
+#content[data-dense="2"] .quiz-question { font-size: 20px; margin-bottom: 16px; }
+#content[data-dense="2"] .choices { gap: 8px; }
+#content[data-dense="2"] .choice-btn { min-height: 42px; padding: 11px 16px; }
+#content[data-dense="2"] .result-box { margin-top: 12px; padding: 12px; }
+#content[data-dense="2"] .result-box .result-icon { font-size: 22px; margin-bottom: 4px; }
+#content[data-dense="2"] .result-box .result-word { font-size: 20px; margin-bottom: 4px; }
+#content[data-dense="2"] .next-btn { padding: 11px; margin-top: 10px; }
+#content[data-dense="3"] .quiz-card { padding: 12px 14px; }
+#content[data-dense="3"] .quiz-progress { margin-bottom: 6px; font-size: 12px; }
+#content[data-dense="3"] .quiz-progress-bar { margin-bottom: 8px; }
+#content[data-dense="3"] .quiz-type-label { margin-bottom: 4px; }
+#content[data-dense="3"] .quiz-question { font-size: 18px; margin-bottom: 10px; }
+#content[data-dense="3"] .choices { gap: 6px; }
+#content[data-dense="3"] .choice-btn { min-height: 38px; padding: 9px 14px; font-size: 14px; }
+#content[data-dense="3"] .result-box { margin-top: 8px; padding: 8px 10px; }
+#content[data-dense="3"] .result-box .result-icon { font-size: 18px; margin-bottom: 2px; }
+#content[data-dense="3"] .result-box .result-word { font-size: 18px; margin-bottom: 2px; }
+#content[data-dense="3"] .result-box .result-meanings { font-size: 13px; }
+#content[data-dense="3"] .next-btn { padding: 9px; margin-top: 8px; font-size: 15px; }
+#content[data-dense="4"] .quiz-card { padding: 10px 12px; }
+#content[data-dense="4"] .quiz-progress { margin-bottom: 4px; }
+#content[data-dense="4"] .quiz-progress-bar { margin-bottom: 6px; }
+#content[data-dense="4"] .quiz-question { font-size: 17px; margin-bottom: 8px; }
+#content[data-dense="4"] .choices { gap: 4px; }
+#content[data-dense="4"] .choice-btn { min-height: 34px; padding: 7px 12px; font-size: 13.5px; }
+#content[data-dense="4"] .result-box { margin-top: 6px; padding: 6px 8px; }
+#content[data-dense="4"] .result-box .result-icon { display: none; }
+#content[data-dense="4"] .result-box .result-word { font-size: 16px; margin-bottom: 0; }
+#content[data-dense="4"] .result-box .result-meanings { font-size: 12.5px; }
+#content[data-dense="4"] .next-btn { padding: 8px; margin-top: 6px; font-size: 14px; }
+#content[data-dense="5"] .quiz-card { padding: 8px 10px; }
+#content[data-dense="5"] .quiz-progress-bar { margin-bottom: 4px; }
+#content[data-dense="5"] .quiz-type-label { display: none; }
+#content[data-dense="5"] .quiz-question { font-size: 16px; margin-bottom: 6px; }
+#content[data-dense="5"] .choice-btn { min-height: 30px; padding: 6px 10px; font-size: 13px; }
+#content[data-dense="5"] .result-box .pron-row { display: none; }
+#content[data-dense="5"] .next-btn { padding: 7px; margin-top: 4px; font-size: 13.5px; }
 
 /* ── ★マーク ── */
 .result-box .result-word { padding: 0 30px; }   /* 右上の★と長い単語が重ならないように */
@@ -790,6 +803,33 @@ input:focus { border-color: var(--primary); }
 .sync-meta { font-size: 12px; color: var(--muted); line-height: 1.7; margin-bottom: 12px; word-break: break-all; }
 .sync-link { background: none; color: var(--muted); font-size: 12px; text-decoration: underline; padding: 8px 0 0; }
 .act-btn:disabled { opacity: 0.55; }
+
+/* ── 復習：出題する分類 ── */
+@media (max-height: 640px) {
+  #section-review .rv-explain { display: none; }
+  #section-review .rv-chips { gap: 6px; margin-bottom: 8px; }
+  #section-review .rv-chips .filter-btn { padding: 6px 10px; font-size: 12px; }
+  #section-review .rv-count { margin-bottom: 4px; }
+  #section-review .rv-notice { padding: 6px 8px; font-size: 12px; margin-bottom: 4px; }
+  #section-review h2 { margin-bottom: 8px !important; }
+  #section-review .data-section { padding: 12px !important; margin-bottom: 10px !important; }
+}
+.rv-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.rv-chips .filter-btn.active::before { content: '✓'; margin-right: 5px; font-weight: 800; }
+.rv-chips .filter-btn .chip-star { display: inline-flex; vertical-align: -2px; }
+.rv-chips .filter-btn .chip-star .ico { margin-right: 4px; }
+.rv-count { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+.rv-count b { color: var(--primary-dark); font-size: 15px; }
+.rv-notice { font-size: 12.5px; color: #8a5f06; background: #fdf1d3; border-radius: 8px; padding: 8px 10px; margin-bottom: 8px; line-height: 1.6; }
+.btn-primary:disabled { opacity: 0.5; cursor: default; }
+
+/* ── テスト中断ボタン ── */
+.quiz-card { position: relative; }
+.quiz-quit { position: absolute; top: 6px; right: 10px; padding: 2px 9px; font-size: 11.5px; line-height: 1.5; font-weight: 600; color: var(--muted); background: transparent; border-radius: 8px; z-index: 1; }
+.quiz-quit:hover { background: #eef4f0; color: var(--text); }
+#content[data-dense="2"] .quiz-quit, #content[data-dense="3"] .quiz-quit { top: 4px; right: 8px; }
+#content[data-dense="4"] .quiz-quit, #content[data-dense="5"] .quiz-quit { top: 2px; right: 4px; padding: 1px 8px; font-size: 11px; }
+html.no-trans *, html.no-trans *::before, html.no-trans *::after { transition: none !important; }
 </style>
 </head>
 <body>
@@ -3218,8 +3258,20 @@ function restoreStudyPos() {
   if (i >= 0) { state.studyIdx = i; state.studyRevealed = false; }
 }
 function touch(no) { updRec[no] = Date.now(); }
-// 復習の対象 ＝ 要復習＋克服中（wrongSet）＋ 自分でマークした単語
-function inReviewPool(no) { return wrongSet.has(no) || !!markRec[no]; }
+// 復習の対象 ＝ 復習画面で選んだ分類（要復習・克服中・克服済み・マーク）の単語
+// 復習で出題する分類（複数選択）。この端末の表示設定として別に保存する（セーブデータの形式は変えない）
+const REVIEW_SEL_KEY = 'leap_review_sel';
+const REVIEW_SEL_KEYS = ['review', 'recovering', 'mastered', 'marked'];
+let reviewSel = (() => {
+  try { const a = JSON.parse(localStorage.getItem(REVIEW_SEL_KEY)); if (Array.isArray(a)) return new Set(a.filter(k => REVIEW_SEL_KEYS.includes(k))); } catch (e) {}
+  return new Set(['review', 'recovering', 'marked']);    // 初期値は、これまでと同じ（要復習＋克服中＋マーク）
+})();
+function saveReviewSel() { try { localStorage.setItem(REVIEW_SEL_KEY, JSON.stringify([...reviewSel])); } catch (e) {} }
+function inReviewPool(no) {
+  const st = statusOf(no);
+  return (reviewSel.has('review') && st === 'review') || (reviewSel.has('recovering') && st === 'recovering') ||
+         (reviewSel.has('mastered') && st === 'mastered') || (reviewSel.has('marked') && !!markRec[no]);
+}
 function reviewPoolWords() { return WORDS.filter(w => inReviewPool(w.no)); }
 function reviewPoolSize() { return reviewPoolWords().length; }
 function statusOf(no) {
@@ -3415,6 +3467,8 @@ function applySlotData(d) {
   state.studyIdx = 0;
   state.studyRevealed = false;
   restoreStudyPos();     // 前回の続きから始める
+  QUIZ_SECTIONS.forEach(n => { const el = document.getElementById('section-' + n); if (el) el.innerHTML = ''; });
+  if (QUIZ_SECTIONS.includes(state.section)) renderSection(state.section);
 }
 
 function loadStorage() {
@@ -3697,8 +3751,28 @@ function showSection(name) {
   });
   const sec = document.getElementById('section-' + name);
   sec.style.display = 'block';
-  renderSection(name);
+  if (quizInProgress(name)) {
+    // 進行中の問題はそのまま残して、続きから再開する（ページを移動しても中断されない）
+    const inp = sec.querySelector('#typing-input, #review-typing-input');
+    if (inp && !inp.disabled && !inp.readOnly) setTimeout(() => inp.focus(), 50);
+    window.scrollTo(0, 0);
+  } else {
+    renderSection(name);
+  }
+  if (QUIZ_SECTIONS.includes(name)) fitQuizPage();
 }
+const QUIZ_SECTIONS = ['test', 'typing', 'review'];
+// そのセクションに、解答中の問題（quiz-card）が表示されているか
+function quizInProgress(name) {
+  return QUIZ_SECTIONS.includes(name) && !!document.querySelector('#section-' + name + ' .quiz-card');
+}
+// 「中断」ボタン：進行中のテストをやめて、設定画面に戻る
+window.quitQuiz = function() {
+  if (!confirm('テストを中断して、設定画面に戻りますか？\n（ここまでの解答は記録されています）')) return;
+  renderSection(state.section);
+  window.scrollTo(0, 0);
+  fitQuizPage();
+};
 
 function renderSection(name) {
   switch(name) {
@@ -8445,7 +8519,7 @@ window.addEventListener('resize', () => {
     const nowMobile = isMobile();
     if (nowMobile !== _lastIsMobile) {
       _lastIsMobile = nowMobile;
-      if (state && state.section) renderSection(state.section);
+      if (state && state.section && !quizInProgress(state.section)) renderSection(state.section);
     }
   }, 150);
 });
@@ -8545,13 +8619,23 @@ function fitStudyLayout() {
   lay.style.height = Math.max(200, Math.floor(h)) + 'px';
   fitStudyContent();
 }
+// 段階を切り替えた直後に寸法を測るため、その間だけ transition を止める。
+// （ボタンに transition: all が付いているので、止めないと「変化前の寸法」を読んで、必要以上に小さくしてしまう）
+function measureNoTransition(fn) {
+  const html = document.documentElement;
+  html.classList.add('no-trans');
+  try { return fn(); } finally { void html.offsetHeight; html.classList.remove('no-trans'); }
+}
 function fitQuizPage() {
   const root = document.getElementById('content');
-  if (!root || !document.querySelector('#content .quiz-card')) { if (root) delete root.dataset.dense; return; }
-  for (let lv = 0; lv <= 4; lv++) {
-    root.dataset.dense = lv;
-    if (document.documentElement.scrollHeight <= window.innerHeight) break;
-  }
+  if (!root) return;
+  if (!QUIZ_SECTIONS.includes(state.section) || !document.querySelector('#section-' + state.section + ' .quiz-card')) { delete root.dataset.dense; return; }
+  measureNoTransition(() => {
+    for (let lv = 0; lv <= 5; lv++) {
+      root.dataset.dense = lv;
+      if (document.documentElement.scrollHeight <= window.innerHeight) break;
+    }
+  });
 }
 (function () {
   const root = document.getElementById('content');
@@ -8565,10 +8649,12 @@ function fitStudyContent() {
   const det = document.querySelector('.study-detail');
   const body = det && det.querySelector('.study-body');
   if (!body || det.offsetParent === null) return;
-  for (let lv = 0; lv <= 4; lv++) {
-    det.dataset.density = lv;
-    if (body.scrollHeight <= body.clientHeight + 1) break;
-  }
+  measureNoTransition(() => {
+    for (let lv = 0; lv <= 4; lv++) {
+      det.dataset.density = lv;
+      if (body.scrollHeight <= body.clientHeight + 1) break;
+    }
+  });
 }
 window.addEventListener('resize', () => { if (state && state.section === 'study') fitStudyLayout(); });
 window.studyTab = function(tab) { state.studyTab = tab; renderStudy(); };
@@ -8678,7 +8764,7 @@ function renderTestQuestion() {
     choiceContent = choices.map((c, i) => `<button class="choice-btn" onclick="answerTest(${c.no},${cur.no})" data-no="${c.no}"><span class="choice-key">${i+1}</span>${escHtml(c.word)}</button>`).join('');
   }
 
-  sec.innerHTML = `<div class="quiz-card">
+  sec.innerHTML = `<div class="quiz-card"><button type="button" class="quiz-quit" onclick="quitQuiz()">中断</button>
     <div class="quiz-progress">${state.testQIdx+1} / ${total}</div>
     <div class="quiz-progress-bar"><div class="quiz-progress-bar-fill" style="width:${pct}%"></div></div>
     <div class="quiz-type-label">${state.testMode==='en2jp'?'英語 → 日本語':'日本語 → 英語'}</div>
@@ -8695,7 +8781,7 @@ window.answerTest = function(selectedNo, correctNo) {
   const cur = WORDS.find(w => w.no === correctNo);
 
   // Highlight
-  document.querySelectorAll('.choice-btn').forEach(btn => {
+  document.querySelectorAll('#section-test .choice-btn').forEach(btn => {
     btn.disabled = true;
     const no = parseInt(btn.dataset.no);
     if (no === correctNo) btn.classList.add('correct');
@@ -8781,7 +8867,7 @@ function renderTypingQuestion() {
   const pct = Math.round(state.typingQIdx / total * 100);
   const qMeaning = randMeaning(cur);
 
-  sec.innerHTML = `<div class="quiz-card">
+  sec.innerHTML = `<div class="quiz-card"><button type="button" class="quiz-quit" onclick="quitQuiz()">中断</button>
     <div class="quiz-progress">${state.typingQIdx+1} / ${total}</div>
     <div class="quiz-progress-bar"><div class="quiz-progress-bar-fill" style="width:${pct}%"></div></div>
     <div class="quiz-type-label">日本語 → 英語タイピング</div>
@@ -8884,19 +8970,31 @@ function reviewSummaryHtml() {
 }
 function renderReview() {
   const sec = document.getElementById('section-review');
-  const wrongWords = reviewPoolWords();
   const sc = statusCounts();
-  if (!wrongWords.length) {
-    const hist = sc.ever
-      ? `<div style="margin-top:10px;">過去に間違えた単語 <b>${sc.ever}語</b> はすべて克服済みです。<br>「一覧」で履歴を確認できます。</div>`
-      : `<div>テストやタイピングで間違えた単語や、学習ページでマークした単語がここに表示されます。</div>`;
+  const nMark = Object.keys(markRec).length;
+  if (!sc.ever && !nMark) {
     sec.innerHTML = `<div class="empty">
       <div style="font-size:48px;margin-bottom:16px;">🎉</div>
       <div style="font-size:18px;font-weight:800;margin-bottom:8px;">復習が必要な単語はありません！</div>
-      ${hist}
+      <div>テストやタイピングで間違えた単語や、学習ページでマークした単語がここに表示されます。</div>
     </div>`;
     return;
   }
+  const poolN = reviewPoolSize();
+  const allThree = ['review', 'recovering', 'mastered'].every(k => reviewSel.has(k));
+  const chip = (k, label, n, on) => `<button type="button" class="filter-btn${on ? ' active' : ''}" aria-pressed="${on}" onclick="toggleReviewSel('${k}')">${label} (${n})</button>`;
+  const chips = [
+    chip('ever', '過去に間違えた', sc.ever, allThree),
+    chip('review', `${stDot('review')}要復習`, sc.review, reviewSel.has('review')),
+    chip('recovering', `${stDot('recovering')}克服中`, sc.recovering, reviewSel.has('recovering')),
+    chip('mastered', `${stDot('mastered')}克服済み`, sc.mastered, reviewSel.has('mastered')),
+    chip('marked', `<span class="chip-star">${icon('star')}</span>マーク`, nMark, reviewSel.has('marked')),
+  ].join('');
+  let notice = '';
+  if (!reviewSel.size) notice = '出題する分類を1つ以上選んでください。';
+  else if (!poolN) notice = sc.mastered && !reviewSel.has('mastered')
+    ? '復習が必要な単語はありません。「克服済み」も選ぶと、克服済みの単語を復習できます。'
+    : '選んだ分類に、該当する単語がありません。';
   const modeButtons = ['test','typing'].map(m => {
     const labels = {test:'4択テスト', typing:'タイピング'};
     const icons = {test: icon('test'), typing: icon('typing')};
@@ -8905,22 +9003,28 @@ function renderReview() {
   }).join('');
   sec.innerHTML = `<h2 style="font-size:18px;font-weight:800;margin-bottom:14px;"><span class="h-ico">${icon('review')}</span>復習モード</h2>
     <div class="data-section" style="margin-bottom:16px">
-      <div class="stat-row">
-        <div class="stat-chip">${stDot('review')}要復習: ${sc.review}語</div>
-        <div class="stat-chip">${stDot('recovering')}克服中: ${sc.recovering}語</div>
-        <div class="stat-chip">${stDot('mastered')}克服済み: ${sc.mastered}語</div>
-        <div class="stat-chip"><span class="li-star">${icon('star')}</span>マーク: ${Object.keys(markRec).length}語</div>
-      </div>
-      <div style="font-size:12px;color:var(--muted);line-height:1.6;">
-        マークした単語も出題します（マークを外すまで復習に残ります）。<br>復習では${stDot('review')}要復習と${stDot('recovering')}克服中を出題します。連続 <b>${masteryN}回</b> 正解すると${stDot('mastered')}克服済みになり、復習対象から外れます（✕の回数は残ります）。
+      <div style="font-size:13px;font-weight:600;color:var(--muted);margin-bottom:8px;">出題する単語（複数選べます）</div>
+      <div class="rv-chips">${chips}</div>
+      <div class="rv-count">出題: <b>${poolN}語</b></div>
+      ${notice ? `<div class="rv-notice">${notice}</div>` : ''}
+      <div class="rv-explain" style="font-size:12px;color:var(--muted);line-height:1.6;">
+        連続 <b>${masteryN}回</b> 正解すると${stDot('mastered')}克服済みになります。克服済みの単語を間違えると、${stDot('review')}要復習に戻ります。マークした単語は、マークを外すまで対象に残ります。
       </div>
     </div>
     <div style="margin-bottom:16px;">
       <div style="font-size:13px;font-weight:600;color:var(--muted);margin-bottom:8px;">出題形式</div>
       <div class="mode-grid">${modeButtons}</div>
     </div>
-    <button class="btn-primary" onclick="startReview()">復習開始</button>`;
+    <button class="btn-primary" onclick="startReview()" ${poolN ? '' : 'disabled'}>復習開始</button>`;
 }
+window.toggleReviewSel = function(k) {
+  if (k === 'ever') {      // 「過去に間違えた」＝ 要復習・克服中・克服済みをまとめて切り替える
+    const keys = ['review', 'recovering', 'mastered'];
+    if (keys.every(x => reviewSel.has(x))) keys.forEach(x => reviewSel.delete(x)); else keys.forEach(x => reviewSel.add(x));
+  } else if (reviewSel.has(k)) reviewSel.delete(k); else reviewSel.add(k);
+  saveReviewSel();
+  renderReview();
+};
 window.setReviewMode = function(m) { state.reviewMode = m; renderReview(); };
 
 window.startReview = function() {
@@ -8929,7 +9033,7 @@ window.startReview = function() {
     alert(state.reviewMode==='test' ? '復習する単語が4語以上必要です' : '復習する単語がありません');
     return;
   }
-  // 要復習を先に、続けて克服中（それぞれシャッフル）
+  // 要復習を先に、続けてそれ以外（克服中・克服済み・マークのみ）。それぞれシャッフル
   state.reviewQueue = [...shuffle(wrongWords.filter(w => statusOf(w.no) === 'review')), ...shuffle(wrongWords.filter(w => statusOf(w.no) !== 'review'))];
   state.reviewQIdx = 0; state.reviewAnswered = false;
   if (state.reviewMode === 'test') renderReviewTestQ();
@@ -8965,7 +9069,7 @@ function renderReviewTestQ() {
     return `<button class="choice-btn" onclick="answerReviewTest(${c.no},${cur.no})" data-no="${c.no}"><span class="choice-key">${i+1}</span>${escHtml(m)}</button>`;
   }).join('');
 
-  sec.innerHTML = `<div class="quiz-card">
+  sec.innerHTML = `<div class="quiz-card"><button type="button" class="quiz-quit" onclick="quitQuiz()">中断</button>
     <div class="quiz-progress">${state.reviewQIdx+1} / ${total} &nbsp;|&nbsp; 復習リスト: ${wrongWords.length}語</div>
     <div class="quiz-progress-bar"><div class="quiz-progress-bar-fill" style="width:${pct}%"></div></div>
     <div class="quiz-type-label">復習 — 英語 → 日本語</div>
@@ -8980,7 +9084,7 @@ window.answerReviewTest = function(selectedNo, correctNo) {
   state.reviewAnswered = true;
   const isCorrect = selectedNo === correctNo;
   const cur = WORDS.find(w => w.no === correctNo);
-  document.querySelectorAll('.choice-btn').forEach(btn => {
+  document.querySelectorAll('#section-review .choice-btn').forEach(btn => {
     btn.disabled = true;
     const no = parseInt(btn.dataset.no);
     if (no === correctNo) btn.classList.add('correct');
@@ -9037,7 +9141,7 @@ function renderReviewTypingQ() {
   const total = state.reviewQueue.length;
   const pct = Math.round(state.reviewQIdx / total * 100);
   const qMeaning = randMeaning(cur);
-  sec.innerHTML = `<div class="quiz-card">
+  sec.innerHTML = `<div class="quiz-card"><button type="button" class="quiz-quit" onclick="quitQuiz()">中断</button>
     <div class="quiz-progress">${state.reviewQIdx+1} / ${total} &nbsp;|&nbsp; 復習リスト: ${wrongWords.length}語</div>
     <div class="quiz-progress-bar"><div class="quiz-progress-bar-fill" style="width:${pct}%"></div></div>
     <div class="quiz-type-label">復習 — タイピング</div>
@@ -9779,7 +9883,7 @@ document.addEventListener('keydown', function(e) {
       }
       if (!inInput && !state.reviewAnswered && ['1','2','3','4'].includes(key)) {
         e.preventDefault();
-        const btns = document.querySelectorAll('.choice-btn:not(:disabled)');
+        const btns = document.querySelectorAll('#section-review .choice-btn:not(:disabled)');
         const idx = parseInt(key) - 1;
         if (btns[idx]) btns[idx].click();
       }
