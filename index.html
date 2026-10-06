@@ -830,6 +830,80 @@ input:focus { border-color: var(--primary); }
 #content[data-dense="2"] .quiz-quit, #content[data-dense="3"] .quiz-quit { top: 4px; right: 8px; }
 #content[data-dense="4"] .quiz-quit, #content[data-dense="5"] .quiz-quit { top: 2px; right: 4px; padding: 1px 8px; font-size: 11px; }
 html.no-trans *, html.no-trans *::before, html.no-trans *::after { transition: none !important; }
+
+/* ── 記録ページ ── */
+:root { --c-mastered: #2f8f58; --c-recovering: #c58a12; --c-review: #c8453f; --c-none: #dbe5de; }
+.rec-wrap { display: flex; flex-direction: column; gap: 10px; max-width: 720px; margin: 0 auto; }
+.rec-seg button { padding: 8px 2px; font-size: 13px; }
+.rec-pane { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; overflow: hidden; }
+.rec-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; flex: none; }
+.rec-tile { background: #f7faf8; border: 1px solid #e6efe9; border-radius: 12px; padding: 10px 12px; }
+.rec-tile .v { font-size: 22px; font-weight: 800; color: var(--primary-dark); line-height: 1.2; font-variant-numeric: tabular-nums; }
+.rec-tile .v small { font-size: 11px; font-weight: 700; color: var(--muted); margin-left: 2px; }
+.rec-tile .l { font-size: 11px; font-weight: 600; color: var(--muted); margin-top: 2px; }
+.rec-card { background: #fff; border: 1px solid #e6efe9; border-radius: 12px; padding: 10px 12px; flex: none; }
+.rec-card h3 { font-size: 12.5px; font-weight: 800; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.rec-card h3 small { font-weight: 600; color: var(--muted); font-size: 11.5px; }
+.rec-card.grow { flex: 1 1 0; min-height: 150px; display: flex; flex-direction: column; }
+.rec-card.grow2 { flex: 1 1 0; min-height: 130px; display: flex; flex-direction: column; }
+.rec-card.list { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; }
+.rec-stack { display: flex; height: 16px; border-radius: 8px; overflow: hidden; background: var(--c-none); }
+.rec-stack.thin { height: 10px; }
+.rec-stack i { display: block; height: 100%; }
+.rec-leg { display: flex; flex-wrap: wrap; gap: 3px 12px; margin-top: 8px; font-size: 11.5px; font-weight: 600; }
+.rec-leg b { font-weight: 800; font-variant-numeric: tabular-nums; }
+.rec-leg span::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; background: var(--c); }
+.rec-bars { display: flex; align-items: flex-end; gap: 6px; height: 74px; }
+.rec-bars div { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 3px; font-size: 10px; color: var(--muted); height: 100%; }
+.rec-bars i { display: block; width: 100%; border-radius: 4px 4px 0 0; background: #9fd0b5; }
+.rec-bars .tdy i { background: var(--primary); }
+.rec-chips { display: flex; gap: 6px; flex: none; }
+.rec-chips button { flex: 1; padding: 7px 0; border-radius: 999px; font-size: 13px; font-weight: 700; background: #eef4f0; color: var(--muted); }
+.rec-chips button.on { background: var(--primary); color: #fff; }
+.rec-chart { position: relative; flex: 1; min-height: 80px; }
+.rec-chart svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.rec-axis { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--muted); margin-top: 4px; }
+.rec-heat { display: grid; grid-template-columns: repeat(26, 1fr); grid-template-rows: repeat(7, auto); grid-auto-flow: column; gap: 2px; }
+.rec-heat i { display: block; height: 11px; border-radius: 2px; background: var(--c-none); }
+.rec-heat i.l1 { background: #c7e6d3; } .rec-heat i.l2 { background: #9fd0b5; } .rec-heat i.l3 { background: #5fb584; } .rec-heat i.l4 { background: #2d7a4f; } .rec-heat i.fut { background: transparent; }
+.rec-rows { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 7px; padding-right: 2px; }
+.rec-row { display: grid; grid-template-columns: 74px 1fr 36px; align-items: center; gap: 8px; font-size: 11.5px; font-weight: 700; flex: none; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.rec-row .rec-stack { height: 11px; border-radius: 6px; }
+.rec-row em { font-style: normal; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+.rec-mini { display: inline-flex; background: #eef4f0; border-radius: 8px; padding: 2px; gap: 2px; }
+.rec-mini button { padding: 2px 9px; font-size: 11px; font-weight: 700; border-radius: 6px; background: transparent; color: var(--muted); }
+.rec-mini button.on { background: #fff; color: var(--primary-dark); box-shadow: 0 1px 3px rgba(20,50,35,.15); }
+.rec-rank > div { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-top: 1px solid #f0f5f2; font-size: 13px; }
+.rec-rank > div:first-child { border-top: none; }
+.rec-rank b { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rec-rank span { font-size: 11px; color: var(--muted); font-weight: 600; white-space: nowrap; }
+.rec-rank .n { width: 16px; font-weight: 800; }
+.rec-empty { font-size: 12.5px; color: var(--muted); line-height: 1.7; padding: 10px 0; text-align: center; }
+.rec-scroll { flex: 1; min-height: 0; overflow-y: auto; }
+.rec-sess { display: grid; grid-template-columns: auto 1fr auto; gap: 1px 10px; padding: 9px 0; border-top: 1px solid #f0f5f2; align-items: center; }
+.rec-sess:first-child { border-top: none; }
+.rec-sess .md { grid-row: span 2; width: 34px; height: 34px; border-radius: 10px; background: var(--primary-light); color: var(--primary-dark); display: grid; place-items: center; }
+.rec-sess .md .ico { width: 17px; height: 17px; }
+.rec-sess b { font-size: 13px; }
+.rec-sess small { font-size: 11px; color: var(--muted); font-weight: 600; }
+.rec-sess .sc { font-size: 15px; font-weight: 800; color: var(--primary-dark); text-align: right; grid-row: span 2; }
+.rec-sess .sc small { display: block; font-weight: 600; }
+.rec-sess > small { grid-column: 2; }
+/* 高さが足りないときは、余白を詰める */
+.rec-pane.compact { gap: 6px; }
+.rec-pane.compact .rec-card { padding: 7px 10px; }
+.rec-pane.compact .rec-card h3 { margin-bottom: 5px; }
+.rec-pane.compact .rec-tile { padding: 6px 10px; }
+.rec-pane.compact .rec-tile .v { font-size: 18px; }
+.rec-pane.compact .rec-bars { height: 52px; }
+.rec-pane.compact .rec-leg { margin-top: 5px; }
+.rec-pane.compact .rec-card.grow { min-height: 110px; }
+@media (max-width: 640px) {
+  #nav .nav-btn { padding: 6px 0; letter-spacing: -0.02em; white-space: nowrap; }
+}
+@media (max-width: 360px) {
+  #nav .nav-btn { font-size: 8.5px; }
+}
 </style>
 </head>
 <body>
@@ -840,6 +914,7 @@ html.no-trans *, html.no-trans *::before, html.no-trans *::after { transition: n
     <button class="nav-btn" onclick="showSection('typing')"><span class="nav-icon" data-icon="typing"></span>タイピング</button>
     <button class="nav-btn" onclick="showSection('review')"><span class="nav-icon" data-icon="review"></span>復習</button>
     <button class="nav-btn" onclick="showSection('wordlist')"><span class="nav-icon" data-icon="wordlist"></span>一覧</button>
+    <button class="nav-btn" onclick="showSection('record')"><span class="nav-icon" data-icon="chart"></span>記録</button>
     <button class="nav-btn" onclick="showSection('settings')"><span class="nav-icon" data-icon="settings"></span>設定</button>
   </div>
 
@@ -849,6 +924,7 @@ html.no-trans *, html.no-trans *::before, html.no-trans *::after { transition: n
     <div id="section-typing" class="section" style="display:none"></div>
     <div id="section-review" class="section" style="display:none"></div>
     <div id="section-wordlist" class="section" style="display:none"></div>
+    <div id="section-record" class="section" style="display:none"></div>
     <div id="section-settings" class="section" style="display:none"></div>
   </div>
 </div>
@@ -3206,6 +3282,19 @@ const MASTERY_OPTIONS = [2, 3, 5];
 const LEGACY_STREAK = 5;   // 旧方式で「間違いリストから外れていた」単語の移行値（設定値が2〜5のどれでも克服済みになる）
 let masteryN = 3;          // 克服に必要な連続正解回数
 let missRec = {};
+// ── 学習の詳しい記録（セーブデータの daily / sessions / wstat に保存）──
+// daily[日付][端末ID] = {a:解答数, c:正解数, v:学習ページで見た単語数, ts:学習ページの秒数, tq:テスト等の秒数}
+//   端末ごとに分けて持つので、PCとiPhoneで同じ日に学習しても、同期でどちらの記録も消えない（表示のときに合計する）
+// sessions = [{id, at, mode:'test'|'typing'|'review', label, n, c, sec}]（古い順・最大300件）
+// wstat[番号] = {f:最初に解答した時刻, ms:平均の解答時間(ms), k:時間を測った回数, v:学習ページで見た回数}
+let dailyRec = {};
+let sessionRec = [];
+let wstatRec = {};
+let sessRun = {};          // 進行中のテスト等（終わるまで保存しない）
+const DEV = (() => {       // この端末のID（セーブデータには入らない。同期のとき端末ごとの記録を区別する）
+  try { let id = localStorage.getItem('leap_device_id'); if (!id) { id = Math.random().toString(36).slice(2, 10); localStorage.setItem('leap_device_id', id); } return id; }
+  catch (e) { return 'x' + Math.random().toString(36).slice(2, 8); }
+})();
 let studyPos = { no: 0, start: 0, end: 0, at: 0 };   // 学習ページで最後に見ていた単語と、そのときの範囲・時刻。セーブデータの studyPos に保存
 let studyNavigated = false;                           // このセッションで、自分で単語を動かしたか（同期で位置を上書きしてよいかの判断用）
 let updRec = {};           // 単語ごとの最終更新時刻(ms)。同期で「新しい方」を残すために使う。セーブデータの upd に保存
@@ -3231,6 +3320,93 @@ function sanitizeMarks(o) {
   return r;
 }
 function sanitizeUpd(o) { return sanitizeMarks(o); }
+function sanitizeDaily(o) {
+  const r = {};
+  if (!o || typeof o !== 'object') return r;
+  for (const k in o) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(k) || !o[k] || typeof o[k] !== 'object') continue;
+    const day = {};
+    for (const dev in o[k]) {
+      const x = o[k][dev];
+      if (x && typeof x === 'object') day[dev] = { a: +x.a || 0, c: +x.c || 0, v: +x.v || 0, ts: +x.ts || 0, tq: +x.tq || 0 };
+    }
+    if (Object.keys(day).length) r[k] = day;
+  }
+  return r;
+}
+function sanitizeSessions(a) {
+  if (!Array.isArray(a)) return [];
+  return a.filter(x => x && typeof x.id === 'string' && x.at > 0 && ['test', 'typing', 'review'].includes(x.mode) && x.n > 0)
+    .map(x => ({ id: x.id, at: +x.at, mode: x.mode, label: String(x.label || '').slice(0, 40), n: +x.n, c: +x.c || 0, sec: +x.sec || 0 }))
+    .sort((x, y) => x.at - y.at).slice(-300);
+}
+function sanitizeWstat(o) {
+  const r = {};
+  if (!o || typeof o !== 'object') return r;
+  for (const k in o) {
+    const n = Number(k), x = o[k];
+    if (!Number.isInteger(n) || n < 1 || n > MAX_NO || !x || typeof x !== 'object') continue;
+    r[n] = { f: +x.f || 0, ms: +x.ms || 0, k: +x.k || 0, v: +x.v || 0 };
+  }
+  return r;
+}
+function dkey(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function dateKey(ts) { return dkey(ts ? new Date(ts) : new Date()); }
+function dailyCur() {
+  const k = dateKey();
+  const day = dailyRec[k] || (dailyRec[k] = {});
+  return day[DEV] || (day[DEV] = { a: 0, c: 0, v: 0, ts: 0, tq: 0 });
+}
+// 解答を1つ記録する（markWrong / markCorrect から呼ばれる）
+function logAnswer(no, ok) {
+  const d = dailyCur(); d.a++; if (ok) d.c++;
+  const w = wstatRec[no] || (wstatRec[no] = { f: 0, ms: 0, k: 0, v: 0 });
+  if (!w.f) w.f = Date.now();
+  let ms = Date.now() - (window.__qStart || Date.now());
+  if (window.__noTime) { ms = 0; window.__noTime = false; }       // スキップは解答時間に含めない
+  if (ms >= 300 && ms <= 60000) { w.ms = Math.round((w.ms * w.k + ms) / (w.k + 1)); w.k++; }   // 長く放置した分は除く
+  const sr = sessRun[state.section];
+  if (sr) { sr.n++; if (ok) sr.c++; }
+}
+// 学習ページで単語を見た（自分で動かしたとき）
+function logView(no) {
+  dailyCur().v++;
+  const w = wstatRec[no] || (wstatRec[no] = { f: 0, ms: 0, k: 0, v: 0 });
+  w.v++;
+  touch(no);
+}
+function beginSession(mode, label) {
+  if (sessRun[mode] && sessRun[mode].n > 0) endSession(mode);
+  sessRun[mode] = { mode, label, n: 0, c: 0, sec: 0, at: Date.now() };
+}
+function endSession(mode) {
+  const sr = sessRun[mode];
+  sessRun[mode] = null;
+  if (!sr || sr.n < 1) return;
+  sessionRec.push({ id: sr.at + '-' + DEV, at: sr.at, mode, label: sr.label, n: sr.n, c: sr.c, sec: sr.sec });
+  if (sessionRec.length > 300) sessionRec = sessionRec.slice(-300);
+  saveStorage();
+}
+// 学習時間：アプリを開いていて、操作が60秒以内に続いている間だけを数える
+let lastActiveAt = Date.now(), pendTs = 0, pendTq = 0;
+function flushTime() {
+  if (!pendTs && !pendTq) return;
+  const d = dailyCur(); d.ts += pendTs; d.tq += pendTq; pendTs = pendTq = 0;
+  const keys = Object.keys(dailyRec).sort();
+  if (keys.length > 400) keys.slice(0, keys.length - 400).forEach(k => delete dailyRec[k]);   // 1年より古い日ごとの記録は整理
+  saveStorage(true);
+}
+['pointerdown', 'keydown', 'touchstart', 'wheel', 'input'].forEach(ev => window.addEventListener(ev, () => { lastActiveAt = Date.now(); }, { passive: true, capture: true }));
+setInterval(() => {
+  if (document.visibilityState !== 'visible' || Date.now() - lastActiveAt > 60000) return;
+  const sec = state.section;
+  if (sec === 'study') pendTs++;
+  else if (QUIZ_SECTIONS.includes(sec) && quizInProgress(sec)) { pendTq++; if (sessRun[sec]) sessRun[sec].sec++; }
+  if (pendTs + pendTq >= 20) flushTime();
+}, 1000);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushTime(); });
+window.addEventListener('pagehide', flushTime);
+
 function sanitizeStudyPos(o) {
   if (!o || typeof o !== 'object') return { no: 0, start: 0, end: 0, at: 0 };
   const no = Number(o.no), at = Number(o.at) || 0;
@@ -3247,6 +3423,7 @@ function recordStudyPos() {
   const sp = studyPos;
   if (sp.no === w.no && sp.start === state.studyStart && sp.end === state.studyEnd) return;
   studyPos = { no: w.no, start: state.studyStart, end: state.studyEnd, at: Date.now() };
+  logView(w.no);
   saveStorage();
 }
 // 記録された位置に、学習ページの範囲と単語を合わせる
@@ -3374,6 +3551,7 @@ function markWrong(no) {
   if (!history[no]) history[no] = {correct:0,total:0};
   history[no].total++;
   lastAnswerAt = Date.now();
+  logAnswer(no, false);
   saveStorage();
 }
 
@@ -3388,6 +3566,7 @@ function markCorrect(no) {
   history[no].total++;
   touch(no);
   lastAnswerAt = Date.now();
+  logAnswer(no, true);
   saveStorage();
 }
 
@@ -3438,11 +3617,12 @@ function currentRanges() {
   return o;
 }
 function currentSlotData() {
-  return { v: 1, history, missRec, marks: markRec, upd: updRec, studyPos, masteryN, masteryAt, ranges: currentRanges(), lastAnswerAt };
+  return { v: 1, history, missRec, marks: markRec, upd: updRec, studyPos, daily: dailyRec, sessions: sessionRec, wstat: wstatRec, masteryN, masteryAt, ranges: currentRanges(), lastAnswerAt };
 }
-function saveStorage() {
+// quiet=true: 時間の記録など、頻繁な保存。端末に書くだけで、同期は別のきっかけ（画面を離れる・次の解答）に任せる
+function saveStorage(quiet) {
   if (slotIndex.active) writeSlotData(slotIndex.active, currentSlotData());
-  scheduleSync('active');
+  if (quiet) { if (syncCfg) syncDirty = true; } else scheduleSync('active');
 }
 // セーブデータの中身を、実際に使う変数(history など)と画面の状態に反映する
 function applySlotData(d) {
@@ -3463,6 +3643,8 @@ function applySlotData(d) {
     window._rangeOpen[p.id] = false;
   });
   studyPos = sanitizeStudyPos(d.studyPos);
+  dailyRec = sanitizeDaily(d.daily); sessionRec = sanitizeSessions(d.sessions); wstatRec = sanitizeWstat(d.wstat);
+  sessRun = {};
   studyNavigated = false;
   state.studyIdx = 0;
   state.studyRevealed = false;
@@ -3746,7 +3928,7 @@ function showSection(name) {
   state.section = name;
   document.querySelectorAll('.section').forEach(el => el.style.display = 'none');
   document.querySelectorAll('.nav-btn').forEach((btn, i) => {
-    const names = ['study','test','typing','review','wordlist','settings'];
+    const names = ['study','test','typing','review','wordlist','record','settings'];
     btn.classList.toggle('active', names[i] === name);
   });
   const sec = document.getElementById('section-' + name);
@@ -3755,6 +3937,7 @@ function showSection(name) {
     // 進行中の問題はそのまま残して、続きから再開する（ページを移動しても中断されない）
     const inp = sec.querySelector('#typing-input, #review-typing-input');
     if (inp && !inp.disabled && !inp.readOnly) setTimeout(() => inp.focus(), 50);
+    window.__qStart = Date.now();     // 戻ってきたところから解答時間を測り直す
     window.scrollTo(0, 0);
   } else {
     renderSection(name);
@@ -3769,6 +3952,7 @@ function quizInProgress(name) {
 // 「中断」ボタン：進行中のテストをやめて、設定画面に戻る
 window.quitQuiz = function() {
   if (!confirm('テストを中断して、設定画面に戻りますか？\n（ここまでの解答は記録されています）')) return;
+  endSession(state.section);      // ここまでの分を、結果の履歴に残す
   renderSection(state.section);
   window.scrollTo(0, 0);
   fitQuizPage();
@@ -3781,6 +3965,7 @@ function renderSection(name) {
     case 'typing': renderTypingSetup(); break;
     case 'review': renderReview(); break;
     case 'wordlist': renderWordList(); break;
+    case 'record': renderRecord(); break;
     case 'settings': renderSettings(); break;
   }
 }
@@ -8732,10 +8917,12 @@ window.startTest = function() {
   state.testQueue = shuffle(pool);
   state.testQIdx = 0; state.testAnswered = false;
   state.testScore = 0; state.testWrong = [];
+  beginSession('test', 'No.' + state.testStart + '〜' + state.testEnd);
   renderTestQuestion();
 };
 
 function renderTestQuestion() {
+  window.__qStart = Date.now();      // 解答時間の計測の開始
   const sec = document.getElementById('section-test');
   const pool = getRange(state.testStart, state.testEnd);
   if (state.testQIdx >= state.testQueue.length) {
@@ -8822,7 +9009,8 @@ function renderTestScore() {
     state.testWrong.map(w => `<div style="padding:6px 0;border-bottom:1px solid #f0f5f2;font-size:14px;"><b>${escHtml(w.word)}</b> — ${w.meanings.map(m=>escHtml(m)).join(' / ')}</div>`).join('') :
     '<div style="color:var(--green);font-weight:700;padding:12px 0;">全問正解！🎉</div>';
 
-  sec.innerHTML = `<div class="score-card">
+  endSession('test');
+    sec.innerHTML = `<div class="score-card">
     <div class="big-score">${pct}%</div>
     <div class="score-label">${state.testScore} / ${total} 正解</div>
     <div class="btn-row" style="justify-content:center">
@@ -8853,10 +9041,12 @@ window.startTyping = function() {
   state.typingQueue = shuffle(pool);
   state.typingQIdx = 0; state.typingAnswered = false;
   state.typingScore = 0; state.typingWrong = [];
+  beginSession('typing', 'No.' + state.typingStart + '〜' + state.typingEnd);
   renderTypingQuestion();
 };
 
 function renderTypingQuestion() {
+  window.__qStart = Date.now();      // 解答時間の計測の開始
   const sec = document.getElementById('section-typing');
   if (state.typingQIdx >= state.typingQueue.length) {
     renderTypingScore();
@@ -8915,6 +9105,7 @@ window.skipTyping = function() {
   if (state.typingAnswered) return;
   const cur = state.typingQueue[state.typingQIdx];
   state.typingAnswered = true;
+  window.__noTime = true;
   markWrong(cur.no);
   state.typingWrong.push(cur);
   const allMeanings = cur.meanings.map(m=>escHtml(m)).join(' / ');
@@ -8946,7 +9137,8 @@ function renderTypingScore() {
   let wrongList = state.typingWrong.length ?
     state.typingWrong.map(w=>`<div style="padding:6px 0;border-bottom:1px solid #f0f5f2;font-size:14px;"><b>${escHtml(w.word)}</b> — ${w.meanings.map(m=>escHtml(m)).join(' / ')}</div>`).join('') :
     '<div style="color:var(--green);font-weight:700;padding:12px 0;">全問正解！🎉</div>';
-  sec.innerHTML = `<div class="score-card">
+  endSession('typing');
+    sec.innerHTML = `<div class="score-card">
     <div class="big-score">${pct}%</div>
     <div class="score-label">${state.typingScore} / ${total} 正解</div>
     <div class="btn-row" style="justify-content:center">
@@ -9036,15 +9228,19 @@ window.startReview = function() {
   // 要復習を先に、続けてそれ以外（克服中・克服済み・マークのみ）。それぞれシャッフル
   state.reviewQueue = [...shuffle(wrongWords.filter(w => statusOf(w.no) === 'review')), ...shuffle(wrongWords.filter(w => statusOf(w.no) !== 'review'))];
   state.reviewQIdx = 0; state.reviewAnswered = false;
+  const RLAB = { review: '要復習', recovering: '克服中', mastered: '克服済み', marked: 'マーク' };
+  beginSession('review', REVIEW_SEL_KEYS.filter(k => reviewSel.has(k)).map(k => RLAB[k]).join('＋'));
   if (state.reviewMode === 'test') renderReviewTestQ();
   else renderReviewTypingQ();
 };
 
 function renderReviewTestQ() {
+  window.__qStart = Date.now();      // 解答時間の計測の開始
   const sec = document.getElementById('section-review');
   const wrongWords = reviewPoolWords();
   if (state.reviewQIdx >= state.reviewQueue.length) {
     const remaining = reviewPoolWords();
+    endSession('review');
     sec.innerHTML = `<div class="score-card">
       <div style="font-size:48px;margin-bottom:12px;">✅</div>
       <div class="big-score" style="font-size:36px;">セッション終了</div>
@@ -9122,9 +9318,11 @@ window.nextReviewTest = function() {
 };
 
 function renderReviewTypingQ() {
+  window.__qStart = Date.now();      // 解答時間の計測の開始
   const sec = document.getElementById('section-review');
   if (state.reviewQIdx >= state.reviewQueue.length) {
     const remaining = reviewPoolWords();
+    endSession('review');
     sec.innerHTML = `<div class="score-card">
       <div style="font-size:48px;margin-bottom:12px;">✅</div>
       <div class="big-score" style="font-size:36px;">セッション終了</div>
@@ -9350,7 +9548,7 @@ function renderSettings() {
         <button type="button" class="dz-btn" onclick="clearMarks()">解除</button>
       </div>
       <div class="dz-row">
-        <div class="dz-text"><b>このセーブデータを全消去</b><span>解答履歴・間違えた記録・マークをすべて消します。</span></div>
+        <div class="dz-text"><b>このセーブデータを全消去</b><span>解答履歴・間違えた記録・マーク・学習位置・単語ごとの解答時間を消します。日ごとの記録とテスト結果の履歴は残ります。</span></div>
         <button type="button" class="dz-btn strong" onclick="resetAll()">全消去</button>
       </div>
       <p class="set-help" style="margin:12px 0 0">どの操作も取り消せません。対象は使用中のセーブデータだけです。</p>
@@ -9367,6 +9565,9 @@ window.exportData = function() {
     missRecords: missRec,         // 間違えた回数・連続正解数・最後に間違えた時刻
     marks: markRec,               // 自分でつけたマーク（番号 → マークした時刻）
     studyPos: studyPos,           // 学習ページで最後に見ていた単語と範囲
+    daily: dailyRec,              // 日ごとの記録（端末別）
+    sessions: sessionRec,         // テスト・タイピング・復習の結果の履歴
+    wstat: wstatRec,              // 単語ごとの追加情報（平均解答時間など）
     masteryN: masteryN,
     ranges: currentRanges(),
     lastAnswerAt: lastAnswerAt,
@@ -9390,7 +9591,7 @@ window.importData = function(input) {
       const hist = (data.history && typeof data.history === 'object') ? data.history : {};
       // 新形式(missRecords)があればそのまま、旧形式(wrongList+history)なら移行して取り込む
       const miss = data.missRecords ? data.missRecords : migrateLegacy(data.wrongList, hist);
-      const d = { v: 1, history: hist, missRec: miss, marks: sanitizeMarks(data.marks), studyPos: sanitizeStudyPos(data.studyPos), masteryN: MASTERY_OPTIONS.includes(data.masteryN) ? data.masteryN : 3,
+      const d = { v: 1, history: hist, missRec: miss, marks: sanitizeMarks(data.marks), studyPos: sanitizeStudyPos(data.studyPos), daily: sanitizeDaily(data.daily), sessions: sanitizeSessions(data.sessions), wstat: sanitizeWstat(data.wstat), masteryN: MASTERY_OPTIONS.includes(data.masteryN) ? data.masteryN : 3,
                   ranges: data.ranges || null, lastAnswerAt: data.lastAnswerAt || 0 };
       const name = String(data.slotName || ('インポート ' + new Date().toISOString().slice(0, 10))).slice(0, SLOT_NAME_MAX);
       const id = createSlot(name, d);
@@ -9442,7 +9643,8 @@ window.clearMarks = function() {
 
 window.resetAll = function() {
   if (!confirm(`セーブデータ「${activeSlotName()}」の記録（解答履歴・間違えた履歴・マーク・学習位置）をすべて消しますか？\nこの操作は取り消せません。`)) return;
-  [history, missRec, markRec].forEach(o => { for (const k in o) touch(k); });
+  [history, missRec, markRec, wstatRec].forEach(o => { for (const k in o) touch(k); });
+  wstatRec = {};
   studyPos = { no: 0, start: 0, end: 0, at: Date.now() };
   missRec = {}; history = {}; markRec = {}; recomputeWrongSet(); saveStorage();
   alert('このセーブデータの記録をすべて消しました');
@@ -9522,16 +9724,17 @@ function normSync(d) {
     marks: sanitizeMarks(d.marks), upd: {},
     masteryN: MASTERY_OPTIONS.includes(d.masteryN) ? d.masteryN : 3,
     masteryAt: d.masteryAt || 0, lastAnswerAt: d.lastAnswerAt || 0, studyPos: sanitizeStudyPos(d.studyPos),
+    daily: sanitizeDaily(d.daily), sessions: sanitizeSessions(d.sessions), wstat: sanitizeWstat(d.wstat),
   };
   const u = sanitizeUpd(d.upd);
-  const nos = new Set([...Object.keys(o.history), ...Object.keys(o.missRec), ...Object.keys(o.marks), ...Object.keys(u)]);
+  const nos = new Set([...Object.keys(o.history), ...Object.keys(o.missRec), ...Object.keys(o.marks), ...Object.keys(o.wstat), ...Object.keys(u)]);
   // upd が無い古い記録は、最後に間違えた時刻やマークの時刻で代用する（最低でも1。無記録の0より新しい扱い）
   nos.forEach(k => { o.upd[k] = u[k] > 0 ? u[k] : Math.max((o.missRec[k] && o.missRec[k].t) || 0, o.marks[k] || 0, 1); });
   return o;
 }
 function mergeSync(a, b) {      // a: この端末  b: リモート
-  const m = { history: {}, missRec: {}, marks: {}, upd: {}, pull: 0, push: 0 };
-  const rec = (d, k) => JSON.stringify([d.history[k] || null, d.missRec[k] || null, d.marks[k] || null]);
+  const m = { history: {}, missRec: {}, marks: {}, wstat: {}, upd: {}, pull: 0, push: 0 };
+  const rec = (d, k) => JSON.stringify([d.history[k] || null, d.missRec[k] || null, d.marks[k] || null, d.wstat[k] || null]);
   const tie = k => {
     const th = x => (x.history[k] && x.history[k].total) || 0, tn = x => (x.missRec[k] && x.missRec[k].n) || 0;
     if (th(a) !== th(b)) return th(a) > th(b) ? 'a' : 'b';
@@ -9547,8 +9750,27 @@ function mergeSync(a, b) {      // a: この端末  b: リモート
     if (s.history[k]) m.history[k] = s.history[k];
     if (s.missRec[k]) m.missRec[k] = s.missRec[k];
     if (s.marks[k]) m.marks[k] = s.marks[k];
+    if (s.wstat[k]) m.wstat[k] = s.wstat[k];
     m.upd[k] = Math.max(ta, tb);
   });
+  // 日ごとの記録：日付×端末ごとに、数字が大きい方（増えるだけの数字なので、大きい方が新しい）
+  const dsum = o => (o.a || 0) + (o.c || 0) + (o.v || 0) + (o.ts || 0) + (o.tq || 0);
+  m.daily = {};
+  new Set([...Object.keys(a.daily), ...Object.keys(b.daily)]).forEach(dt => {
+    const A = a.daily[dt] || {}, B = b.daily[dt] || {}, out = {};
+    new Set([...Object.keys(A), ...Object.keys(B)]).forEach(dev => {
+      const x = A[dev], y = B[dev];
+      if (x && y) { if (dsum(y) > dsum(x)) { out[dev] = y; m.pull++; } else { out[dev] = x; if (dsum(x) > dsum(y)) m.push++; } }
+      else if (x) { out[dev] = x; m.push++; } else { out[dev] = y; m.pull++; }
+    });
+    m.daily[dt] = out;
+  });
+  // テスト等の結果の履歴：idが同じものは同じ記録として、両方をあわせる（新しい300件）
+  const aIds = new Set(a.sessions.map(x => x.id)), bIds = new Set(b.sessions.map(x => x.id));
+  const sm = new Map(); a.sessions.forEach(x => sm.set(x.id, x)); b.sessions.forEach(x => { if (!sm.has(x.id)) sm.set(x.id, x); });
+  m.sessions = [...sm.values()].sort((x, y) => x.at - y.at).slice(-300);
+  if (m.sessions.some(x => !aIds.has(x.id))) m.pull++;
+  if (m.sessions.some(x => !bIds.has(x.id))) m.push++;
   // 克服の条件（連続正解数）は、変更した時刻が新しい方
   if (b.masteryAt > a.masteryAt) { m.masteryN = b.masteryN; m.masteryAt = b.masteryAt; if (a.masteryN !== b.masteryN) m.pull++; }
   else { m.masteryN = a.masteryN; m.masteryAt = a.masteryAt; if (a.masteryAt > b.masteryAt && a.masteryN !== b.masteryN) m.push++; }
@@ -9559,12 +9781,14 @@ function mergeSync(a, b) {      // a: この端末  b: リモート
   return m;
 }
 function syncPayload(m) {
-  return { v: 1, history: m.history, missRec: m.missRec, marks: m.marks, upd: m.upd, studyPos: m.studyPos, masteryN: m.masteryN, masteryAt: m.masteryAt, lastAnswerAt: m.lastAnswerAt, savedAt: Date.now() };
+  return { v: 1, history: m.history, missRec: m.missRec, marks: m.marks, upd: m.upd, studyPos: m.studyPos, daily: m.daily, sessions: m.sessions, wstat: m.wstat, masteryN: m.masteryN, masteryAt: m.masteryAt, lastAnswerAt: m.lastAnswerAt, savedAt: Date.now() };
 }
 function isFreshSlot(id) {
   const d = id === slotIndex.active ? currentSlotData() : (readSlotData(id) || {});
+  // 「まだ何も解いていない」セーブデータか。学習ページで単語を見ただけ（見た数・時間・位置）は、記録とは数えない
+  const answered = Object.values(d.daily || {}).some(day => Object.values(day || {}).some(r => r && r.a > 0));
   return !Object.keys(d.history || {}).length && !Object.keys(d.missRec || {}).length &&
-         !Object.keys(sanitizeMarks(d.marks)).length && !Object.keys(d.upd || {}).length && !(d.lastAnswerAt > 0);
+         !Object.keys(sanitizeMarks(d.marks)).length && !answered && !((d.sessions || []).length) && !(d.lastAnswerAt > 0);
 }
 function syncBackupSlot(run, id, raw) {
   if (!run.backup) run.backup = { at: Date.now(), slots: {} };
@@ -9573,6 +9797,7 @@ function syncBackupSlot(run, id, raw) {
 function applyMerged(id, m, run) {
   if (id === slotIndex.active) {
     history = m.history; missRec = m.missRec; markRec = m.marks; updRec = m.upd;
+    dailyRec = m.daily; sessionRec = m.sessions; wstatRec = m.wstat;
     masteryN = m.masteryN; masteryAt = m.masteryAt; lastAnswerAt = m.lastAnswerAt;
     const prevPosAt = studyPos.at;
     studyPos = m.studyPos;
@@ -9584,7 +9809,7 @@ function applyMerged(id, m, run) {
   } else {
     const cur = readSlotData(id) || {};
     writeSlotData(id, Object.assign({}, cur, { v: 1, history: m.history, missRec: m.missRec, marks: m.marks, upd: m.upd, studyPos: m.studyPos,
-      masteryN: m.masteryN, masteryAt: m.masteryAt, lastAnswerAt: m.lastAnswerAt }));
+      daily: m.daily, sessions: m.sessions, wstat: m.wstat, masteryN: m.masteryN, masteryAt: m.masteryAt, lastAnswerAt: m.lastAnswerAt }));
   }
   run.pulledAny = true;
 }
@@ -9700,7 +9925,7 @@ async function syncNow(mode) {
 function afterSyncRefresh(run) {
   recomputeWrongSet();
   const sec = state.section;
-  if (sec === 'settings' || sec === 'wordlist' || (sec === 'study' && (run.pulledActive || run.structural))) renderSection(sec);
+  if (sec === 'settings' || sec === 'wordlist' || sec === 'record' || (sec === 'study' && (run.pulledActive || run.structural))) renderSection(sec);
 }
 function scheduleSync(mode) {
   if (!syncCfg || syncRunning) { if (syncCfg) syncDirty = true; return; }
@@ -9805,6 +10030,178 @@ function initSync() {
   window.addEventListener('online', () => { if (syncCfg) syncNow('all'); });
   if (syncCfg) setTimeout(() => syncNow('all'), 600);
 }
+
+// ───────────────────────────────────────────
+// 記録ページ（サマリー / 推移 / 範囲別 / 履歴）
+// ───────────────────────────────────────────
+const WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土'];
+function dayNum(k) { const [y, m, d] = k.split('-').map(Number); return Math.round(Date.UTC(y, m - 1, d) / 86400000); }
+function recDays(n) {
+  const out = [], t = new Date();
+  for (let i = n - 1; i >= 0; i--) out.push(dkey(new Date(t.getFullYear(), t.getMonth(), t.getDate() - i)));
+  return out;
+}
+function daySum(k) {
+  const o = { a: 0, c: 0, v: 0, ts: 0, tq: 0 }, day = dailyRec[k];
+  if (day) for (const dev in day) { const r = day[dev]; o.a += r.a || 0; o.c += r.c || 0; o.v += r.v || 0; o.ts += r.ts || 0; o.tq += r.tq || 0; }
+  return o;
+}
+function fmtDur(sec) {
+  sec = Math.round(sec);
+  if (sec < 60) return sec + '秒';
+  const m = Math.floor(sec / 60);
+  if (m < 60) return m + '分' + String(sec % 60).padStart(2, '0') + '秒';
+  return Math.floor(m / 60) + '時間' + String(m % 60).padStart(2, '0') + '分';
+}
+function fmtDurShort(sec) {
+  const m = Math.round(sec / 60);
+  return m < 60 ? m + '分' : Math.floor(m / 60) + '時間' + String(m % 60).padStart(2, '0') + '分';
+}
+function streakInfo() {
+  const act = Object.keys(dailyRec).filter(k => { const s = daySum(k); return s.a > 0 || s.v > 0; }).map(dayNum).sort((x, y) => x - y);
+  let longest = 0, run = 0, prev = null;
+  act.forEach(n => { run = (prev !== null && n === prev + 1) ? run + 1 : 1; longest = Math.max(longest, run); prev = n; });
+  const set = new Set(act), today = dayNum(dateKey());
+  let cur = 0, d = set.has(today) ? today : today - 1;      // 今日まだ学習していなくても、昨日までの連続は途切れない
+  while (set.has(d)) { cur++; d--; }
+  return { cur, longest, total: act.length };
+}
+function recTile(v, unit, label) { return `<div class="rec-tile"><div class="v">${v}<small>${unit}</small></div><div class="l">${label}</div></div>`; }
+
+function recSummaryHtml() {
+  const today = daySum(dateKey()), st = streakInfo(), sc = statusCounts();
+  const answered = Object.keys(history).length, clean = Math.max(0, answered - sc.ever), unans = Math.max(0, MAX_NO - sc.ever - clean);
+  const pct = n => (n / MAX_NO * 100).toFixed(2) + '%';
+  const week = recDays(7).map(k => ({ k, ...daySum(k) }));
+  const wmax = Math.max(10, ...week.map(x => x.a));
+  const wTotal = week.reduce((t, x) => t + x.a, 0), wts = week.reduce((t, x) => t + x.ts, 0), wtq = week.reduce((t, x) => t + x.tq, 0);
+  const bars = week.map((x, i) => `<div class="${i === 6 ? 'tdy' : ''}" title="${x.k}：${x.a}問"><i style="height:${Math.max(x.a ? 6 : 3, x.a / wmax * 100)}%"></i>${i === 6 ? '今日' : WEEKDAYS[dayFromKey(x.k).getDay()]}</div>`).join('');
+  return `<div class="rec-tiles">
+      ${recTile(today.a, '問', '今日の解答')}${recTile(today.a ? Math.round(today.c / today.a * 100) : '—', today.a ? '%' : '', '今日の正答率')}${recTile(st.cur, '日', '連続学習日数')}
+    </div>
+    <div class="rec-card"><h3>単語の状況<small>全${MAX_NO.toLocaleString()}語</small></h3>
+      <div class="rec-stack"><i style="width:${pct(sc.mastered)};background:var(--c-mastered)"></i><i style="width:${pct(sc.recovering)};background:var(--c-recovering)"></i><i style="width:${pct(sc.review)};background:var(--c-review)"></i><i style="width:${pct(clean)};background:#b7dcc5"></i></div>
+      <div class="rec-leg"><span style="--c:var(--c-mastered)">克服済み <b>${sc.mastered}</b></span><span style="--c:var(--c-recovering)">克服中 <b>${sc.recovering}</b></span><span style="--c:var(--c-review)">要復習 <b>${sc.review}</b></span><span style="--c:#b7dcc5">間違いなし <b>${clean}</b></span><span style="--c:var(--c-none)">未解答 <b>${unans.toLocaleString()}</b></span></div></div>
+    <div class="rec-card opt"><h3>今週の解答数<small>合計 ${wTotal}問</small></h3><div class="rec-bars">${bars}</div></div>
+    <div class="rec-card opt"><h3>今週の学習時間<small>合計 ${fmtDurShort(wts + wtq)}</small></h3>
+      <div class="rec-stack thin"><i style="width:${(wts + wtq) ? (wts / (wts + wtq) * 100) : 0}%;background:#9fd0b5"></i><i style="width:${(wts + wtq) ? (wtq / (wts + wtq) * 100) : 0}%;background:var(--primary)"></i></div>
+      <div class="rec-leg"><span style="--c:#9fd0b5">学習ページ <b>${fmtDurShort(wts)}</b></span><span style="--c:var(--primary)">テスト・復習など <b>${fmtDurShort(wtq)}</b></span></div></div>`;
+}
+function dayFromKey(k) { const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d); }
+
+function recTrendHtml() {
+  const span = state.recSpan || 30, days = recDays(span), data = days.map(k => ({ k, ...daySum(k) }));
+  const maxA = Math.max(10, ...data.map(x => x.a)), step = 300 / span, bw = Math.max(2, step * 0.68);
+  const bars = data.map((x, i) => x.a ? `<rect x="${(i * step + (step - bw) / 2).toFixed(1)}" y="${(110 - x.a / maxA * 100).toFixed(1)}" width="${bw.toFixed(1)}" height="${(x.a / maxA * 100).toFixed(1)}" rx="1.5" fill="${i === span - 1 ? '#2d7a4f' : '#9fd0b5'}"><title>${x.k}：${x.a}問（正解${x.c}）</title></rect>` : '').join('');
+  const pts = data.map((x, i) => x.a ? `${(i * step + step / 2).toFixed(1)},${(110 - x.c / x.a * 100).toFixed(1)}` : null).filter(Boolean);
+  const tot = data.reduce((t, x) => ({ a: t.a + x.a, c: t.c + x.c }), { a: 0, c: 0 });
+  const md = k => { const d = dayFromKey(k); return (d.getMonth() + 1) + '/' + d.getDate(); };
+  const st = streakInfo();
+  // 学習した日（直近26週）
+  const t = new Date(), mon = new Date(t.getFullYear(), t.getMonth(), t.getDate() - ((t.getDay() + 6) % 7));
+  let cells = '';
+  for (let c = 0; c < 26; c++) for (let r = 0; r < 7; r++) {
+    const d = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() - (25 - c) * 7 + r);
+    if (d > t) { cells += '<i class="fut"></i>'; continue; }
+    const s = daySum(dkey(d)), n = s.a + s.v, lv = n === 0 ? 0 : n < 10 ? 1 : n < 30 ? 2 : n < 60 ? 3 : 4;
+    cells += `<i class="l${lv}" title="${dkey(d)}：${s.a}問・${s.v}語を見た"></i>`;
+  }
+  const chips = [7, 30, 90].map(n => `<button type="button" class="${span === n ? 'on' : ''}" onclick="setRecSpan(${n})">${n}日</button>`).join('');
+  return `<div class="rec-chips">${chips}</div>
+    <div class="rec-card grow"><h3>解答数と正答率<small>${tot.a ? '期間の正答率 ' + Math.round(tot.c / tot.a * 100) + '%' : 'まだ記録がありません'}</small></h3>
+      <div class="rec-chart"><svg viewBox="0 0 300 120" preserveAspectRatio="none" aria-hidden="true"><line x1="0" y1="110" x2="300" y2="110" stroke="#e1ebe5" stroke-width="1"/>${bars}${pts.length > 1 ? `<polyline fill="none" stroke="#c58a12" stroke-width="1.8" stroke-linejoin="round" vector-effect="non-scaling-stroke" points="${pts.join(' ')}"/>` : ''}</svg></div>
+      <div class="rec-axis"><span>${md(days[0])}</span><span>最大 ${maxA}問/日</span><span>${md(days[span - 1])}</span></div>
+      <div class="rec-leg"><span style="--c:#9fd0b5">解答数</span><span style="--c:var(--c-recovering)">正答率</span></div></div>
+    <div class="rec-card opt" style="order:2"><h3>学習した日<small>濃いほど多く解いた日</small></h3><div class="rec-heat">${cells}</div></div>
+    <div class="rec-tiles opt" style="order:3">${recTile(st.cur, '日', '連続学習')}${recTile(st.longest, '日', '最長記録')}${recTile(st.total, '日', '学習した日数')}</div>`;
+}
+
+function recRangeHtml() {
+  const rows = [];
+  for (let s0 = 1; s0 <= MAX_NO; s0 += 100) {
+    const e0 = Math.min(s0 + 99, MAX_NO), n = e0 - s0 + 1;
+    let m = 0, r = 0, v = 0, cl = 0, ans = 0;
+    for (let no = s0; no <= e0; no++) {
+      const st = statusOf(no);
+      if (st === 'mastered') m++; else if (st === 'recovering') v++; else if (st === 'review') r++;
+      else if (history[no]) cl++;
+      if (history[no]) ans++;
+    }
+    const w = x => (x / n * 100).toFixed(1) + '%';
+    rows.push(`<div class="rec-row" title="解答済み ${ans}/${n}語"><span>${s0}–${e0}</span><div class="rec-stack"><i style="width:${w(m)};background:var(--c-mastered)"></i><i style="width:${w(v)};background:var(--c-recovering)"></i><i style="width:${w(r)};background:var(--c-review)"></i><i style="width:${w(cl)};background:#b7dcc5"></i></div><em>${Math.round(ans / n * 100)}%</em></div>`);
+  }
+  const mode = state.recRank || 'miss';
+  let list;
+  if (mode === 'miss') {
+    list = Object.keys(missRec).map(Number).filter(no => missRec[no].n > 0).sort((a, b) => missRec[b].n - missRec[a].n || missRec[b].t - missRec[a].t).slice(0, 5)
+      .map(no => ({ no, sub: `✕${missRec[no].n}` + (wstatRec[no] && wstatRec[no].k ? `・平均 ${(wstatRec[no].ms / 1000).toFixed(1)}秒` : '') }));
+  } else {
+    list = Object.keys(wstatRec).map(Number).filter(no => wstatRec[no].k >= 2).sort((a, b) => wstatRec[b].ms - wstatRec[a].ms).slice(0, 5)
+      .map(no => ({ no, sub: `平均 ${(wstatRec[no].ms / 1000).toFixed(1)}秒・${wstatRec[no].k}回` }));
+  }
+  const word = no => WORDS[no - 1] && WORDS[no - 1].no === no ? WORDS[no - 1].word : (WORDS.find(w => w.no === no) || {}).word || '';
+  const rank = list.length ? list.map((x, i) => `<div><span class="n">${i + 1}</span><b>${escHtml(word(x.no))}</b><span>${x.sub}</span></div>`).join('')
+    : `<div class="rec-empty">${mode === 'miss' ? 'まだ間違えた単語がありません' : '解答時間の記録がたまると、ここに表示されます'}</div>`;
+  return `<div class="rec-card grow2"><h3>100語ごとの達成度<small>数字＝解答済みの割合</small></h3>
+      <div class="rec-rows">${rows.join('')}</div>
+      <div class="rec-leg" style="margin-top:8px"><span style="--c:var(--c-mastered)">克服済み</span><span style="--c:var(--c-recovering)">克服中</span><span style="--c:var(--c-review)">要復習</span><span style="--c:#b7dcc5">間違いなし</span></div></div>
+    <div class="rec-card opt"><h3>苦手ランキング<span class="rec-mini"><button type="button" class="${mode === 'miss' ? 'on' : ''}" onclick="setRecRank('miss')">間違い</button><button type="button" class="${mode === 'slow' ? 'on' : ''}" onclick="setRecRank('slow')">遅い</button></span></h3><div class="rec-rank">${rank}</div></div>`;
+}
+
+function recHistoryHtml() {
+  const L = sessionRec.slice().reverse(), todayK = dateKey(), yK = dkey(new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate() - 1));
+  const names = { test: '4択テスト', typing: 'タイピング', review: '復習' };
+  const rows = L.map(s => {
+    const k = dateKey(s.at), d = new Date(s.at), hm = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    const dl = k === todayK ? '今日' : k === yK ? '昨日' : (d.getMonth() + 1) + '/' + d.getDate();
+    return `<div class="rec-sess"><span class="md">${icon(s.mode)}</span><b>${names[s.mode]}</b><span class="sc">${s.c}/${s.n}<small>${Math.round(s.c / s.n * 100)}%</small></span><small>${dl} ${hm} ・ ${escHtml(s.label)} ・ ${fmtDur(s.sec)}</small></div>`;
+  }).join('');
+  return `<div class="rec-card list"><h3>最近の結果<small>${L.length ? '全' + L.length + '回' : ''}</small></h3>
+    <div class="rec-scroll">${rows || '<div class="rec-empty">まだ記録がありません。<br>テスト・タイピング・復習を最後まで解く（または中断する）と、結果がここに残ります。</div>'}</div></div>`;
+}
+
+function renderRecord() {
+  flushTime();
+  const sec = document.getElementById('section-record');
+  const tab = state.recTab || 'summary';
+  const tabs = [['summary', 'サマリー'], ['trend', '推移'], ['range', '範囲別'], ['history', '履歴']];
+  const body = { summary: recSummaryHtml, trend: recTrendHtml, range: recRangeHtml, history: recHistoryHtml }[tab]();
+  sec.innerHTML = `<div class="rec-wrap" id="rec-wrap">
+    <h2 style="font-size:18px;font-weight:800;"><span class="h-ico">${icon('chart')}</span>記録</h2>
+    <div class="seg rec-seg" role="tablist">${tabs.map(([k, l]) => `<button type="button" class="${tab === k ? 'active' : ''}" onclick="setRecTab('${k}')">${l}</button>`).join('')}</div>
+    <div class="rec-pane" id="rec-pane">${body}</div></div>`;
+  fitRecord();
+}
+window.setRecTab = function(k) { state.recTab = k; renderRecord(); };
+window.setRecSpan = function(n) { state.recSpan = n; renderRecord(); };
+window.setRecRank = function(m) { state.recRank = m; renderRecord(); };
+// ページ全体がスクロールしないように、枠の高さを画面に合わせ、入りきらないときは下の項目から隠す
+function fitRecord() {
+  const wrap = document.getElementById('rec-wrap');
+  if (!wrap) return;
+  window.scrollTo(0, 0);
+  const topV = wrap.getBoundingClientRect().top;
+  let h;
+  if (isMobile()) {
+    const nav = document.getElementById('nav'), navTop = nav ? nav.getBoundingClientRect().top : window.innerHeight;
+    const padB = parseFloat(getComputedStyle(document.getElementById('content')).paddingBottom) || 0;
+    h = Math.min(navTop - 8, window.innerHeight - padB) - topV;
+  } else {
+    h = Math.min(window.innerHeight - topV - 24, 760);
+  }
+  wrap.style.height = Math.max(240, Math.floor(h)) + 'px';
+  const pane = document.getElementById('rec-pane');
+  measureNoTransition(() => {
+    pane.classList.remove('compact');
+    pane.querySelectorAll('.opt').forEach(e => { e.style.display = ''; });
+    if (pane.scrollHeight > pane.clientHeight + 1) pane.classList.add('compact');
+    for (const e of [...pane.querySelectorAll('.opt')].reverse()) {
+      if (pane.scrollHeight <= pane.clientHeight + 1) break;
+      e.style.display = 'none';
+    }
+  });
+}
+window.addEventListener('resize', () => { if (state && state.section === 'record') fitRecord(); });
 
 // ── KEYBOARD SHORTCUTS ──
 /*
