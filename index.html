@@ -774,11 +774,11 @@ input:focus { border-color: var(--primary); }
 .stat-tiles.four { grid-template-columns: repeat(4, 1fr); margin-bottom: 0; }
 .word-table .td-word .mark-btn.sm { opacity: .55; }
 .word-table .td-word .mark-btn.sm.on, .word-table .td-word .mark-btn.sm:hover { opacity: 1; }
-.study-detail[data-density="1"] .mark-btn { width: 34px; height: 34px; }
-.study-detail[data-density="2"] .mark-btn { width: 30px; height: 30px; margin-top: 0; }
-.study-detail[data-density="3"] .mark-btn { width: 26px; height: 26px; margin-top: 0; }
-.study-detail[data-density="3"] .mark-btn .ico, .study-detail[data-density="4"] .mark-btn .ico { width: 14px; height: 14px; }
-.study-detail[data-density="4"] .mark-btn { width: 24px; height: 24px; margin-top: 0; }
+.study-detail[data-density="1"] .word-head .mark-btn { width: 34px; height: 34px; }
+.study-detail[data-density="2"] .word-head .mark-btn { width: 30px; height: 30px; margin-top: 0; }
+.study-detail[data-density="3"] .word-head .mark-btn { width: 26px; height: 26px; margin-top: 0; }
+.study-detail[data-density="3"] .word-head .mark-btn .ico, .study-detail[data-density="4"] .word-head .mark-btn .ico { width: 14px; height: 14px; }
+.study-detail[data-density="4"] .word-head .mark-btn { width: 24px; height: 24px; margin-top: 0; }
 @media (max-width: 640px) {
   .stat-tiles.four { grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6px; }
   .stat-tiles.four .stat-tile { padding: 9px 8px 8px; }
@@ -903,6 +903,30 @@ html.no-trans *, html.no-trans *::before, html.no-trans *::after { transition: n
 }
 @media (max-width: 360px) {
   #nav .nav-btn { font-size: 8.5px; }
+}
+
+/* ── 学習：★の位置（スマホは下の操作列、PCは単語の右） ── */
+.mark-btn { -webkit-tap-highlight-color: transparent; }
+.study-nav-row .mark-btn { display: none; }
+@media (max-width: 640px) {
+  .word-head .mark-btn { display: none; }
+  .study-nav-row .mark-btn { display: grid; flex: none; width: 60px; height: auto; align-self: stretch; padding: 0; margin: 0; border-radius: 12px; border-width: 1.5px; }
+  .study-nav-row .mark-btn .ico { width: 26px; height: 26px; }
+  .study-nav-row .mark-btn:active { transform: scale(0.96); }
+}
+
+/* ── マークしたことの知らせ（キーで切り替えたとき） ── */
+#mark-toast { position: fixed; top: 14px; left: 50%; transform: translate(-50%, -12px); z-index: 400; display: flex; align-items: center; gap: 7px;
+  padding: 8px 16px; border-radius: 999px; background: rgba(26,46,34,0.92); color: #fff; font-size: 13px; font-weight: 700;
+  opacity: 0; pointer-events: none; transition: opacity .18s, transform .18s; box-shadow: 0 4px 14px rgba(0,0,0,.2); }
+#mark-toast.show { opacity: 1; transform: translate(-50%, 0); }
+@media (min-width: 641px) { #mark-toast { top: 66px; } }   /* PCは上にナビのタブがあるので、その下に出す */
+#mark-toast .on { display: inline-flex; color: #f2c14e; }
+#mark-toast .on .ico { width: 15px; height: 15px; fill: currentColor; }
+
+/* ── 学習（スマホ）：縦のスクロールはブラウザに任せ、横のスライドは単語の移動に使う ── */
+@media (max-width: 640px) {
+  .study-detail { touch-action: pan-y; }
 }
 </style>
 </head>
@@ -3483,7 +3507,32 @@ function icon(name) {
 // ★マークのボタン（学習・一覧・復習の結果で共通）。cls に 'sm' を渡すと小さい版
 function markBtnHtml(no, cls) {
   const on = !!markRec[no];
-  return `<button type="button" class="mark-btn${on ? ' on' : ''}${cls ? ' ' + cls : ''}" data-mark-no="${no}" onclick="toggleMark(${no}); this.blur();" aria-pressed="${on}" aria-label="マーク" title="マーク（Mキー）">${icon('star')}</button>`;
+  return `<button type="button" class="mark-btn${on ? ' on' : ''}${cls ? ' ' + cls : ''}" data-mark-no="${no}" onclick="toggleMark(${no}); this.blur();" aria-pressed="${on}" aria-label="マーク" title="マーク（M キー / ↑ キー）">${icon('star')}</button>`;
+}
+// テスト・タイピング・復習：今出題している単語のマークを、キーで切り替える
+function currentQuizWord() {
+  const sec = state.section;
+  if (!quizInProgress(sec)) return null;
+  const q = sec === 'test' ? state.testQueue[state.testQIdx]
+          : sec === 'typing' ? state.typingQueue[state.typingQIdx]
+          : state.reviewQueue[state.reviewQIdx];
+  return q || null;
+}
+function markCurrentQuizWord() {
+  const w = currentQuizWord();
+  if (!w) return false;
+  toggleMark(w.no);
+  showMarkToast(!!markRec[w.no]);     // 回答前は★が画面にないので、切り替わったことを知らせる（単語は答えになるので出さない）
+  return true;
+}
+let markToastTimer = null;
+function showMarkToast(on) {
+  let t = document.getElementById('mark-toast');
+  if (!t) { t = document.createElement('div'); t.id = 'mark-toast'; t.setAttribute('role', 'status'); document.body.appendChild(t); }
+  t.innerHTML = on ? `<span class="on">${icon('star')}</span>マークしました` : 'マークを外しました';
+  t.classList.add('show');
+  clearTimeout(markToastTimer);
+  markToastTimer = setTimeout(() => t.classList.remove('show'), 1300);
 }
 window.toggleMark = function(no) {
   no = Number(no);
@@ -8770,6 +8819,7 @@ function renderStudy() {
       </div>
       <div class="study-nav-row">
         <button class="btn-secondary" onclick="studyPrev()">← 前へ</button>
+        ${markBtnHtml(cur.no, 'nav')}
         <button id="study-main-btn" class="next-btn" style="flex:1;margin-top:0" onclick="studyAdvance()">${covered ? '意味を見る' : '次へ →'}</button>
       </div>
     </div>
@@ -10203,9 +10253,70 @@ function fitRecord() {
 }
 window.addEventListener('resize', () => { if (state && state.section === 'record') fitRecord(); });
 
+// ───────────────────────────────────────────
+// 学習ページ（スマホ）：左右にスライドして単語を移動する
+//  左へスライド＝次の単語 / 右へスライド＝前の単語。指に内容が追従し、離すと次の単語が横から入る。
+//  ボタン・入力欄・範囲指定の操作や、縦のスクロールとは区別する。意味が隠れているときも、そのまま単語だけ移動する。
+// ───────────────────────────────────────────
+(function initStudySwipe() {
+  const sec = document.getElementById('section-study');
+  if (!sec) return;
+  let t = null;       // 進行中のスライド {x, y, at, drag, body}
+  const active = () => isMobile() && state.section === 'study' && state.studyTab === 'detail';
+  const total = () => getRange(state.studyStart, state.studyEnd).length;
+  const canMove = dir => dir > 0 ? state.studyIdx < total() - 1 : state.studyIdx > 0;
+  const reset = (body, ms) => {
+    body.style.transition = `transform ${ms}ms ease-out, opacity ${ms}ms ease-out`;
+    body.style.transform = ''; body.style.opacity = '';
+    setTimeout(() => { body.style.transition = ''; body.style.willChange = ''; }, ms + 30);
+  };
+  sec.addEventListener('touchstart', e => {
+    t = null;
+    if (!active() || e.touches.length !== 1) return;
+    // 下の操作列と範囲指定の欄、入力欄は対象外。内容エリアの中のボタン（発音・意味を隠す・★）の上から始めても、指が動いたらタップにはならないので、スライドとして扱う
+    if (e.target.closest('input, textarea, a, .range-bar, .study-nav-row')) return;
+    const det = e.target.closest('.study-detail'), body = det && det.querySelector('.study-body');
+    if (!body) return;
+    const p = e.touches[0];
+    t = { x: p.clientX, y: p.clientY, at: Date.now(), drag: false, body };
+  }, { passive: true });
+  sec.addEventListener('touchmove', e => {
+    if (!t || e.touches.length !== 1) return;
+    const p = e.touches[0], dx = p.clientX - t.x, dy = p.clientY - t.y;
+    if (!t.drag) {
+      if (Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy) * 1.3) { t.drag = true; t.body.style.willChange = 'transform'; }
+      else { if (Math.abs(dy) > 12) t = null; return; }       // 縦に動かしたら、スライドとは扱わない
+    }
+    const dir = dx < 0 ? 1 : -1, mv = dx * (canMove(dir) ? 0.7 : 0.2);      // 端の単語では、動きを重くして「これ以上ない」と伝える
+    t.body.style.transition = 'none';
+    t.body.style.transform = `translateX(${mv}px)`;
+    t.body.style.opacity = String(1 - Math.min(Math.abs(mv) / 320, 0.45));
+  }, { passive: true });
+  const end = e => {
+    if (!t) return;
+    const s = t; t = null;
+    if (!s.drag) return;
+    const p = (e.changedTouches && e.changedTouches[0]) || { clientX: s.x }, dx = p.clientX - s.x, dt = Math.max(1, Date.now() - s.at);
+    const dir = dx < 0 ? 1 : -1;
+    const go = e.type === 'touchend' && (Math.abs(dx) >= 70 || (Math.abs(dx) >= 35 && Math.abs(dx) / dt > 0.5)) && canMove(dir);   // 距離が十分、または素早いはじき
+    if (!go) { reset(s.body, 200); return; }
+    s.body.style.transition = 'transform .11s ease-in, opacity .11s ease-in';
+    s.body.style.transform = `translateX(${dir > 0 ? -70 : 70}px)`; s.body.style.opacity = '0';
+    setTimeout(() => {
+      if (!active()) return;
+      if (dir > 0) studyNext(); else studyPrev();
+      const nb = document.querySelector('#section-study .study-body');
+      if (nb && nb.animate) nb.animate([{ transform: `translateX(${dir > 0 ? 60 : -60}px)`, opacity: 0 }, { transform: 'translateX(0)', opacity: 1 }], { duration: 190, easing: 'ease-out' });
+    }, 110);
+  };
+  sec.addEventListener('touchend', end, { passive: true });
+  sec.addEventListener('touchcancel', end, { passive: true });
+})();
+
 // ── KEYBOARD SHORTCUTS ──
 /*
-  Study   : →/Space/Enter=意味を表示(隠しモード時)→次へ  ←=前へ  M=マーク
+  Study   : →/Space/Enter=意味を表示(隠しモード時)→次へ  ←=前へ  M/↑=マーク
+  Quiz    : テスト・タイピング・復習の出題中も M/↑=マーク（タイピング入力中は ↑ のみ）
   Test    : 1-4=選択肢選択(回答前)  Enter/Space=次へ(回答後)
   Typing  : Enter=送信(既存・input内)  Enter/Space=次へ(回答後・input外)
   Review  : テスト/タイピングと同様
@@ -10229,12 +10340,18 @@ document.addEventListener('keydown', function(e) {
     } else if (key === 'ArrowLeft') {
       e.preventDefault();
       studyPrev();
-    } else if (key === 'm' || key === 'M') {
+    } else if ((key === 'm' || key === 'M' || key === 'ArrowUp') && !e.repeat) {     // マーク：M または ↑
       e.preventDefault();
       const w = getRange(state.studyStart, state.studyEnd)[state.studyIdx];
       if (w) toggleMark(w.no);
     }
     return;
+  }
+
+  // ── テスト・タイピング・復習：マークのキー ──
+  // 4択では M または ↑。タイピングの入力中は、M は文字として入力されるので、↑ だけをマークに使う
+  if (QUIZ_SECTIONS.includes(sec) && !e.repeat && (key === 'ArrowUp' || ((key === 'm' || key === 'M') && !inInput && !e.ctrlKey && !e.metaKey && !e.altKey))) {
+    if (markCurrentQuizWord()) { e.preventDefault(); return; }
   }
 
   // ── テストモード ──
