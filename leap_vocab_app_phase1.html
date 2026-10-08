@@ -964,6 +964,70 @@ html.no-trans *, html.no-trans *::before, html.no-trans *::after { transition: n
   .range-bar input[type=number] { font-size:16px; }
 }
 
+
+/* 学習UX B案：今日／手動。単一HTML・既存の配色とナビを維持。 */
+.learn-home { max-width:540px; margin:auto; }
+.learn-home h2 { font-size:18px; margin:0 0 12px; display:flex; gap:8px; align-items:center; }
+.learn-home .learn-today { margin:12px 0; }
+.learn-head { display:flex; justify-content:space-between; align-items:baseline; }
+.learn-head strong { font-size:30px; color:var(--primary-dark); }
+.learn-head small { font-size:13px; margin-left:4px; }
+.learn-muted,.learn-footer { font-size:12px; color:var(--muted); line-height:1.5; }
+.learn-footer { margin:14px 0; }
+.learn-actions,.learn-tools,.learn-feedback-actions { display:flex; flex-wrap:wrap; gap:6px; margin:8px 0; }
+.learn-tools .btn-secondary,.learn-feedback-actions .btn-secondary { padding:5px 8px; font-size:12px; }
+.learn-actions>.btn-secondary { flex:1; }
+.learn-answer { line-height:1.6; text-align:center; font-size:15px; margin:10px 0; }
+.learn-answer>b { display:block; font-size:22px; }
+.learn-grades { display:grid; grid-template-columns:1fr 1.25fr 1fr; gap:6px; }
+.learn-grades button { padding:12px 6px; font-size:13px; }
+.learn-question .quiz-question { overflow-wrap:anywhere; }
+.learn-question #learn-input { font-size:17px; }
+.learn-personal { font-size:12px; color:var(--muted); margin:6px 0; max-height:3em; overflow:hidden; overflow-wrap:anywhere; }
+.learn-word-btn { background:transparent; padding:2px; color:var(--primary-dark); font-weight:700; text-align:left; }
+.learn-goals { display:flex; flex-wrap:wrap; gap:12px; margin:10px 0; }
+.learn-goals label { display:flex; align-items:center; gap:6px; font-size:14px; }
+.learn-goals select,.learn-goals input { font:inherit; font-size:16px; padding:8px; width:auto; max-width:180px; }
+.learn-goals input[type=number] { width:60px; }
+.learn-metrics { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; text-align:center; margin:6px 0; }
+.learn-metrics>button,.learn-metrics>div { background:var(--primary-light); padding:8px 3px; border-radius:8px; color:var(--primary-dark); }
+.learn-metrics b { display:block; font-size:23px; }
+.learn-metrics span { font-size:11px; }
+.learn-score .learn-muted { margin-bottom:10px; }
+.learn-home[data-learn-dense="1"] .data-section,.learn-home[data-learn-dense="2"] .data-section,.learn-home[data-learn-dense="3"] .data-section,.learn-home[data-learn-dense="4"] .data-section { padding:10px; margin:8px 0; }
+.learn-home[data-learn-dense="2"] .learn-footer,.learn-home[data-learn-dense="3"] .learn-footer,.learn-home[data-learn-dense="4"] .learn-footer { margin:8px 0; }
+.learn-home[data-learn-dense="3"] .btn-primary,.learn-home[data-learn-dense="4"] .btn-primary { padding:10px; }
+.learn-question[data-learn-dense="2"] .quiz-question,.learn-question[data-learn-dense="3"] .quiz-question,.learn-question[data-learn-dense="4"] .quiz-question { font-size:24px; margin:10px 0; }
+.learn-question[data-learn-dense="3"] .learn-answer,.learn-question[data-learn-dense="4"] .learn-answer { font-size:13px; line-height:1.4; margin:6px 0; }
+.learn-question[data-learn-dense="4"] .btn-secondary { padding:8px 5px; font-size:12px; }
+.learn-question[data-learn-dense="4"] .quiz-question { font-size:18px; line-height:1.35; margin:6px 0; }
+.learn-question[data-learn-dense="4"] .learn-grades button { padding:8px 4px; font-size:12px; }
+.section[data-learn-setup="yes"][data-learn-dense="1"] .mode-option,
+.section[data-learn-setup="yes"][data-learn-dense="2"] .mode-option,
+.section[data-learn-setup="yes"][data-learn-dense="3"] .mode-option,
+.section[data-learn-setup="yes"][data-learn-dense="4"] .mode-option { padding:10px; }
+.section[data-learn-setup="yes"][data-learn-dense="2"] .rv-explain,
+.section[data-learn-setup="yes"][data-learn-dense="3"] .rv-explain,
+.section[data-learn-setup="yes"][data-learn-dense="4"] .rv-explain { display:none; }
+.section[data-learn-setup="yes"][data-learn-dense="3"] .data-section,
+.section[data-learn-setup="yes"][data-learn-dense="4"] .data-section { padding:8px; margin-bottom:8px !important; }
+.section[data-learn-setup="yes"][data-learn-dense="4"] .mode-icon { display:none; }
+.section[data-learn-setup="yes"][data-learn-dense="4"] .btn-primary { padding:9px; }
+.section[data-learn-setup="yes"][data-learn-dense="4"] .filter-btn { padding:6px 8px; }
+.section[data-learn-setup="yes"][data-learn-dense="4"] h2 { margin-bottom:8px !important; }
+#section-wordlist .mark-btn.sm { min-width:30px; min-height:30px; }
+@media(max-width:640px) {
+ .learn-home .learn-tabs { margin:0 0 8px; }
+ .learn-home .ux-count { margin:8px 0; }
+ .learn-home>.btn-secondary { width:100%; }
+ .learn-home .learn-actions { margin:8px 0; }
+ .learn-tools { gap:4px; }
+ .learn-tools .btn-secondary { padding:5px 6px; font-size:11px; }
+ .learn-question .quiz-question { font-size:24px; }
+ .learn-purpose { margin:8px 0; }
+ .learn-purpose button { padding:7px 10px; }
+}
+
 </style>
 </head>
 <body>
@@ -3427,13 +3491,13 @@ function logAnswer(no, ok) {
   if (ms >= 300 && ms <= 60000) { w.ms = Math.round((w.ms * w.k + ms) / (w.k + 1)); w.k++; }   // 長く放置した分は除く
   const sr = sessRun[state.section];
   if (sr) { sr.n++; if (ok) sr.c++; }
+  learnRecordObjective(no,ok);
 }
 // 学習ページで単語を見た（自分で動かしたとき）
 function logView(no) {
   dailyCur().v++;
   const w = wstatRec[no] || (wstatRec[no] = { f: 0, ms: 0, k: 0, v: 0 });
   w.v++;
-  touch(no);
 }
 function beginSession(mode, label) {
   if (sessRun[mode] && sessRun[mode].n > 0) endSession(mode);
@@ -3443,7 +3507,8 @@ function endSession(mode) {
   const sr = sessRun[mode];
   sessRun[mode] = null;
   if (!sr || sr.n < 1) return;
-  sessionRec.push({ id: sr.at + '-' + DEV, at: sr.at, mode, label: sr.label, n: sr.n, c: sr.c, sec: sr.sec });
+  let sessionId=sr.at+'-'+DEV;let suffix=0;while(sessionRec.some(s=>s.id===sessionId))sessionId=sr.at+'-'+DEV+'-'+(++suffix);
+  sessionRec.push({ id: sessionId, at: sr.at, mode, label: sr.label, n: sr.n, c: sr.c, sec: sr.sec });
   if (sessionRec.length > 300) sessionRec = sessionRec.slice(-300);
   saveStorage();
 }
@@ -3702,16 +3767,19 @@ function currentRanges() {
   return o;
 }
 function currentSlotData() {
-  return { v: 1, history, missRec, marks: markRec, upd: updRec, studyPos, daily: dailyRec, sessions: sessionRec, wstat: wstatRec, masteryN, masteryAt, ranges: currentRanges(), lastAnswerAt };
+  return Object.assign({}, slotExtras, { v: 1, history, missRec, marks: markRec, upd: updRec, studyPos, daily: dailyRec, sessions: sessionRec, wstat: wstatRec, masteryN, masteryAt, ranges: currentRanges(), lastAnswerAt, learning });
 }
 // quiet=true: 時間の記録など、頻繁な保存。端末に書くだけで、同期は別のきっかけ（画面を離れる・次の解答）に任せる
 function saveStorage(quiet) {
-  if (slotIndex.active) writeSlotData(slotIndex.active, currentSlotData());
+  if (slotIndex.active && !writeSlotData(slotIndex.active, currentSlotData())) { if(!quiet) alert('保存できませんでした。設定からエクスポートして記録を保管してください。'); return false; }
   if (quiet) { if (syncCfg) syncDirty = true; } else scheduleSync('active');
 }
 // セーブデータの中身を、実際に使う変数(history など)と画面の状態に反映する
 function applySlotData(d) {
   d = d || {};
+  slotExtras=learnExtra(d);learning=sanitizeLearning(d.learning);learnRun=null;
+  for(const k of Object.keys(uxRuns))uxRuns[k]=null;
+  uxOptions.review=learning.goals.review;
   history = (d.history && typeof d.history === 'object') ? d.history : {};
   missRec = (d.missRec && typeof d.missRec === 'object') ? d.missRec : {};
   markRec = sanitizeMarks(d.marks);   // 古いセーブデータには marks が無い → マークなし
@@ -3969,6 +4037,7 @@ function shuffle(arr) {
 const MEANING_WEIGHT_POWER = 2;   // 大きいほど1つ目に偏る（1=緩やか、3=かなり偏る）
 function randMeaning(w) {
   const ms = w.meanings;
+  const practiced=learnPickMeaning(w);if(practiced!==null)return practiced;
   if (ms.length <= 1) return ms[0];
   const ws = ms.map((_, i) => 1 / Math.pow(i + 1, MEANING_WEIGHT_POWER));
   let r = Math.random() * ws.reduce((a, b) => a + b, 0);
@@ -8870,6 +8939,7 @@ function renderStudy() {
         <div class="reveal-sheet" role="button" tabindex="0" aria-label="タップして意味を表示" onclick="studyReveal()">${icon('eye')}タップして意味を表示</div>
       </div>
       ${exHtml}
+      ${learnNoteHtml(cur.no)}${learnStudyTools(cur)}
       </div>
       <div class="study-nav-row">
         <button class="btn-secondary" onclick="studyPrev()">← 前へ</button>
@@ -9046,6 +9116,7 @@ WORDS.forEach(w=>w.meanings.forEach(m=>{if(!uxMeaningIndex.has(m))uxMeaningIndex
 function uxTypingPrompt(kind,w,idx) {
   const q=uxQuestion(kind,w,idx), other=uxMeaningIndex.get(q.meaning)||[];
   // 同じ訳がある問題だけ指定を補う。助けありの練習として表示する。
+  if(other.length>1)q.hint=true;
   const clue=other.length>1 ? `<div class="quiz-type-label ux-clue">指定語 No.${w.no} · 先頭 ${escHtml(w.word.slice(0,1))} · ${w.word.length}文字（ヒントあり）</div>` : '';
   return `<div class="quiz-question">${escHtml(q.meaning)}</div>${clue}`;
 }
@@ -9086,6 +9157,7 @@ function uxScore(kind,wrong,score,total,again,back,extra) {
   sec.innerHTML=`<div class="score-card ux-score"><div class="big-score">${total?Math.round(score/total*100):0}%</div>
     <div class="score-label">${score} / ${total} 正解${run&&run.retry?' · 解き直し':''}</div>
     ${extra||''}<div class="btn-row">
+    ${run&&run.uncertain&&run.uncertain.length?learnButton('間違い・あやふや',`learnRetryObjective('${kind}')`):''}
     ${wrong.length?`<button class="btn-secondary" onclick="retryUxWrong('${kind}')">間違いだけ (${wrong.length}語)</button>`:''}
     <button class="btn-secondary" onclick="${again}">${kind==='review'?'続ける':'もう一度'}</button>
     <button class="btn-secondary" onclick="${back}">設定に戻る</button></div>
@@ -9113,6 +9185,7 @@ function renderTestSetup() {
   }).join('');
   sec.innerHTML = `<h2 style="font-size:18px;font-weight:800;margin-bottom:14px;"><span class="h-ico">${icon('test')}</span>テストモード</h2>
     ${rangeWidget('test', state.testStart, state.testEnd)}
+    ${learnPurposeHtml()}
     <div style="margin-bottom:16px;">
       <div style="font-size:13px;font-weight:600;color:var(--muted);margin-bottom:8px;">出題形式</div>
       <div class="mode-grid">${modeButtons}</div>
@@ -9123,11 +9196,15 @@ function renderTestSetup() {
 window.setTestMode = function(m) { state.testMode = m; renderTestSetup(); };
 
 window.startTest = function(words,retry) {
-  const pool=Array.isArray(words)?words:getRange(state.testStart,state.testEnd);
+  const initial=Array.isArray(words)?words:getRange(state.testStart,state.testEnd);
+  const purpose=retry?'retry':(state.learnPurpose||'immediate');
+  if(!Array.isArray(words)&&purpose==='delayed'){const due=learnDue().filter(x=>initial.some(w=>w.no===x.word.no));if(!due.length){alert('この範囲には今日の確認対象がありません');return;}startLearn(learnLimit(due,'test'),'delayed');return;}
+  const pool=learnPresetPool(purpose,initial);
   if(!pool.length){alert('範囲内の単語がありません');return;}
-  state.testQueue=uxLimit('test',shuffle(pool),retry);
+  state.testQueue=uxLimit('test',purpose==='exam'?pool:shuffle(pool),retry);
   state.testQIdx=0;state.testAnswered=false;state.testScore=0;state.testWrong=[];
-  uxBegin('test',pool,state.testMode,retry,'No.'+state.testStart+'〜'+state.testEnd);
+  uxBegin('test',pool,state.testMode,retry,'No.'+state.testStart+'〜'+state.testEnd+(purpose==='exam'?'・模試前':''));
+  uxRuns.test.purpose=purpose;
   renderTestQuestion();
 };
 
@@ -9251,7 +9328,7 @@ function renderTypingQuestion() {
       <button class="submit-btn" onclick="submitTyping()">確認</button>
     </div>
     <div id="typing-result"></div>
-    <button class="btn-secondary" style="width:100%;margin-top:8px" onclick="skipTyping()">スキップ</button>
+    <div class="learn-actions"><button class="btn-secondary" onclick="learnLegacyHint('typing')">ヒント</button><button class="btn-secondary" onclick="skipTyping()">わからない</button></div>
   </div>`;
   setTimeout(() => { const inp = document.getElementById('typing-input'); if(inp) inp.focus(); }, 100);
 }
@@ -9333,7 +9410,7 @@ function reviewSummaryHtml() {
   return `<div class="score-label">今回 ${q.length}語 → ${stDot('mastered')}克服済み ${cnt.mastered} ／ ${stDot('recovering')}克服中 ${cnt.recovering} ／ ${stDot('review')}要復習 ${cnt.review}</div>
       <div class="score-label" style="margin-top:4px">復習リストに残り: ${reviewPoolSize()}語</div>`;
 }
-function renderReview() {
+function renderManualReviewBase() {
   const sec = document.getElementById('section-review');
   const sc = statusCounts();
   const nMark = Object.keys(markRec).length;
@@ -9493,7 +9570,7 @@ function renderReviewTypingQ() {
       <button class="submit-btn" onclick="submitReviewTyping()">確認</button>
     </div>
     <div id="review-typing-result"></div>
-    <button class="btn-secondary" style="width:100%;margin-top:8px" onclick="skipReviewTyping()">わからない</button>
+    <div class="learn-actions"><button class="btn-secondary" onclick="learnLegacyHint('review')">ヒント</button><button class="btn-secondary" onclick="skipReviewTyping()">わからない</button></div>
   </div>`;
   setTimeout(() => { const inp = document.getElementById('review-typing-input'); if(inp) inp.focus(); }, 100);
 }
@@ -9572,7 +9649,7 @@ function buildWordListBody() {
     const wrongBadge = statusBadgeHtml(w.no);
     return `<tr>
       <td class="td-no">${w.no}</td>
-      <td class="td-word">${escHtml(w.word)}${markBtnHtml(w.no, 'sm')}</td>
+<td class="td-word"><button type="button" class="learn-word-btn" onclick="learnFromList(${w.no})">${escHtml(w.word)}</button>${markBtnHtml(w.no, 'sm')}</td>
       <td class="td-meaning">${w.meanings.map(m=>escHtml(m)).join(' / ')}</td>
       <td class="td-status">${wrongBadge}</td>
     </tr>`;
@@ -9659,6 +9736,7 @@ function renderSettings() {
     ${slotsSectionHtml()}
 
     ${syncCardHtml()}
+    ${learnGoalsHtml()}
 
     <div class="set-card">
       <div class="set-head"><span class="set-ico">${icon('chart')}</span><h3>学習状況</h3><span class="slot-sub-name">${nm}</span></div>
@@ -9730,6 +9808,7 @@ window.exportData = function() {
     masteryN: masteryN,
     ranges: currentRanges(),
     lastAnswerAt: lastAnswerAt,
+    learning: learning,
   };
   const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
   const url = URL.createObjectURL(blob);
@@ -9751,7 +9830,7 @@ window.importData = function(input) {
       // 新形式(missRecords)があればそのまま、旧形式(wrongList+history)なら移行して取り込む
       const miss = data.missRecords ? data.missRecords : migrateLegacy(data.wrongList, hist);
       const d = { v: 1, history: hist, missRec: miss, marks: sanitizeMarks(data.marks), studyPos: sanitizeStudyPos(data.studyPos), daily: sanitizeDaily(data.daily), sessions: sanitizeSessions(data.sessions), wstat: sanitizeWstat(data.wstat), masteryN: MASTERY_OPTIONS.includes(data.masteryN) ? data.masteryN : 3,
-                  ranges: data.ranges || null, lastAnswerAt: data.lastAnswerAt || 0 };
+                  ranges: data.ranges || null, lastAnswerAt: data.lastAnswerAt || 0, learning: sanitizeLearning(data.learning) };
       const name = String(data.slotName || ('インポート ' + new Date().toISOString().slice(0, 10))).slice(0, SLOT_NAME_MAX);
       const id = createSlot(name, d);
       if (!id) return;
@@ -9863,7 +9942,7 @@ async function ghGetJson(path) {
   if (r.status === 404) return null;
   if (!r.ok) throw syncErr(r.status);
   const j = await r.json();
-  if (!j.content) throw syncErr(0, 'ファイルが大きすぎて読み込めません');
+  if (!j.content) {const raw=await ghFetch('/contents/'+path,{headers:{Accept:'application/vnd.github.raw+json'}});if(!raw.ok)throw syncErr(raw.status);return {sha:j.sha,data:JSON.parse(await raw.text())};}
   return { sha: j.sha, data: JSON.parse(b64dec(j.content)) };
 }
 async function ghPutJson(path, obj, sha) {
@@ -9883,7 +9962,7 @@ function normSync(d) {
     marks: sanitizeMarks(d.marks), upd: {},
     masteryN: MASTERY_OPTIONS.includes(d.masteryN) ? d.masteryN : 3,
     masteryAt: d.masteryAt || 0, lastAnswerAt: d.lastAnswerAt || 0, studyPos: sanitizeStudyPos(d.studyPos),
-    daily: sanitizeDaily(d.daily), sessions: sanitizeSessions(d.sessions), wstat: sanitizeWstat(d.wstat),
+    daily: sanitizeDaily(d.daily), sessions: sanitizeSessions(d.sessions), wstat: sanitizeWstat(d.wstat), learning: sanitizeLearning(d.learning), extra: learnExtra(d),
   };
   const u = sanitizeUpd(d.upd);
   const nos = new Set([...Object.keys(o.history), ...Object.keys(o.missRec), ...Object.keys(o.marks), ...Object.keys(o.wstat), ...Object.keys(u)]);
@@ -9936,18 +10015,21 @@ function mergeSync(a, b) {      // a: この端末  b: リモート
   // 学習位置は、記録した時刻が新しい方
   if (b.studyPos.at > a.studyPos.at) { m.studyPos = b.studyPos; m.pull++; }
   else { m.studyPos = a.studyPos; if (a.studyPos.at > b.studyPos.at) m.push++; }
+  m.learning=mergeLearning(a.learning,b.learning);
+  m.extra=Object.assign({},b.extra||{},a.extra||{});
+  const learned=JSON.stringify(m.learning);if(learned!==JSON.stringify(a.learning))m.pull++;if(learned!==JSON.stringify(b.learning))m.push++;
   m.lastAnswerAt = Math.max(a.lastAnswerAt, b.lastAnswerAt);
   return m;
 }
 function syncPayload(m) {
-  return { v: 1, history: m.history, missRec: m.missRec, marks: m.marks, upd: m.upd, studyPos: m.studyPos, daily: m.daily, sessions: m.sessions, wstat: m.wstat, masteryN: m.masteryN, masteryAt: m.masteryAt, lastAnswerAt: m.lastAnswerAt, savedAt: Date.now() };
+  return Object.assign({},m.extra||{}, { v: 1, history: m.history, missRec: m.missRec, marks: m.marks, upd: m.upd, studyPos: m.studyPos, daily: m.daily, sessions: m.sessions, wstat: m.wstat, masteryN: m.masteryN, masteryAt: m.masteryAt, lastAnswerAt: m.lastAnswerAt, savedAt: Date.now(), learning: m.learning });
 }
 function isFreshSlot(id) {
   const d = id === slotIndex.active ? currentSlotData() : (readSlotData(id) || {});
   // 「まだ何も解いていない」セーブデータか。学習ページで単語を見ただけ（見た数・時間・位置）は、記録とは数えない
   const answered = Object.values(d.daily || {}).some(day => Object.values(day || {}).some(r => r && r.a > 0));
   return !Object.keys(d.history || {}).length && !Object.keys(d.missRec || {}).length &&
-         !Object.keys(sanitizeMarks(d.marks)).length && !answered && !((d.sessions || []).length) && !(d.lastAnswerAt > 0);
+         !Object.keys(sanitizeMarks(d.marks)).length && !answered && !((d.sessions || []).length) && !(d.lastAnswerAt > 0) && !sanitizeLearning(d.learning).events.length;
 }
 function syncBackupSlot(run, id, raw) {
   if (!run.backup) run.backup = { at: Date.now(), slots: {} };
@@ -9955,6 +10037,7 @@ function syncBackupSlot(run, id, raw) {
 }
 function applyMerged(id, m, run) {
   if (id === slotIndex.active) {
+    learning=sanitizeLearning(m.learning);slotExtras=Object.assign({},slotExtras,m.extra||{});
     history = m.history; missRec = m.missRec; markRec = m.marks; updRec = m.upd;
     dailyRec = m.daily; sessionRec = m.sessions; wstatRec = m.wstat;
     masteryN = m.masteryN; masteryAt = m.masteryAt; lastAnswerAt = m.lastAnswerAt;
@@ -9968,7 +10051,7 @@ function applyMerged(id, m, run) {
   } else {
     const cur = readSlotData(id) || {};
     writeSlotData(id, Object.assign({}, cur, { v: 1, history: m.history, missRec: m.missRec, marks: m.marks, upd: m.upd, studyPos: m.studyPos,
-      daily: m.daily, sessions: m.sessions, wstat: m.wstat, masteryN: m.masteryN, masteryAt: m.masteryAt, lastAnswerAt: m.lastAnswerAt }));
+      daily: m.daily, sessions: m.sessions, wstat: m.wstat, masteryN: m.masteryN, masteryAt: m.masteryAt, lastAnswerAt: m.lastAnswerAt, learning: m.learning },m.extra||{}));
   }
   run.pulledAny = true;
 }
@@ -10077,6 +10160,7 @@ async function syncNow(mode) {
     syncRunning = false;
     if (run.backup) { try { localStorage.setItem(SYNC_BACKUP_KEY, JSON.stringify(run.backup)); } catch (e) {} }
     if (run.pulledAny || run.structural) afterSyncRefresh(run);
+    if (!failed && syncDirty && !syncQueuedMode) syncQueuedMode='active';
     if (syncQueuedMode) { const m = syncQueuedMode; syncQueuedMode = null; setTimeout(() => syncNow(m), 300); }
     else if (failed && failed.status !== 401 && failed.status !== 404) { syncTimer = setTimeout(() => syncNow('active'), 60000); }
   }
@@ -10241,7 +10325,7 @@ function recSummaryHtml() {
     <div class="rec-card"><h3>単語の状況<small>全${MAX_NO.toLocaleString()}語</small></h3>
       <div class="rec-stack"><i style="width:${pct(sc.mastered)};background:var(--c-mastered)"></i><i style="width:${pct(sc.recovering)};background:var(--c-recovering)"></i><i style="width:${pct(sc.review)};background:var(--c-review)"></i><i style="width:${pct(clean)};background:#b7dcc5"></i></div>
       <div class="rec-leg"><span style="--c:var(--c-mastered)">克服済み <b>${sc.mastered}</b></span><span style="--c:var(--c-recovering)">克服中 <b>${sc.recovering}</b></span><span style="--c:var(--c-review)">要復習 <b>${sc.review}</b></span><span style="--c:#b7dcc5">間違いなし <b>${clean}</b></span><span style="--c:var(--c-none)">未解答 <b>${unans.toLocaleString()}</b></span></div></div>
-    <div class="rec-card opt"><h3>今週の解答数<small>合計 ${wTotal}問</small></h3><div class="rec-bars">${bars}</div></div>
+    ${learnStatsHtml()}
     <div class="rec-card opt"><h3>今週の学習時間<small>合計 ${fmtDurShort(wts + wtq)}</small></h3>
       <div class="rec-stack thin"><i style="width:${(wts + wtq) ? (wts / (wts + wtq) * 100) : 0}%;background:#9fd0b5"></i><i style="width:${(wts + wtq) ? (wtq / (wts + wtq) * 100) : 0}%;background:var(--primary)"></i></div>
       <div class="rec-leg"><span style="--c:#9fd0b5">学習ページ <b>${fmtDurShort(wts)}</b></span><span style="--c:var(--primary)">テスト・復習など <b>${fmtDurShort(wtq)}</b></span></div></div>`;
@@ -10299,11 +10383,12 @@ function recRangeHtml() {
       .map(no => ({ no, sub: `平均 ${(wstatRec[no].ms / 1000).toFixed(1)}秒・${wstatRec[no].k}回` }));
   }
   const word = no => WORDS[no - 1] && WORDS[no - 1].no === no ? WORDS[no - 1].word : (WORDS.find(w => w.no === no) || {}).word || '';
-  const rank = list.length ? list.map((x, i) => `<div><span class="n">${i + 1}</span><b>${escHtml(word(x.no))}</b><span>${x.sub}</span></div>`).join('')
+  const rank = list.length ? list.map((x, i) => `<div><span class="n">${i + 1}</span><button type="button" class="learn-word-btn" onclick="startLearnWord(${x.no})">${escHtml(word(x.no))}</button><span>${x.sub}</span></div>`).join('')
     : `<div class="rec-empty">${mode === 'miss' ? 'まだ間違えた単語がありません' : '解答時間の記録がたまると、ここに表示されます'}</div>`;
   return `<div class="rec-card grow2"><h3>100語ごとの達成度<small>数字＝解答済みの割合</small></h3>
       <div class="rec-rows">${rows.join('')}</div>
       <div class="rec-leg" style="margin-top:8px"><span style="--c:var(--c-mastered)">克服済み</span><span style="--c:var(--c-recovering)">克服中</span><span style="--c:var(--c-review)">要復習</span><span style="--c:#b7dcc5">間違いなし</span></div></div>
+    ${learnWeakCard()}
     <div class="rec-card opt"><h3>苦手ランキング<span class="rec-mini"><button type="button" class="${mode === 'miss' ? 'on' : ''}" onclick="setRecRank('miss')">間違い</button><button type="button" class="${mode === 'slow' ? 'on' : ''}" onclick="setRecRank('slow')">遅い</button></span></h3><div class="rec-rank">${rank}</div></div>`;
 }
 
@@ -10438,6 +10523,8 @@ document.addEventListener('keydown', function(e) {
 
   const key = e.key;
   const sec = state.section;
+  if(e.ctrlKey||e.metaKey||e.altKey||tag==='BUTTON'||tag==='SELECT')return;
+  if(learnKey(e))return;
 
   // ── 学習モード ──
   if (sec === 'study') {
@@ -10549,6 +10636,204 @@ function syncNavHeight() {
 }
 window.addEventListener('resize', syncNavHeight);
 window.addEventListener('orientationchange', syncNavHeight);
+
+// LEAP learning v1. 既存の克服判定とは独立した、承認済みの追加記録。
+const LEARN_INTERVALS=[1,3,7,14,30];
+const LEARN_KINDS=['recall','choice','spelling','context','audio'];
+const LEARN_RESULTS=['correct','uncertain','wrong'];
+const LEARN_WORDS=new Map(WORDS.map(w=>[w.no,w]));
+let learnSeq=0,learnRun=null,slotExtras={};
+function learnBlank(){return {v:1,resetAt:0,events:[],schedule:{},meanings:{},goals:{at:0,id:'',review:20,newWords:5,weekDays:5,examDate:''},notes:{}};}
+let learning=learnBlank();
+const learnObj=o=>o&&typeof o==='object'&&!Array.isArray(o)?o:{};
+const learnNum=(n,max=Number.MAX_SAFE_INTEGER)=>Math.min(max,Math.max(0,Number.isFinite(Number(n))?Number(n):0));
+const learnNo=n=>Number.isInteger(Number(n))&&LEARN_WORDS.has(Number(n));
+function learnId(){return Date.now()+'-'+DEV+'-'+(++learnSeq)+'-'+Math.random().toString(36).slice(2,12);}
+function learnExtra(d){const known=new Set(['v','history','missRec','marks','upd','studyPos','daily','sessions','wstat','masteryN','masteryAt','ranges','lastAnswerAt','learning','savedAt','__proto__','constructor','prototype']);const out={};Object.keys(learnObj(d)).forEach(k=>{if(!known.has(k))out[k]=d[k];});return out;}
+function sanitizeLearning(raw){
+  const d=learnObj(raw),o=learnBlank();o.resetAt=learnNum(d.resetAt);
+  const ids=new Map();
+  (Array.isArray(d.events)?d.events:[]).slice(-4000).forEach(e=>{
+    if(!e||!learnNo(e.no)||!LEARN_KINDS.includes(e.kind)||!LEARN_RESULTS.includes(e.result)||typeof e.id!=='string'||!e.id||!learnNum(e.at))return;
+    const w=LEARN_WORDS.get(Number(e.no));
+    const x={id:e.id.slice(0,120),no:Number(e.no),at:learnNum(e.at),kind:e.kind,result:e.result,hint:!!e.hint,purpose:['daily','diagnostic','study','immediate','delayed','exam','weak','retry'].includes(e.purpose)?e.purpose:'study',meaningIndex:Math.min(w.meanings.length-1,Math.floor(learnNum(e.meaningIndex))),first:!!e.first,delayed:!!e.delayed,slip:!!e.slip};
+    if(!ids.has(x.id))ids.set(x.id,x);
+  });
+  o.events=[...ids.values()].sort((a,b)=>a.at-b.at||a.id.localeCompare(b.id)).slice(-2000);
+  for(const k of Object.keys(learnObj(d.schedule))){if(!learnNo(k))continue;const out={};for(const axis of ['meaning','spelling']){const s=learnObj(d.schedule[k])[axis];if(!s||!learnNum(s.at))continue;out[axis]={at:learnNum(s.at),id:String(s.id||'').slice(0,120),stage:Math.floor(learnNum(s.stage,4)),nextAt:learnNum(s.nextAt),lastDay:/^\d{4}-\d{2}-\d{2}$/.test(s.lastDay)?s.lastDay:'',verifiedAt:learnNum(s.verifiedAt),lastResult:LEARN_RESULTS.includes(s.lastResult)?s.lastResult:'wrong'};}if(Object.keys(out).length)o.schedule[k]=out;}
+  for(const k of Object.keys(learnObj(d.meanings))){if(!learnNo(k))continue;const w=LEARN_WORDS.get(Number(k)),out={};for(const i of Object.keys(learnObj(d.meanings[k]))){if(!/^\d+$/.test(i)||Number(i)>=w.meanings.length)continue;const s=learnObj(d.meanings[k][i]);out[i]={n:Math.floor(learnNum(s.n,1e6)),at:learnNum(s.at),id:String(s.id||'').slice(0,120),result:LEARN_RESULTS.includes(s.result)?s.result:'uncertain'};}o.meanings[k]=out;}
+  const g=learnObj(d.goals);o.goals={at:learnNum(g.at),id:String(g.id||'').slice(0,120),review:[10,20,50].includes(Number(g.review))?Number(g.review):20,newWords:[0,5,10,20].includes(Number(g.newWords))?Number(g.newWords):5,weekDays:Math.max(1,Math.min(7,Math.floor(Number(g.weekDays)||5))),examDate:/^\d{4}-\d{2}-\d{2}$/.test(g.examDate)&&Number.isFinite(Date.parse(g.examDate+'T12:00:00'))?g.examDate:''};
+  for(const k of Object.keys(learnObj(d.notes))){if(!learnNo(k))continue;const n=learnObj(d.notes[k]);o.notes[k]={text:String(n.text||'').slice(0,300),reason:['reading','spelling','confused','important',''].includes(n.reason)?n.reason:'',at:learnNum(n.at),deletedAt:learnNum(n.deletedAt),id:String(n.id||'').slice(0,120)};}
+  // 将来の追加部分も、書き戻すだけで不用意に削除しない。
+  for(const k of Object.keys(d)){if(!Object.prototype.hasOwnProperty.call(o,k)&&!['__proto__','constructor','prototype'].includes(k))o[k]=d[k];}
+  return o;
+}
+function learnLatest(a,b){if(!a)return b;if(!b)return a;const x=Math.max(a.at||0,a.deletedAt||0),y=Math.max(b.at||0,b.deletedAt||0);if(x!==y)return x>y?a:b;const ia=String(a.id||''),ib=String(b.id||'');if(ia!==ib)return ia>ib?a:b;return JSON.stringify(a)>=JSON.stringify(b)?a:b;}
+function mergeLearning(rawA,rawB){
+  const a=sanitizeLearning(rawA),b=sanitizeLearning(rawB);
+  if(a.resetAt!==b.resetAt)return sanitizeLearning(a.resetAt>b.resetAt?a:b);
+  const out=Object.assign({},b,a),ev=new Map();[...a.events,...b.events].forEach(e=>ev.set(e.id,learnLatest(ev.get(e.id),e)));
+  out.events=[...ev.values()].sort((x,y)=>x.at-y.at||x.id.localeCompare(y.id)).slice(-2000);out.schedule={};out.meanings={};out.notes={};
+  const nested=(A,B,into)=>new Set([...Object.keys(A),...Object.keys(B)]).forEach(no=>{const x=A[no]||{},y=B[no]||{},z={};new Set([...Object.keys(x),...Object.keys(y)]).forEach(k=>z[k]=learnLatest(x[k],y[k]));into[no]=z;});
+  nested(a.schedule,b.schedule,out.schedule);nested(a.meanings,b.meanings,out.meanings);
+  new Set([...Object.keys(a.notes),...Object.keys(b.notes)]).forEach(no=>out.notes[no]=learnLatest(a.notes[no],b.notes[no]));out.goals=learnLatest(a.goals,b.goals);
+  return sanitizeLearning(out);
+}
+function learnNextAt(at,days){const d=new Date(at);d.setDate(d.getDate()+days);return d.getTime();}
+function learnRecord(no,kind,result,{hint=false,purpose='study',meaningIndex=0,slip=false}={}){
+  if(!learnNo(no)||!LEARN_KINDS.includes(kind)||!LEARN_RESULTS.includes(result))return null;
+  no=Number(no);const at=Date.now(),day=dateKey(at),axis=kind==='spelling'?'spelling':'meaning';
+  const all=learning.schedule[no]||(learning.schedule[no]={}),prev=all[axis],qualified=['recall','spelling'].includes(kind)&&!hint;
+  const first=!prev||prev.lastDay!==day,delayed=!!(first&&prev&&at>=prev.nextAt&&qualified);
+  const e={id:learnId(),no,at,kind,result,hint:!!hint,purpose,meaningIndex:Math.min(LEARN_WORDS.get(no).meanings.length-1,Math.floor(learnNum(meaningIndex))),first,delayed,slip:!!slip};
+  learning.events.push(e);if(learning.events.length>2000)learning.events=learning.events.slice(-2000);
+  let stage=prev?prev.stage:0,verifiedAt=prev?prev.verifiedAt:0,nextAt=prev?prev.nextAt:learnNextAt(at,1);
+  if(result==='wrong'){stage=0;verifiedAt=0;nextAt=learnNextAt(at,1);}
+  else if(result==='uncertain'||hint||kind==='choice'){nextAt=Math.min(nextAt,learnNextAt(at,1));}
+  else if(qualified&&first){if(delayed){stage=Math.min(stage+1,4);verifiedAt=at;nextAt=learnNextAt(at,LEARN_INTERVALS[stage]);}else if(!prev){nextAt=learnNextAt(at,1);}}
+  all[axis]={at,id:e.id,stage,nextAt,lastDay:day,verifiedAt,lastResult:result};
+  if(axis==='meaning'){const m=learning.meanings[no]||(learning.meanings[no]={}),old=m[e.meaningIndex];m[e.meaningIndex]={n:(old?old.n:0)+1,at,id:e.id,result};}
+  return e;
+}
+function learnRecordObjective(no,ok){
+  const kind=state.section,run=uxRuns[kind];if(!run||!['test','typing','review'].includes(kind))return;
+  const idx=kind==='test'?state.testQIdx:kind==='typing'?state.typingQIdx:state.reviewQIdx;
+  const w=LEARN_WORDS.get(Number(no));if(!w)return;
+  const q=uxQuestion(kind,w,idx),mode=kind==='typing'||(kind==='review'&&run.mode==='typing')?'spelling':'choice';
+  const axis=mode==='spelling'?'spelling':'meaning',prior=learning.schedule[no]&&learning.schedule[no][axis];run.lastPrev=prior?{...prior}:null;
+  run.lastEvent=learnRecord(no,mode,ok?'correct':'wrong',{hint:!!q.hint,purpose:run.retry?'retry':(run.purpose||'immediate'),meaningIndex:w.meanings.indexOf(q.meaning)});
+}
+function learnLimit(queue,kind='review'){const n=uxOptions[kind];return n===0?queue.slice():queue.slice(0,n||learning.goals.review);}
+function learnEventFor(run){return run&&run.lastEvent&&learning.events.find(e=>e.id===run.lastEvent.id);}
+function learnDue(){const out=[],at=Date.now();for(const no of Object.keys(learning.schedule))for(const axis of ['meaning','spelling']){const s=learning.schedule[no][axis];if(s&&s.nextAt<=at)out.push({word:LEARN_WORDS.get(Number(no)),kind:axis==='spelling'?'spelling':'recall',at:s.nextAt});}return out.sort((a,b)=>a.at-b.at||a.word.no-b.word.no);}
+function learnUnconfirmed(){return WORDS.filter(w=>history[w.no]&&Number(history[w.no].total)>0&&!learning.schedule[w.no]);}
+function learnNew(){return getRange(state.studyStart,state.studyEnd).filter(w=>!(history[w.no]&&Number(history[w.no].total)>0)&&!learning.schedule[w.no]);}
+function learnTodayCount(){return new Set(learning.events.filter(e=>dateKey(e.at)===dateKey()).map(e=>e.no+':'+(e.kind==='spelling'?'spelling':'meaning'))).size;}
+function learnVerified(){return Object.values(learning.schedule).filter(s=>s.meaning&&s.meaning.verifiedAt>0).length;}
+function learnActiveDays(){const days=new Set(Object.keys(dailyRec).filter(k=>{const x=daySum(k);return x.a>0||x.v>0;}));learning.events.forEach(e=>days.add(dateKey(e.at)));return days;}
+function learnWeek(){const dates=new Set(recDays(7));return [...learnActiveDays()].filter(k=>dates.has(k)).length;}
+function learnWeak(kind='all',recent=false){const counts=new Map(),after=Date.now()-14*86400000;learning.events.forEach(e=>{if(e.result==='correct'||(kind!=='all'&&(kind==='spelling')!==(e.kind==='spelling'))||(recent&&e.at<after))return;counts.set(e.no,(counts.get(e.no)||0)+(e.result==='wrong'?2:1));});return [...counts].sort((a,b)=>b[1]-a[1]||a[0]-b[0]).map(([no,n])=>({word:LEARN_WORDS.get(no),n}));}
+function learnPickMeaning(w){const rec=learning.meanings[w.no];if(!rec||Object.values(rec).reduce((n,x)=>n+x.n,0)<3)return null;const ranked=w.meanings.map((m,i)=>({m,n:rec[i]?rec[i].n:0,bad:rec[i]&&rec[i].result!=='correct'?1:0}));ranked.sort((a,b)=>a.n-b.n||b.bad-a.bad);return ranked[0].m;}
+
+function learnButton(text,action,cls='btn-secondary'){return `<button type="button" class="${cls}" onclick="${action}">${text}</button>`;}
+function learnTabs(){return `<div class="rec-chips learn-tabs">${['today','manual'].map(x=>`<button type="button" class="${(state.learnTab||'today')===x?'on':''}" onclick="setLearnTab('${x}')">${x==='today'?'今日':'手動'}</button>`).join('')}</div>`;}
+window.setLearnTab=function(t){state.learnTab=t==='manual'?'manual':'today';renderReview();};
+function renderReview(){
+  if((state.learnTab||'today')==='manual'){renderManualReviewBase();const sec=document.getElementById('section-review');sec.innerHTML=learnTabs()+sec.innerHTML;learnFitView();return;}
+  const due=learnDue(),old=learnUnconfirmed(),goal=learning.goals;
+  const sec=document.getElementById('section-review');
+  sec.innerHTML=`<div class="learn-home"><h2>${icon('review')}復習</h2>${learnTabs()}
+    <div class="data-section learn-today"><div class="learn-head"><b>今日の復習</b><strong>${due.length}<small>問</small></strong></div><div class="learn-muted">意味 ${due.filter(x=>x.kind==='recall').length} · 綴り ${due.filter(x=>x.kind==='spelling').length}</div></div>
+    ${uxCountHtml('review')}<div class="learn-actions">${learnButton('今日の復習を開始','startLearnDaily()', 'btn-primary')}${learnButton('新出＋復習','startLearnCombined()')}</div>
+    ${old.length?learnButton('既習の確認 ('+old.length+'語)','startLearnDiagnostic()'):''}
+    <div class="learn-footer">今日の確認 ${learnTodayCount()}問 · 今週 ${learnWeek()}/${goal.weekDays}日</div>
+    <div class="learn-actions">${learnButton('苦手から','startLearnWeak()')}${learnButton('今日はここまで',"showSection('record')")}</div></div>`;
+  learnFitView();
+}
+window.startLearnDaily=function(){const due=learnDue();if(!due.length){if(learnUnconfirmed().length){startLearnDiagnostic();return;}alert('今日の復習はありません');return;}startLearn(learnLimit(due),'daily');};
+window.startLearnDiagnostic=function(){const p=learnLimit(shuffle(learnUnconfirmed()));if(!p.length){alert('未確認の既習語はありません');return;}startLearn(p.map(word=>({word,kind:'recall'})),'diagnostic');};
+window.startLearnCombined=function(){const goal=learning.goals,all=learnDue(),due=learnLimit(all),fresh=all.length>goal.review?[]:shuffle(learnNew()).slice(0,goal.newWords);const q=[...due,...fresh.map(word=>({word,kind:'recall',fresh:true}))];if(!q.length){startLearnDiagnostic();return;}startLearn(q,'daily');};
+window.startLearnWeak=function(kind='all'){const p=learnWeak(kind,state.learnWeakRecent!==false);const fallback=reviewPoolWords().map(word=>({word}));const words=p.length?p:fallback;const q=learnLimit(words).map(x=>({word:x.word,kind:kind==='spelling'?'spelling':'recall'}));if(!q.length){alert('苦手の記録はまだありません');return;}startLearn(q,'weak');};
+window.startLearnWord=function(no,kind='recall'){const word=LEARN_WORDS.get(Number(no));if(!word)return;if(kind==='audio'&&!learnAudioSafe(word)){alert('この単語は音声だけの問題の対象外です');return;}if(kind==='context'&&!getExample(word.word)){alert('例文がありません');return;}startLearn([{word,kind}],'study');};
+function startLearn(queue,purpose='study'){
+  const q=queue.filter(x=>x&&x.word&&learnNo(x.word.no)&&LEARN_KINDS.includes(x.kind)).map(x=>({...x,meaningIndex:x.meaningIndex===undefined?0:x.meaningIndex}));
+  if(!q.length)return;
+  if(quizInProgress('review')&&!confirm('進行中の復習を中断して、新しいセットを始めますか？'))return;
+  endSession('review');
+  const sec=document.getElementById('section-review');sec.innerHTML='';state.reviewQueue=q.map(x=>x.word);state.reviewQIdx=0;state.reviewAnswered=false;
+  learnRun={queue:q,idx:0,purpose,revealed:false,answered:false,hint:0,score:0,answers:0,wrong:[],uncertain:[],redone:new Set(),lastEvent:null,at:Date.now()};
+  showSection('review');renderLearnQuestion();
+}
+function learnAudioSafe(w){return ['agree','oppose','advise','discuss','blame','complain','offer','suggest','recommend','grateful','apologize','explain','describe','celebrate','congratulate'].includes(w.word)&&('speechSynthesis' in window);}
+function learnCurrent(){return learnRun&&learnRun.queue[learnRun.idx];}
+function renderLearnQuestion(){
+  const r=learnRun,x=learnCurrent();if(!r)return;if(!x){renderLearnScore();return;}
+  const w=x.word,sec=document.getElementById('section-review'),ex=getExample(w.word);
+  state.reviewQueue=r.queue.map(z=>z.word);state.reviewQIdx=r.idx;state.reviewAnswered=r.answered;
+  if(!x.meaningChosen){const meaning=learnPickMeaning(w)||randMeaning(w);x.meaningIndex=w.meanings.indexOf(meaning);x.meaningChosen=true;}
+  if(!r.answered)window.__qStart=Date.now();
+  let prompt=x.kind==='spelling'?escHtml(w.meanings[x.meaningIndex]):x.kind==='context'?escHtml(ex?ex.en:w.word):x.kind==='audio'?learnButton(icon('speaker')+' 音声を聞く',`speak('${escHtml(w.word).replace(/'/g,'&#39;')}')`):escHtml(w.word);
+  let inputs=x.kind==='spelling'&&!r.answered?`<div class="typing-input-row"><input id="learn-input" type="text" maxlength="120" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" placeholder="英単語を入力" onkeydown="if(event.key==='Enter'){event.preventDefault();learnSubmit();}"><button class="submit-btn" onclick="learnSubmit()">確認</button></div><div class="learn-actions">${learnButton('ヒント','learnHint()')}${learnButton('わからない',"learnGrade('wrong')")}</div>`:'';
+  const answer=r.revealed||r.answered?`<div class="learn-answer"><b>${escHtml(w.word)}</b>${pronHtml(w.word)}<div>${w.meanings.map(escHtml).join(' / ')}</div>${x.kind==='context'&&ex?`<div class="learn-muted">${escHtml(ex.jp)}</div>`:''}</div>`:'';
+  const controls=r.answered?learnButton('次へ →','learnNext()','next-btn'):x.kind==='spelling'?'':r.revealed?`<div class="learn-grades">${learnButton('出ない',"learnGrade('wrong')")}${learnButton('正しいが迷った',"learnGrade('uncertain')")}${learnButton('思い出せた',"learnGrade('correct')")}</div>`:learnButton('答えを表示','learnReveal()','next-btn');
+  sec.innerHTML=`<div class="quiz-card learn-question"><button type="button" class="quiz-quit" onclick="quitQuiz()">中断</button><div class="quiz-progress">${r.idx+1} / ${r.queue.length}${x.retry?' · 解き直し':''}</div><div class="quiz-progress-bar"><div class="quiz-progress-bar-fill" style="width:${r.idx/r.queue.length*100}%"></div></div><div class="quiz-type-label">${{recall:'意味を思い出す',spelling:'綴りを確認',context:'この例文の意味を確認',audio:'音から意味を思い出す'}[x.kind]}${x.fresh?' · 新出':''}</div><div class="quiz-question">${prompt}</div>${inputs}<div id="learn-feedback" aria-live="polite"></div>${answer}${controls}${r.answered?`<div class="learn-actions">${learnButton('混同語を比べる',`learnCompare(${w.no})`)}${r.lastEvent&&r.lastEvent.result==='wrong'&&x.kind==='spelling'?learnButton('押し間違いを記録','learnSlip()'):''}</div>`:''}</div>`;
+  fitQuizPage();learnFitView();
+  if(x.kind==='spelling'&&!r.answered){const inp=document.getElementById('learn-input');if(inp)inp.focus();}
+}
+window.learnReveal=function(){if(!learnRun||learnRun.answered)return;learnRun.revealed=true;renderLearnQuestion();};
+window.learnGrade=function(result){
+  const r=learnRun,x=learnCurrent();if(!r||!x||r.answered||!LEARN_RESULTS.includes(result))return;
+  if(x.kind!=='spelling'&&!r.revealed)return;
+  r.lastEvent=learnRecord(x.word.no,x.kind,result,{hint:r.hint>0,purpose:x.retry?'retry':r.purpose,meaningIndex:x.meaningIndex});r.answered=true;r.answers++;
+  if(result==='correct')r.score++;else if(result==='wrong')r.wrong.push(x);else r.uncertain.push(x);
+  if(result==='wrong'&&!r.redone.has(x.word.no+':'+x.kind)&&r.purpose!=='retry'){
+    r.redone.add(x.word.no+':'+x.kind);r.queue.splice(Math.min(r.queue.length,r.idx+4),0,{...x,retry:true,meaningChosen:true});
+  }
+  lastAnswerAt=Date.now();saveStorage();renderLearnQuestion();
+};
+window.learnNext=function(){const r=learnRun;if(!r||!r.answered)return;r.idx++;r.revealed=false;r.answered=false;r.hint=0;renderLearnQuestion();};
+window.learnSubmit=function(){
+  const r=learnRun,x=learnCurrent(),inp=document.getElementById('learn-input');if(!r||!x||r.answered||!inp)return;
+  const val=normalizeTypingInput(inp.value);if(!val)return;
+  const other=(uxMeaningIndex.get(x.word.meanings[x.meaningIndex])||[]).find(w=>w.no!==x.word.no&&isTypingMatch(val,w.word));
+  if(other){document.getElementById('learn-feedback').textContent=other.word+'は同じ訳を持つ別の語です。ヒントで指定語を確認できます。';return;}
+  const ok=isTypingMatch(val,x.word.word);learnGrade(ok?'correct':'wrong');
+  if(!ok)document.getElementById('learn-feedback').innerHTML=uxSpellingHtml(val,x.word.word);
+};
+window.learnHint=function(){const r=learnRun,x=learnCurrent();if(!r||!x||r.answered)return;r.hint=Math.min(r.hint+1,3);const box=document.getElementById('learn-feedback');if(r.hint===1)box.textContent='先頭: '+x.word.word.slice(0,1);else if(r.hint===2)box.textContent='先頭: '+x.word.word.slice(0,1)+' · '+x.word.word.length+'文字';else box.textContent=x.word.word;};
+window.learnSlip=function(){const e=learnEventFor(learnRun);if(!e||e.kind!=='spelling'||e.result!=='wrong'||e.slip)return;e.slip=true;saveStorage();const b=document.getElementById('learn-feedback');if(b)b.textContent='押し間違いを記録しました。正しく入力して再確認します。';};
+function renderLearnScore(){const r=learnRun;if(!r)return;const next=learnDue().length;document.getElementById('section-review').innerHTML=`<div class="score-card ux-score learn-score"><div class="big-score">${r.answers?Math.round(r.score/r.answers*100):0}%</div><div class="score-label">${r.answers}問完了 · ${r.score}問正解</div><div class="learn-muted">間違い ${r.wrong.length} · あやふや ${r.uncertain.length} · 今日の復習残り ${next}問</div><div class="btn-row">${r.wrong.length||r.uncertain.length?learnButton('間違い・あやふやだけ','learnRetry()'):''}${learnButton('復習へ戻る','learnFinish()')}${learnButton('今日はここまで',"learnFinish();showSection('record')")}</div></div>`;state.reviewAnswered=false;learnFitView();}
+window.learnRetry=function(){const r=learnRun;if(!r)return;const m=new Map([...r.wrong,...r.uncertain].map(x=>[x.word.no+':'+x.kind,{word:x.word,kind:x.kind,meaningIndex:x.meaningIndex,retry:true}]));const q=[...m.values()];learnRun=null;startLearn(q,'retry');};
+window.learnFinish=function(){learnRun=null;document.getElementById('section-review').innerHTML='';renderReview();};
+function learnKey(e){if(!learnRun||state.section!=='review'||!quizInProgress('review')||e.ctrlKey||e.metaKey||e.altKey)return false;const tag=e.target&&e.target.tagName;if(['INPUT','TEXTAREA','BUTTON','SELECT'].includes(tag))return false;const r=learnRun;if(e.repeat)return false;if(e.key==='Enter'||e.key===' '){e.preventDefault();if(r.answered)learnNext();else if(learnCurrent().kind!=='spelling')learnReveal();return true;}if(r.revealed&&!r.answered&&['1','2','3'].includes(e.key)){e.preventDefault();learnGrade(['wrong','uncertain','correct'][Number(e.key)-1]);return true;}return false;}
+
+window.learnStudyTest=function(){if(quizInProgress('test')&&!confirm('進行中のテストを中断して、この学習範囲を確認しますか？'))return;showSection('test');state.testStart=state.studyStart;state.testEnd=state.studyEnd;state.testMode='en2jp';state.learnPurpose='immediate';uxOptions.test=10;startTest();};
+window.learnChooseWord=function(no){const w=LEARN_WORDS.get(Number(no));if(!w)return;const answer=prompt('1:意味を思い出す  2:綴りを確認'+(learnAudioSafe(w)?'  3:音から確認':''),'1');if(answer==='1')startLearnWord(no);else if(answer==='2')startLearnWord(no,'spelling');else if(answer==='3'&&learnAudioSafe(w))startLearnWord(no,'audio');};
+function learnStudyTools(w){return `<div class="learn-tools">${learnButton('思い出す',`learnChooseWord(${w.no})`)}${getExample(w.word)?learnButton('例文を確認',`startLearnWord(${w.no},'context')`):''}${learnButton('10問確認','learnStudyTest()')}${learnButton('メモ',`learnNote(${w.no})`)}</div>`;}
+function learnNoteHtml(no){const n=learning.notes[no];return n&&!n.deletedAt&&n.text?`<div class="learn-personal">メモ: ${escHtml(n.text)}</div>`:'';}
+window.learnNote=function(no){if(!learnNo(no))return;const old=learning.notes[no]||{},reason=prompt('理由: 読解／綴り／混同／重要',{'reading':'読解','spelling':'綴り','confused':'混同','important':'重要'}[old.reason]||'読解');if(reason===null)return;const text=prompt('自分用のメモ（300文字まで。空欄で削除）',old.deletedAt?'':old.text||'');if(text===null)return;learning.notes[no]={text:text.slice(0,300),reason:({'読解':'reading','綴り':'spelling','混同':'confused','重要':'important'})[reason]||'important',at:Date.now(),deletedAt:text?0:Date.now(),id:learnId()};if(text&&!markRec[no])toggleMark(no);else saveStorage();if(state.section==='study')renderStudy();else if(state.section==='wordlist')renderWordList();};
+window.learnFromList=function(no){const w=LEARN_WORDS.get(Number(no));if(!w)return;const choices=prompt('1:意味を確認  2:メモ  3:混同語を比較','1');if(choices==='1')startLearnWord(no);else if(choices==='2')learnNote(no);else if(choices==='3')learnCompare(no);};
+window.learnCompare=function(no){const w=LEARN_WORDS.get(Number(no));if(!w)return;const others=WORDS.filter(x=>x.no!==w.no&&x.meanings.some(m=>w.meanings.includes(m))).slice(0,2);if(!others.length){alert('同じ日本語訳を持つ比較候補はありません');return;}const describe=x=>{const e=getExample(x.word);return x.word+' — '+x.meanings.join(' / ')+(e?'\n'+e.en+'\n'+e.jp:'');};alert([w,...others].map(describe).join('\n\n'));};
+
+function learnGoalsHtml(){const g=learning.goals;return `<div class="set-card"><div class="set-head"><h3>今日の量・週間目標</h3></div><div class="learn-goals"><label>復習 <select id="learn-goal-review">${[10,20,50].map(n=>`<option value="${n}" ${n===g.review?'selected':''}>${n}問</option>`).join('')}</select></label><label>新出 <select id="learn-goal-new">${[0,5,10,20].map(n=>`<option value="${n}" ${n===g.newWords?'selected':''}>${n}語</option>`).join('')}</select></label><label>週の目標 <input type="number" id="learn-goal-week" min="1" max="7" value="${g.weekDays}">日</label><label>模試日 <input type="date" id="learn-goal-exam" value="${g.examDate}"></label></div>${learnButton('目標を保存','saveLearnGoals()')}<div class="learn-muted">復習が多い日は新出を減らします。</div></div>`;}
+window.saveLearnGoals=function(){const get=id=>document.getElementById(id).value;learning.goals=sanitizeLearning({goals:{at:Date.now(),id:learnId(),review:Number(get('learn-goal-review')),newWords:Number(get('learn-goal-new')),weekDays:Number(get('learn-goal-week')),examDate:get('learn-goal-exam')}}).goals;uxOptions.review=learning.goals.review;saveStorage();alert('目標を保存しました');};
+window.setLearnPurpose=function(p){if(!['immediate','delayed','exam'].includes(p))return;state.learnPurpose=p;renderTestSetup();};
+function learnPurposeHtml(){const p=state.learnPurpose||'immediate',exam=learning.goals.examDate,remaining=exam?Math.ceil((Date.parse(exam+'T12:00:00')-Date.now())/86400000):null;return `<div class="rec-chips learn-purpose">${[['immediate','学習直後'],['delayed','定着確認'],['exam','模試前']].map(([k,l])=>`<button type="button" class="${p===k?'on':''}" onclick="setLearnPurpose('${k}')">${l}</button>`).join('')}${p==='exam'&&remaining!==null?`<span class="learn-muted">${remaining>=0?'模試まで '+remaining+'日':'模試日を過ぎています'}</span>`:''}</div>`;}
+function learnPresetPool(p,pool){if(p==='delayed'){const q=learnDue().filter(x=>pool.some(w=>w.no===x.word.no));return Array.from(new Map(q.map(x=>[x.word.no,x.word])).values());}if(p==='exam'){const practiced=pool.filter(w=>history[w.no]&&history[w.no].total>0||learning.schedule[w.no]);const n=uxOptions.test||learning.goals.review,weak=new Set(learnWeak('all',true).map(x=>x.word.no)),a=shuffle(practiced.filter(w=>weak.has(w.no)||statusOf(w.no)==='review')),b=shuffle(practiced.filter(w=>!a.includes(w)));return [...a.slice(0,Math.ceil(n/2)),...b,...a.slice(Math.ceil(n/2))];}return pool;}
+window.learnUncertain=function(kind){const r=uxRuns[kind],e=learnEventFor(r);if(!e||e.result!=='correct'||r.flagged===e.id)return;r.flagged=e.id;e.result='uncertain';const axis=e.kind==='spelling'?'spelling':'meaning',s=learning.schedule[e.no]&&learning.schedule[e.no][axis];if(s&&s.id===e.id){s.lastResult='uncertain';s.stage=r.lastPrev?r.lastPrev.stage:0;s.verifiedAt=r.lastPrev?r.lastPrev.verifiedAt:0;s.nextAt=Math.min(r.lastPrev?r.lastPrev.nextAt:learnNextAt(e.at,1),learnNextAt(e.at,1));}const m=learning.meanings[e.no]&&learning.meanings[e.no][e.meaningIndex];if(m&&m.id===e.id)m.result='uncertain';const w=LEARN_WORDS.get(e.no);r.uncertain=r.uncertain||[];r.uncertain.push(w);saveStorage();const b=document.getElementById('learn-confidence-'+kind);if(b){b.textContent='あやふやを記録';b.disabled=true;}};
+function learnConfidenceHtml(kind){const r=uxRuns[kind];return r&&r.lastEvent&&r.lastEvent.result==='correct'?`<button type="button" id="learn-confidence-${kind}" class="filter-btn" onclick="learnUncertain('${kind}')">あやふや</button>`:'';}
+window.learnRetryObjective=function(kind){const r=uxRuns[kind];if(!r)return;const words=Array.from(new Map([...(r.wrong||[]),...(r.uncertain||[])].map(w=>[w.no,w])).values());if(!words.length)return;if(kind==='test'){state.testMode=r.mode;startTest(words,true);}else if(kind==='typing')startTyping(words,true);else{state.reviewMode=r.mode;startReview(words,true);}};
+window.learnLegacyHint=function(kind){const run=uxRuns[kind],idx=kind==='typing'?state.typingQIdx:state.reviewQIdx,w=kind==='typing'?state.typingQueue[idx]:state.reviewQueue[idx],answered=kind==='typing'?state.typingAnswered:state.reviewAnswered;if(!run||!w||answered)return;const q=uxQuestion(kind,w,idx);q.hint=true;q.hintLevel=Math.min((q.hintLevel||0)+1,3);const box=document.getElementById(kind==='typing'?'typing-result':'review-typing-result');box.textContent=q.hintLevel===1?'先頭: '+w.word.slice(0,1):q.hintLevel===2?'先頭: '+w.word.slice(0,1)+' · '+w.word.length+'文字':w.word;};
+window.learnLegacySlip=function(kind){const r=uxRuns[kind],e=learnEventFor(r);if(!e||e.kind!=='spelling'||e.result!=='wrong')return;e.slip=true;saveStorage();alert('押し間違いとして記録しました。不正解の履歴は残し、もう一度正しく入力します。');};
+function learnAfterAnswer(kind){const r=uxRuns[kind];if(!r||!r.lastEvent)return;const id=kind==='test'?'result-area':kind==='typing'?'typing-result':r.mode==='typing'?'review-typing-result':'review-result',box=document.getElementById(id);if(!box)return;box.insertAdjacentHTML('beforeend',`<div class="learn-feedback-actions">${learnConfidenceHtml(kind)}${r.lastEvent.kind==='spelling'&&r.lastEvent.result==='wrong'?learnButton('押し間違い',`learnLegacySlip('${kind}')`):''}${learnButton('混同語',`learnCompare(${r.lastEvent.no})`)}</div>`);}
+
+function learnStatsHtml(){const due=learnDue().length,verified=learnVerified(),events=learning.events.filter(e=>e.delayed&&e.first&&!e.hint&&['recall','spelling'].includes(e.kind));const per=axis=>{const es=events.filter(e=>(e.kind==='spelling')===(axis==='spelling'));return es.length?es.filter(e=>e.result==='correct').length+'/'+es.length:'—';};return `<div class="rec-card learn-record"><h3>次の学習<small>後日確認は導入後の記録</small></h3><div class="learn-metrics"><button onclick="showSection('review');startLearnDaily()"><b>${due}</b><span>今日の復習</span></button><div><b>${verified}</b><span>後日確認済み・意味</span></div><button onclick="showSection('review');startLearnWeak()"><b>${learnWeak('all',true).length}</b><span>最近の苦手</span></button></div><div class="learn-muted">後日の初回：意味 ${per('meaning')} · 綴り ${per('spelling')}　今週 ${learnWeek()}/${learning.goals.weekDays}日</div></div>`;}
+function learnWeakCard(){const kind=state.learnWeakKind||'all',recent=state.learnWeakRecent!==false,list=learnWeak(kind,recent).slice(0,5);return `<div class="rec-card opt"><h3>方式別の苦手<span class="rec-mini">${['all','meaning','spelling'].map(k=>`<button class="${kind===k?'on':''}" onclick="setLearnWeakKind('${k}')">${{all:'全部',meaning:'意味',spelling:'綴り'}[k]}</button>`).join('')}</span></h3><div class="learn-actions">${learnButton(recent?'直近14日':'記録全体','toggleLearnWeakRecent()')}${learnButton('この分類を練習',`startLearnWeak('${kind}')`)}</div><div class="rec-rank">${list.map((x,i)=>`<div><span class="n">${i+1}</span><button class="learn-word-btn" onclick="startLearnWord(${x.word.no},'${kind==='spelling'?'spelling':'recall'}')">${escHtml(x.word.word)}</button><span>苦手 ${x.n}</span></div>`).join('')||'<div class="rec-empty">まだ記録がありません</div>'}</div></div>`;}
+window.setLearnWeakKind=function(k){state.learnWeakKind=k;renderRecord();};
+window.toggleLearnWeakRecent=function(){state.learnWeakRecent=state.learnWeakRecent===false;renderRecord();};
+function learnFitView(){
+  const sec=document.getElementById('section-'+state.section);if(!sec)return;
+  let root=sec.querySelector('.learn-home, .learn-question, .learn-score');
+  const setup=QUIZ_SECTIONS.includes(state.section)&&!sec.querySelector('.quiz-card, .score-card, .learn-home')&&sec.querySelector('.mode-grid');
+  if(setup){sec.dataset.learnSetup='yes';root=sec;}else{delete sec.dataset.learnSetup;delete sec.dataset.learnDense;}
+  if(!root)return;
+  measureNoTransition(()=>{for(let n=0;n<5;n++){root.dataset.learnDense=n;if(document.documentElement.scrollHeight<=innerHeight)break;}});
+}
+const learnOldFitQuiz=fitQuizPage;
+fitQuizPage=function(){learnOldFitQuiz();learnFitView();};
+window.addEventListener('resize',learnFitView);
+const learnOldQuit=window.quitQuiz;
+window.quitQuiz=function(){if(state.section==='review'&&learnRun){if(!confirm('このセットを中断しますか？回答済みの記録は残ります。'))return;learnRun=null;renderReview();return;}learnOldQuit();};
+const learnOldStartReview=window.startReview;
+window.startReview=function(words,retry){learnRun=null;learnOldStartReview(words,retry);};
+for(const [name,kind] of [['answerTest','test'],['submitTyping','typing'],['skipTyping','typing'],['answerReviewTest','review'],['submitReviewTyping','review'],['skipReviewTyping','review']]){const base=window[name];window[name]=function(...args){const before=kind==='test'?state.testAnswered:kind==='typing'?state.typingAnswered:state.reviewAnswered;const result=base(...args);const after=kind==='test'?state.testAnswered:kind==='typing'?state.typingAnswered:state.reviewAnswered;if(!before&&after)learnAfterAnswer(kind);return result;};}
+const learnOldStreak=streakInfo;
+streakInfo=function(){const old=learnOldStreak(),days=[...learnActiveDays()].map(dayNum).sort((a,b)=>a-b),set=new Set(days);let run=0,longest=0,prev=-Infinity;days.forEach(d=>{run=d===prev+1?run+1:1;longest=Math.max(longest,run);prev=d;});const today=dayNum(dateKey());let cur=0,d=set.has(today)?today:today-1;while(set.has(d)){cur++;d--;}return {cur,longest:Math.max(old.longest,longest),total:days.length};};
+const learnOldReset=window.resetAll;
+window.resetAll=function(){const oldConfirm=window.confirm,epoch=Math.max(Date.now(),learning.resetAt+1);let accepted=false;window.confirm=(...args)=>{accepted=oldConfirm.apply(window,args);return accepted;};try{learnOldReset();}finally{window.confirm=oldConfirm;}if(accepted){learning=learnBlank();learning.resetAt=epoch;learnRun=null;QUIZ_SECTIONS.forEach(n=>{const sec=document.getElementById('section-'+n);if(sec)sec.innerHTML='';});saveStorage();renderSettings();}};
+const learnOldRestore=window.syncRestore;
+window.syncRestore=function(){let backup=null;try{backup=JSON.parse(localStorage.getItem(SYNC_BACKUP_KEY));}catch(e){}if(!backup||!backup.slots)return;const oldConfirm=window.confirm,epoch=Math.max(Date.now(),learning.resetAt+1);let accepted=false;window.confirm=(...args)=>{accepted=oldConfirm.apply(window,args);return accepted;};try{learnOldRestore();}finally{window.confirm=oldConfirm;}if(accepted){for(const id of Object.keys(backup.slots)){const d=readSlotData(id);if(d){d.learning=sanitizeLearning(d.learning);d.learning.resetAt=Math.max(epoch,d.learning.resetAt+1);writeSlotData(id,d);}}learning=sanitizeLearning((readSlotData(slotIndex.active)||{}).learning);saveStorage();}};
+
 
 // ── INIT ──
 document.querySelectorAll('[data-icon]').forEach(el => { el.innerHTML = icon(el.dataset.icon); });
